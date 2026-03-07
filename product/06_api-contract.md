@@ -1,8 +1,9 @@
 # API Contract — TactiTok
 
-> **Version:** 0.1
+> **Version:** 0.2
 > **Status:** Draft
 > **Last updated:** 2026-03-07
+> **Change log:** v0.2 — added `GET /api/health` endpoint (N1 fix); changed content file URL to include `?v={version}` for proxy cache-busting (N2 fix); corrected ETag note (ETag handles browser cache only, not proxy cache); updated endpoint count to 21.
 > **Preceding document:** `product/05_data-model.md`
 > **Next document:** `product/07_delivery-plan.md`
 
@@ -95,6 +96,40 @@ All error responses (4xx, 5xx) use the following JSON envelope:
 
 ## 6. Public API (Edge-facing, No Auth)
 
+### 6.0 GET /api/health
+
+Returns server status. Used by the Edge SPA to detect whether the cloud server is reachable through the edge proxy.
+
+**Used by:** Edge SPA (Sprint 4 Week 8) to poll reachability and drive the online/offline indicator. A successful `200` response with `X-Cache-Status` absent or `HIT` means the proxy reached the cloud. A `STALE` or failed response means the cloud is unreachable.
+
+**Request:**
+
+```
+GET /api/health
+```
+
+**Response: 200 OK**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-07T10:00:00.000Z"
+}
+```
+
+**Response: 500** — server error (rare; indicates the server process is up but broken internally).
+
+**Edge proxy caching:**
+
+```nginx
+# Health endpoint is NOT cached — must reflect real cloud reachability
+proxy_cache off;
+```
+
+The edge proxy must **not** cache this response. If the cloud is unreachable, the request must fail (not return a cached response). This failure is the signal the SPA uses to detect offline state.
+
+---
+
 ### 6.1 GET /api/catalog
 
 Returns the full catalog snapshot: all content items with metadata, the full category tree, and all interests.
@@ -184,9 +219,11 @@ Returns the raw binary content file (MP4 or PDF). Supports HTTP range requests f
 **Request:**
 
 ```
-GET /api/content/{id}/file
+GET /api/content/{id}/file?v={version}
 Range: bytes=0-499999        (optional — for range/prefetch)
 ```
+
+**The `?v={version}` parameter is mandatory for edge SPA requests.** The Edge SPA always constructs the URL using the `version` field from the cached catalog entry (e.g., `?v=1`, `?v=2`). The server ignores the `v` parameter — it exists solely to bust the edge proxy cache when content is updated. nginx includes the query string in the cache key by default, so a version increment produces a cache miss and forces a fresh fetch.
 
 **Response: 200 OK** (full file, no Range header sent)
 
@@ -211,9 +248,10 @@ Accept-Ranges: bytes
 **Response: 404 Not Found** — content item does not exist.
 
 **Header notes:**
-- `ETag` format is `"{version}-{id}"`. When content is updated (`version++`), the ETag changes, invalidating the edge proxy cache entry for that item.
+- `ETag` format is `"{version}-{id}"`. This handles browser-level conditional requests (Chrome `<video>` element cache). It does **not** invalidate the nginx `proxy_cache` entry, which uses the request URL as its cache key.
+- Proxy-level cache invalidation is handled by the `?v={version}` query param: when admin updates a file (`version++`), the next catalog sync delivers the new version, the SPA constructs a new URL (`?v=2`), and the proxy sees a cache miss.
 - `Accept-Ranges: bytes` is required for Chrome's `<video>` element to issue range requests.
-- `Cache-Control: max-age=2592000, immutable` = 30 days; matches edge proxy cache validity.
+- `Cache-Control: max-age=2592000, immutable` = 30 days; matches edge proxy cache validity for a given URL+version.
 - `Content-Disposition: inline` tells Chrome to render (not save) the file.
 
 **Edge proxy caching:**
@@ -221,6 +259,8 @@ Accept-Ranges: bytes
 ```nginx
 proxy_cache_valid 200 206 30d;
 proxy_cache_use_stale error timeout updating http_502 http_503 http_504;
+# nginx caches by $scheme$proxy_host$request_uri (includes query string) by default
+# ?v={version} param causes a cache miss when version changes — this is intentional
 ```
 
 ---
@@ -722,12 +762,15 @@ export interface ApiError {
 
 | Endpoint | Server `Cache-Control` | Edge proxy cache | Notes |
 |---------|----------------------|-----------------|-------|
+| `GET /api/health` | `no-store` | **Not cached** | Must reflect real cloud reachability; `proxy_cache off` at edge proxy |
 | `GET /api/catalog` | `no-store` | 5 minutes | Proxy overrides via `proxy_ignore_headers Cache-Control` |
-| `GET /api/content/:id/file` | `max-age=2592000, immutable` | 30 days | ETag includes version; changes on content update |
+| `GET /api/content/:id/file?v={version}` | `max-age=2592000, immutable` | 30 days per version | Cache key includes `?v=` — new version = cache miss = fresh fetch |
 | `GET /api/content/:id/thumbnail` | `max-age=2592000, immutable` | 30 days | ETag includes version |
 | All admin endpoints | `no-store` | Not cached | Admin SPA has stable network |
 
 **Catalog cache note:** The server sets `Cache-Control: no-store` to prevent Chrome from caching the catalog (the SPA manages its own IndexedDB copy). The edge proxy caches it anyway using `proxy_ignore_headers Cache-Control` for the `/api/catalog` location block only.
+
+**Content file cache invalidation:** When admin replaces a content file (`version++`), the Edge SPA constructs a new URL (`?v={new_version}`) from the updated catalog. The proxy sees a cache miss for the new URL and fetches the fresh file. The old cached entry (`?v={old_version}`) is no longer requested and expires naturally after 30 days. No manual cache purging is needed.
 
 ---
 
@@ -789,8 +832,9 @@ After a successful catalog sync, the Edge SPA must:
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
+| `GET` | `/api/health` | None | Server health / reachability check |
 | `GET` | `/api/catalog` | None | Full catalog sync |
-| `GET` | `/api/content/:id/file` | None | Binary content file (range-aware) |
+| `GET` | `/api/content/:id/file?v={version}` | None | Binary content file (range-aware; `?v` for cache-busting) |
 | `GET` | `/api/content/:id/thumbnail` | None | Thumbnail image |
 | `POST` | `/api/admin/login` | None | Issue session token |
 | `POST` | `/api/admin/logout` | Bearer | Client-side token discard (no-op on server) |
@@ -810,7 +854,7 @@ After a successful catalog sync, the Edge SPA must:
 | `PUT` | `/api/admin/interests/:id` | Bearer | Rename interest |
 | `DELETE` | `/api/admin/interests/:id` | Bearer | Delete interest |
 
-**Total: 20 endpoints.** 3 public, 17 admin.
+**Total: 21 endpoints.** 4 public, 17 admin.
 
 ---
 
@@ -833,7 +877,7 @@ After a successful catalog sync, the Edge SPA must:
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|------|-----------|--------|-----------|
 | CR1 | nginx `proxy_cache` does not cache content when Chrome's first request includes a `Range` header | Medium | High | Test in sprint 1; configure `proxy_cache_key` to ignore the `Range` header; or force a full-file pre-fetch to warm the cache |
-| CR2 | ETag mismatch causes unnecessary proxy cache bypass after content update | Low | Low | Verify ETag format includes version; test with an actual content update |
+| CR2 | Old `?v={version}` cache entries accumulate in proxy cache disk (one entry per version per file) | Low | Low | Entries expire after 30 days `inactive` timeout; acceptable for MVP with ≤15 items and infrequent updates |
 | CR3 | 100 MB multipart upload times out under default Express/Multer config | Low | Medium | Set generous upload timeout (e.g., 10 min) on upload routes; test with a 100 MB file |
 | CR4 | MIME type validation bypass (rename `.exe` to `.mp4`) | Medium | Medium | Use magic-byte check (`file-type` library) in addition to MIME header |
 | CR5 | Catalog JSON grows unexpectedly large as content count increases | Low (MVP) | Low | `?since` param accepted from day one; add pagination as needed |

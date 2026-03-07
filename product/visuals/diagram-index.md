@@ -1,10 +1,10 @@
 # Diagram Index — TactiTok
 
-> **Version:** 0.2
+> **Version:** 0.3
 > **Status:** Draft
 > **Date:** 2026-03-07
-> **Source:** Cross-doc review v0.2 (`product/reviews/01_cross-doc-review.md`)
-> **Change from v0.1:** All 7 documents reviewed. DG-05, DG-06, DG-11 now unblocked. DG-10 blocker updated from B4 to N1. DG-08, DG-09 blocker updated to N2. DG-17 (sprint/milestone overview) added.
+> **Source:** Cross-doc review v0.3 (`product/reviews/01_cross-doc-review.md`)
+> **Change from v0.2:** Round 3 fixes applied. All blockers resolved. DG-07, DG-08, DG-09 unblocked (N2→D62, B3→D60). DG-10 unblocked (N1→D63, B5→D61). All 17 diagrams now ready for generation.
 
 For backlog detail, priority order, and blocker tracking, see `product/visuals/diagram-todo.md`.
 
@@ -33,8 +33,8 @@ For backlog detail, priority order, and blocker tracking, see `product/visuals/d
 | DG-04 | Data Model / ERD | Required | 🟢 Unblocked | — | — | — | — |
 | DG-05 | Content Publishing Flow (Sequence) | Required | 🟢 **Unblocked** | — | — | — | — |
 | DG-06 | Reels Feed / Video Playback Flow (Sequence) | Required | 🟢 **Unblocked** | — | — | — | — |
-| DG-07 | Library Browse & Search Flow (Sequence) | Required | 🟠 Blocked | B3 (Q23), B5 (Q17) | — | — | — |
-| DG-08 | Offline Download + Sync Flow (Sequence) | Required | 🟠 Blocked | B3 (Q23), N2 | — | — | — |
+| DG-07 | Library Browse & Search Flow (Sequence) | Required | 🟢 **Unblocked** | ~~B3, B5~~ — resolved (D60, D61) | — | — | — |
+| DG-08 | Offline Download + Sync Flow (Sequence) | Required | 🟢 **Unblocked** | ~~B3, N2~~ — resolved (D60, D62) | — | — | — |
 
 ---
 
@@ -42,8 +42,8 @@ For backlog detail, priority order, and blocker tracking, see `product/visuals/d
 
 | ID | Name | Priority | Status | Blockers | Source file | PNG | SVG |
 |----|------|----------|--------|----------|-------------|-----|-----|
-| DG-09 | Edge Proxy Cache State Flow | Recommended | 🟠 Blocked | N2 | — | — | — |
-| DG-10 | Network Connectivity State Diagram | Recommended | 🟡 Partial | N1 | — | — | — |
+| DG-09 | Edge Proxy Cache State Flow | Recommended | 🟢 **Unblocked** | ~~N2~~ — resolved (D62) | — | — | — |
+| DG-10 | Network Connectivity State Diagram | Recommended | 🟢 **Unblocked** | ~~N1~~ — resolved (D63) | — | — | — |
 | DG-11 | Admin Content Management Flow (Sequence) | Recommended | 🟢 **Unblocked** | — | — | — | — |
 | DG-12 | First-Time Setup / Interest Selection Flow | Recommended | 🟢 Unblocked | — | — | — | — |
 | DG-13 | Monorepo Package Structure | Recommended | 🟢 Unblocked | — | — | — | — |
@@ -67,10 +67,12 @@ For backlog detail, priority order, and blocker tracking, see `product/visuals/d
 |---------|--------|---------|
 | ~~B1 — Doc 06 missing~~ | ✅ Resolved | DG-05, DG-06, DG-11 unblocked |
 | ~~B2 — Doc 07 missing~~ | ✅ Resolved | DG-17 unblocked |
-| B3 — Q23 (updated badge scope) | 🔴 Open | DG-07, DG-08 |
-| B5 — Q17 (saved items UI surface) | 🔴 Open | DG-07 |
-| N1 — `/api/health` not in API contract | 🔴 Open | DG-10 accuracy |
-| N2 — proxy cache invalidation via ETag (same URL) | 🔴 Open | DG-08, DG-09 |
+| ~~B3 — Q23 (updated badge scope)~~ | ✅ **Resolved → D60** | DG-07, DG-08 unblocked |
+| ~~B5 — Q17 (saved items UI surface)~~ | ✅ **Resolved → D61** | DG-07 unblocked |
+| ~~N1 — `/api/health` not in API contract~~ | ✅ **Resolved → D63** | DG-10 unblocked |
+| ~~N2 — proxy cache invalidation via ETag (same URL)~~ | ✅ **Resolved → D62** | DG-08, DG-09 unblocked |
+
+**All blockers resolved. All 17 diagrams are ready for generation.**
 
 ---
 
