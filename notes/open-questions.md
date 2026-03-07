@@ -7,7 +7,7 @@ Use this file to track unresolved questions that may affect future documents or 
 | # | Question | Affects | Recommended default | Deadline |
 |---|---------|---------|-------------------|----------|
 | Q1 | ~~Which video protocol/format for MVP?~~ **RESOLVED → D28: MP4 + range requests** | System Architecture | MP4 + HTTP range requests | Resolved 2026-03-07 |
-| Q2 | Metadata sync mechanism: pull on app open, periodic polling, or push? | API Contract | Pull on app open + manual refresh | Before API Contract |
+| Q2 | ~~Metadata sync mechanism: pull on app open, periodic polling, or push?~~ **RESOLVED → D47: Pull on app open + manual refresh; no background sync in MVP** | API Contract | Pull on app open + manual refresh | Resolved 2026-03-07 |
 | Q3 | ~~What is stored in IndexedDB vs. Cache API?~~ **SUPERSEDED → D41/D44/D45: Cache API no longer used; IndexedDB for device state only; edge proxy caches content** | System Architecture | Edge proxy for content; IndexedDB for device state | Superseded 2026-03-07 |
 | Q4 | ~~How are interests defined and managed? Fixed list, admin-managed, hierarchical?~~ **RESOLVED → D35: Admin-managed flat list; independent of categories** | Data Model, Admin UX | Admin-managed flat list | Resolved 2026-03-07 |
 | Q5 | Minimum demo security posture? | Deployment | Network isolation + admin password | Before Delivery Plan |
@@ -51,6 +51,16 @@ Use this file to track unresolved questions that may affect future documents or 
 | Q23 | Should the "updated" badge appear on all items in library, or only on downloaded items? | Edge UX, logic complexity | Only on downloaded items (version mismatch is clear) | Before UI implementation |
 | Q24 | Should thumbnails be stored in same `./data/content/` directory or separate `./data/thumbnails/`? | File organization | Separate `./data/thumbnails/` for clarity | Before implementation |
 | Q25 | Should the admin be able to assign a content item to zero categories? | Data integrity | Allow zero (uncategorized); show under "All" or "Uncategorized" | Before implementation |
+
+## From API Contract (06)
+
+| # | Question | Affects | Recommended default | Deadline |
+|---|---------|---------|-------------------|----------|
+| Q29 | JWT (stateless) vs. opaque token (requires server-side store)? | Auth, logout behaviour | JWT — API contract assumes this | Before implementation |
+| Q30 | Should content file endpoint use Node.js streaming or nginx `X-Accel-Redirect`? | Performance | Node.js in MVP; switch if load is a problem | Sprint 2 after load test |
+| Q31 | Should `DELETE /api/admin/categories/:id` cascade-delete children, or reject if children exist? | Admin UX | Cascade delete — API contract assumes this | Before implementation |
+| Q32 | `multipart/form-data` vs. `tus` chunked upload for file upload? | Upload reliability | `multipart/form-data` (admin has stable network) | Before implementation |
+| Q33 | Server sets `Cache-Control: no-store` or `public, max-age=0` on `/api/catalog`? | nginx config | `no-store` + `proxy_ignore_headers` on proxy; test and adjust | Sprint 1 |
 
 ## From Architecture v0.2 Update (Edge Proxy)
 

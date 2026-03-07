@@ -77,3 +77,15 @@ Use this file to track explicit project decisions and why they were made.
 | D44 | No Chrome Cache API for content storage | Edge proxy's `proxy_cache` handles all content caching; Chrome Cache API would be redundant | 2026-03-07 |
 | D45 | IndexedDB used only for device state (profile, download records metadata, local actions) | Content files are cached by edge proxy, not by Chrome; IndexedDB holds only structured metadata | 2026-03-07 |
 | D46 | Team builds Docker setup (Dockerfile + nginx.conf) as part of MVP | Edge proxy is part of the system; team creates the Docker config; assumes Docker daemon pre-installed on Linux VM | 2026-03-07 |
+
+## From API Contract (06)
+
+| # | Decision | Rationale | Date |
+|---|---------|-----------|------|
+| D47 | Metadata sync = pull on app open + manual refresh; no background/periodic sync in MVP | Simplest implementation; app open is the natural trigger; manual refresh covers urgent needs | 2026-03-07 |
+| D48 | Admin auth token = JWT (stateless); logout is client-side token discard | No server-side session store needed; logout risk is low in controlled HQ environment | 2026-03-07 |
+| D49 | File upload = `multipart/form-data` (no chunked upload in MVP) | Admin operates on stable HQ network; tus adds complexity; can swap handler without changing API contract | 2026-03-07 |
+| D50 | `GET /api/catalog` accepts `?since` param but always returns full catalog in MVP | Forward-compatible; clients can send the param from day one without breaking when delta sync is added | 2026-03-07 |
+| D51 | `DELETE /api/admin/categories/:id` cascade-deletes child categories | Simpler admin UX; avoids forcing admin to manually delete children before parent | 2026-03-07 |
+| D52 | MIME validation uses magic-byte check (`file-type` library) in addition to client-provided MIME header | Client-provided MIME header is trivially spoofed; magic bytes are the authoritative check | 2026-03-07 |
+| D53 | ETag format for content files = `"{version}-{id}"` | ETag changes on every content update (version increment); edge proxy cache entry is automatically invalidated | 2026-03-07 |
