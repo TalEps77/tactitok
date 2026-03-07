@@ -1,10 +1,11 @@
 # Presentation Plan — TactiTok
 
-> **Version:** 0.1
+> **Version:** 0.2
 > **Status:** Draft
 > **Date:** 2026-03-07
-> **Source:** Cross-doc review pass (`product/reviews/01_cross-doc-review.md`)
+> **Source:** Cross-doc review v0.2 (`product/reviews/01_cross-doc-review.md`)
 > **Binding source of truth:** `product/north-star.md`
+> **Change from v0.1:** All 7 documents now reviewed. DK-03, DK-04 partially unblocked (docs 06 + 07 available). DK-05 fully unblocked. Blocker table updated.
 
 This file defines the planning layer for all presentation / deck artifacts for the TactiTok project. It specifies what decks should be created, for whom, and what each must cover. No slide content is generated here — only the planning layer.
 
@@ -12,13 +13,11 @@ This file defines the planning layer for all presentation / deck artifacts for t
 
 ## Blocker Summary
 
-The following must be resolved before specific presentations can be finalized.
-
-| Blocker | Affects decks | Resolution |
-|---------|--------------|-----------|
-| **B1** — Doc 06 (API Contract) not generated | DK-03 (architecture deep-dive), DK-04 (dev onboarding) | Generate doc 06 first |
-| **B2** — Doc 07 (Delivery Plan) not generated | DK-04 (developer onboarding), DK-05 (execution overview) | Generate doc 07 first |
-| **B3** — Diagrams not yet generated | All decks benefit from diagrams as visuals | Generate Pass 1 diagrams first (DG-01 to DG-04, DG-12, DG-13) |
+| Blocker | Affects decks | Status | Resolution |
+|---------|--------------|--------|-----------|
+| ~~**B1** — Doc 06 (API Contract) not generated~~ | ~~DK-03, DK-04~~ | ✅ **Resolved** | Doc 06 now complete |
+| ~~**B2** — Doc 07 (Delivery Plan) not generated~~ | ~~DK-04, DK-05~~ | ✅ **Resolved** | Doc 07 now complete |
+| **B3** — Diagrams not yet generated | All decks benefit from diagrams as visuals | 🔴 Open | Generate Pass 1 diagrams first (DG-01–DG-06, DG-11–DG-13, DG-17) |
 
 ---
 
@@ -95,9 +94,9 @@ These decks are mandatory — without them the project cannot be properly evalua
 | **Secondary audience** | The 3 student developers (as a reference) |
 | **Core message** | The MVP uses a clean, minimal architecture that solves hard offline constraints without overcomplicating the codebase |
 | **Format** | Presentation slides; diagram-heavy; ~20–25 slides |
-| **Source basis** | `02_system-boundaries.md`, `04_system-architecture.md`, `05_data-model.md`, diagrams DG-02, DG-03, DG-04, DG-08, DG-09 |
+| **Source basis** | `02_system-boundaries.md`, `04_system-architecture.md`, `05_data-model.md`, `06_api-contract.md`, diagrams DG-02, DG-03, DG-04, DG-05, DG-08, DG-09 |
 | **Priority** | Required |
-| **Status** | 🟠 Partially blocked (needs diagrams DG-02 to DG-04 first; needs doc 06 for API section) |
+| **Status** | 🟡 **Partially unblocked** (doc 06 now available; needs diagrams DG-02 to DG-04 first for visual slides) |
 | **Slide count range** | 20–25 |
 
 **Suggested section outline:**
@@ -136,9 +135,9 @@ These decks add significant value but are not critical for the MVP evaluation mi
 | **Secondary audience** | Academic supervisors evaluating technical execution |
 | **Core message** | Here's the system, how it fits together, what you build in what order, and where to find everything |
 | **Format** | Slides; practical, reference-oriented; ~20–30 slides |
-| **Source basis** | `04_system-architecture.md` §6 (monorepo), `05_data-model.md`, `07_delivery-plan.md` (when available), diagrams DG-02, DG-03, DG-04, DG-13 |
+| **Source basis** | `04_system-architecture.md` §6 (monorepo), `05_data-model.md`, `06_api-contract.md`, `07_delivery-plan.md`, diagrams DG-02, DG-03, DG-04, DG-13, DG-17 |
 | **Priority** | Recommended |
-| **Status** | 🟠 Blocked (B2 — needs doc 07 for sprint structure; B1 — needs doc 06 for API section) |
+| **Status** | 🟡 **Partially unblocked** (docs 06 + 07 now available; needs diagrams DG-02–04, DG-13, DG-17 first) |
 | **Slide count range** | 20–30 |
 
 **Suggested section outline:**
@@ -175,9 +174,9 @@ These decks add significant value but are not critical for the MVP evaluation mi
 | **Secondary audience** | The 3 student developers |
 | **Core message** | The team has a realistic, milestone-driven plan to deliver a demoable MVP in 10 weeks with defined de-scope levers |
 | **Format** | Slides; milestone-focused; ~15–18 slides |
-| **Source basis** | `07_delivery-plan.md` (when available), `03_mvp-spec.md` §13 (de-scope levers), `01_product-brief.md` §12–13 (assumptions and risks) |
+| **Source basis** | `07_delivery-plan.md`, `03_mvp-spec.md` §13 (de-scope levers), `01_product-brief.md` §12–13 (assumptions and risks), diagram DG-17 |
 | **Priority** | Recommended |
-| **Status** | 🔴 Blocked (B2 — entirely depends on doc 07) |
+| **Status** | 🟢 **Unblocked** (doc 07 now complete) |
 | **Slide count range** | 15–18 |
 
 **Suggested section outline:**
@@ -234,18 +233,18 @@ These decks serve specific audiences or purposes but are not needed for the MVP 
 
 When generating presentations, follow this order:
 
-**Step 1 — Generate Pass 1 diagrams first** (DG-01, DG-02, DG-03, DG-04, DG-12, DG-13)
+**Step 1 — Generate Pass 1 diagrams** (DG-01–DG-06, DG-11–DG-13, DG-17 — all unblocked)
 
 **Step 2 — Generate required decks:**
-1. DK-01 Stakeholder / Evaluator Overview (depends on diagrams)
-2. DK-02 Demo Walkthrough (depends on screenshots/prototype)
-3. DK-03 Architecture Deep-Dive (depends on diagrams + doc 06)
+1. DK-01 Stakeholder / Evaluator Overview (depends on Pass 1 diagrams)
+2. DK-02 Demo Walkthrough (depends on screenshots/prototype; outline can be written now)
+3. DK-03 Architecture Deep-Dive (depends on Pass 1 diagrams; doc 06 now available)
 
-**Step 3 — Generate remaining diagrams** (DG-05–DG-11)
+**Step 3 — Resolve N1 + N2 + Q23 + Q17, then generate remaining diagrams** (DG-07, DG-08, DG-09, DG-10)
 
 **Step 4 — Generate recommended decks:**
-4. DK-04 Developer Onboarding (depends on doc 06 + doc 07)
-5. DK-05 MVP Execution Overview (depends on doc 07)
+4. DK-04 Developer Onboarding (depends on Pass 1 diagrams + docs 06 + 07 — all available)
+5. DK-05 MVP Execution Overview (fully unblocked — doc 07 available; use DG-17)
 
 **Step 5 — Generate optional decks as needed:**
 6. DK-06 Data Model Reference

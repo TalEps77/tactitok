@@ -1,23 +1,22 @@
 # Cross-Document Review — TactiTok
 
-> **Version:** 0.1
+> **Version:** 0.2
 > **Status:** Draft
 > **Date:** 2026-03-07
 > **Author:** Automated planning pass (prompt: `08_cross-doc-visuals-planning`)
+> **Change from v0.1:** All 7 documents now reviewed (docs 06 and 07 were placeholders in v0.1). Issues C4, M1–M4 are updated. Two new issues added: N1 and N2. Blockers and diagram/presentation statuses updated throughout.
 > **Binding source of truth:** `product/north-star.md`
-> **Purpose:** Normalize the 5 substantive documents, surface actionable issues, and establish the planning baseline for diagram and presentation artifact generation.
 
 ---
 
 ## 1. Purpose of This Review
 
-This review reads the full available TactiTok document set as one coherent source base and answers:
+This review reads the full TactiTok document set (all 7 core documents + North Star + notes) as one coherent source base and answers:
 
-- Are the 5 substantive documents (docs 01–05) internally consistent?
-- Do they consistently reflect the North Star?
+- Are all 7 documents internally consistent and consistent with the North Star?
 - What must be resolved before diagrams or presentations are generated?
 - What terminology needs standardization?
-- What is missing or ambiguous at a level that will cause problems downstream?
+- What is still missing or ambiguous at a level that will cause problems downstream?
 
 This is a **product-side normalization pass** — not a design or code review.
 
@@ -33,258 +32,288 @@ This is a **product-side normalization pass** — not a design or code review.
 | 03 | `product/03_mvp-spec.md` | v0.1 | Draft | ✅ Yes |
 | 04 | `product/04_system-architecture.md` | v0.2 | Draft | ✅ Yes |
 | 05 | `product/05_data-model.md` | v0.2 | Draft | ✅ Yes |
-| 06 | `product/06_api-contract.md` | — | **Placeholder** | ❌ Not generated |
-| 07 | `product/07_delivery-plan.md` | — | **Placeholder** | ❌ Not generated |
+| 06 | `product/06_api-contract.md` | v0.1 | Draft | ✅ Yes |
+| 07 | `product/07_delivery-plan.md` | v0.1 | Draft | ✅ Yes |
 | N | `notes/assumptions.md` | — | Active | ✅ Yes |
 | N | `notes/decisions.md` | — | Active | ✅ Yes |
 | N | `notes/open-questions.md` | — | Active | ✅ Yes |
 
-**Critical state:** The 7-document set is **not complete**. Docs 06 and 07 are stubs. All findings below are based on docs 01–05 and the North Star.
+**All 7 core documents are now substantive.** The document set is complete.
 
 ---
 
 ## 3. High-Confidence Alignments
 
-The following areas are **consistently specified** across all reviewed documents and align with the North Star:
+The following areas are **consistently specified** across all documents and align with the North Star:
 
-- **Two-surface architecture** — edge SPA + admin portal — is described consistently in NS, 01, 02, 03, 04, and 05.
-- **Edge device topology (v0.2)** — Windows + Linux VM + Docker + nginx proxy — is correctly propagated into 02, 04, 05, and notes. No residual v0.1 references remain in substantive docs.
-- **No user authentication on edge** — kiosk/anonymous model with device profile is consistent across all 5 docs.
-- **Content types: video (MP4, ≤3 min) and PDF only** — consistent in NS, 01, 02, 03, 04, 05.
-- **Content delivery: MP4 + HTTP range requests (no HLS/DASH)** — consistent in 01 (Q1 resolved), 04, 05; decision D28 is final.
-- **Offline model: edge proxy cache (nginx) for files + IndexedDB for device state** — consistent across 02, 04, 05 after v0.2 update; no Service Worker, no Cache API.
-- **Catalog sync: pull-only, full snapshot, on app open + manual refresh** — consistent in 02, 03, 04, 05; decision D17/D34 are final.
-- **Admin portal: simple shared password, no RBAC** — consistent in 01, 02, 03, 04.
-- **Interest model: admin-managed flat list, independent of categories** — consistent in 01, 03, 05; decision D35 is final.
-- **Category model: 2-level hierarchy, parent-id pattern** — consistent in 01, 03, 04, 05.
-- **Technology stack: TypeScript monorepo, React (SPAs), Node.js + Express, PostgreSQL, nginx, Docker** — consistent in 04; tech decisions D24–D34, D41–D46 are all reflected in 04 and 05.
-- **Demo corpus: 10 PDFs + 5 videos** — consistent in 01, 03; decision D9 is final.
-- **De-scope order** — consistent priority ordering in 01, 02, 03, 04, 05 (updated badge → like/save → interest filtering → category admin → search → PDF → offline).
-- **Continuation notes** — all 5 docs include explicit continuation guidance pointing to the same post-MVP features: user identity, push sync, S3, CDN, recommendation engine, analytics.
+- **Two-surface architecture** (edge SPA + admin portal) — consistent in NS, 01, 02, 03, 04, 05, 06, 07.
+- **Edge device topology v0.2** (Windows + Linux VM + Docker + nginx proxy) — correctly propagated into 02, 04, 05, 07; notes decisions D41–D46 match.
+- **No user authentication on edge** — kiosk/device-profile model consistent across all documents. Public edge API endpoints explicit in doc 06 §4.2.
+- **Content types: MP4 video (≤3 min) and PDF only** — consistent in NS, 01, 02, 03, 04, 05, 06, 07.
+- **Video delivery: MP4 + HTTP range requests** — explicit in 04, 06; decision D28; confirmed in 07 Sprint 2.
+- **Offline model: edge proxy cache (nginx) for files + IndexedDB for device state** — consistent across 02, 04, 05, 06 §10, 07 Sprint 4; decisions D41–D45.
+- **Catalog sync: pull-only, full snapshot, on app open + manual refresh** — consistent in 02, 03, 04, 05, 06 §10.1–10.2, 07 Sprint 3 Week 3; decision D47 (`?since` accepted but returns full catalog in MVP, D50).
+- **Admin portal: JWT auth, shared password, no RBAC** — consistent in 01, 02, 03, 04, 06 §4.1, 07 Sprint 1; decision D48.
+- **File upload: multipart/form-data, 100 MB limit, MIME + magic-byte validation** — consistent in 03, 04, 06 §11, 07 Sprint 5; decisions D49, D52.
+- **Interest model: admin-managed flat list, independent of categories** — consistent in 01, 03, 05, 06 §7.4, 07; decision D35.
+- **Category model: 2-level hierarchy, parent-id, cascade-delete children** — consistent in 01, 03, 05, 06 §7.3, 07; decisions D23, D51.
+- **Orphan cleanup on sync** — explicit in 06 §10.4, confirmed in 07 Sprint 4 Week 8; consistent with data model.
+- **Technology stack** — TypeScript monorepo, React, Node/Express, PostgreSQL, nginx, Docker — consistent in 04, 07; decisions D24–D34, D41–D59.
+- **Demo corpus: 10 PDFs + 5 videos** — consistent in 01, 03, 07 Sprint 6; decision D9.
+- **De-scope order** — lever priority consistent across 01, 02, 03, 04, 07 §8 and §13; decision D57.
+- **Thumbnail endpoint** — defined in 06 §6.3; consistent with data model `thumbnailPath` field.
+- **ETag format** `"{version}-{id}"` — defined in 06 §6.2; consistent with data model version field and the "updated" badge mechanism (version comparison).
+- **Delivery timeline** — 6 × 2-week sprints, 12 weeks total — consistent with North Star §8.
+- **Role split** — Dev A (backend), Dev B (edge SPA), Dev C (admin SPA) — internally consistent in 07; decision D54.
+- **Continuation notes** — all 7 documents include consistent forward-compatibility guidance: delta sync, user auth, adaptive streaming, S3, CDN, push sync.
 
 ---
 
 ## 4. Contradictions / Inconsistencies
 
-### C1 — "Updated" badge scope (UNRESOLVED — BLOCKER)
+### C1 — "Updated" badge scope (STILL OPEN — BLOCKER for library diagram)
 
-**Severity:** High — affects UI design, data model logic, and sequence diagrams.
+**Severity:** High — affects UI design and sequence diagram.
+**Status change from v0.1:** Delivery plan partially clarifies but does not close.
 
 | Document | What it says |
 |----------|-------------|
 | MVP Spec Journey 3 Step 8 | "If content has been updated since last metadata sync, badge is visible" — implies all library items |
-| MVP Spec Out-of-Scope item 17 | No mention of limiting to downloads |
-| Data Model §9.3 | "for MVP simplicity, badge shows only on downloaded items where the version mismatch is clear" |
-| Open Question Q23 | Formally open: "all items in library, or only on downloaded items?" |
+| Data Model §9.3 | "badge shows only on downloaded items where version mismatch is clear" |
+| API Contract §10.3 | "compares `DownloadRecord.version` with catalog version for each downloaded item" — downloads-only logic |
+| Delivery Plan Sprint 4, Week 7 (Dev C) | Presents two options: downloaded items (version comparison) OR approximate heuristic on all library items — does not close the question |
+| Open Question Q23 | Still open |
 
-- **Conflict:** Spec implies all items; data model implies downloads-only.
-- **Impact:** Different logic complexity. All-items requires tracking "last seen version" per item (adds a `seenVersions` map to IndexedDB). Downloads-only is simpler (compare `DownloadRecord.version` to `CachedCatalog` version).
-- **Recommendation:** Close Q23. Proposed default: **downloads-only for MVP** (simpler; less IndexedDB data; spec language was ambiguous, not a design decision).
-- **Must resolve before:** Library view diagram, edge client sequence diagrams, UI implementation.
-
----
-
-### C2 — Stale assumption A23 in notes/assumptions.md
-
-**Severity:** Medium — creates confusion for developers reading notes.
-
-- **A23 text:** "IndexedDB + Cache API provide enough storage for 15 downloaded items in kiosk Chrome"
-- **Superseded by:** Decisions D43, D44, D45 (Cache API eliminated; edge proxy cache handles all content storage)
-- **Fix:** Update A23 to reflect that Cache API is no longer used; the constraint is now about edge proxy cache disk space (10 GB) and IndexedDB storage for metadata records only.
-- **Must fix before:** Developer handoff; notes should be accurate.
+- **Remaining conflict:** API Contract §10.3 implements downloads-only logic (comparing DownloadRecord to catalog version). MVP Spec Step 8 says all items. Delivery plan leaves both options open.
+- **Recommended resolution:** Close Q23 as **downloads-only** — API contract already implements this, delivery plan suggests it as the simpler alternative, and it is the less risky path.
+- **Must resolve before:** Library view diagram (DG-07), offline/sync flow diagram (DG-08).
 
 ---
 
-### C3 — Prefetch mechanism description gap
+### C2 — Stale assumption A23 *(RESOLVED in v0.1 pass)*
 
-**Severity:** Low — not a true contradiction, but language is inconsistent.
+Assumption A23 in `notes/assumptions.md` was updated to reflect that Cache API is no longer used. No further action needed.
+
+---
+
+### C3 — Prefetch mechanism description gap *(LOW SEVERITY — no action required)*
+
+- Delivery plan Sprint 3 Week 6 now provides implementation detail: "when current video reaches 30% playback, issue a `Range: bytes=0-{N}` request for the next video in the feed. Store the partial response in memory."
+- This is consistent with Architecture §9.7. The language difference (MVP Spec says "buffer N seconds"; Architecture says "range request triggers proxy to cache full file") is a level-of-abstraction difference, not a contradiction.
+- **No action needed.** Note the distinction in the prefetch flow diagram (DG-06) when generated.
+
+---
+
+### C4 — Cache invalidation for updated content files (PARTIALLY RESOLVED — residual issue N2)
+
+**Severity of residual:** Medium.
+
+- **What doc 06 resolves:** ETag format `"{version}-{id}"` is defined. When content is updated (version++), the ETag changes. This correctly invalidates **browser-level cache** (Chrome's own `<video>` and `fetch()` cache) if the browser is re-requesting a previously-cached response.
+- **What doc 06 does NOT resolve:** nginx `proxy_cache` caches by URL key by default (`$scheme$proxy_host$request_uri`). If the URL stays the same (`/api/content/{id}/file`), a changed ETag on the upstream server does **not** cause the proxy to evict the cached entry — the proxy serves the old file for the full 30-day TTL. This means: the "Updated" badge appears correctly (version mismatch via IndexedDB), but clicking to view the updated file may still serve the old version from proxy cache for up to 30 days.
+- **Impact on demo:** Demo Step 15 ("HQ uploads updated video → edge shows 'updated' badge after sync") — the badge appears correctly. But if the evaluator then plays the updated video, they may see the old version. This is a demo-risk issue.
+- **See N2 below** for the full analysis and recommended resolution.
+
+---
+
+### C5 — "Saved" items — no confirmed UI surface *(STILL OPEN — lower severity)*
+
+**Severity:** Low-Medium.
+
+- MVP Spec CAP-2.8 (Save button | Should), delivery plan Sprint 3 Week 5 (Save button implemented, stored in IndexedDB). Confirmed the button exists.
+- No document confirms what happens when the user wants to recall saved items. Q17 ("marked in Library with a filter toggle") remains a recommended default, not a decision.
+- **Impact:** If Save is implemented with no recall surface, it is a write-only interaction with no user value. The delivery plan does not add a "Saved" filter to the library view.
+- **Recommendation:** Close Q17 as a decision: "Save button stores in IndexedDB; no recall surface in MVP (indicators only). Callable explicitly in continuation." This is consistent with MVP Spec Out-of-Scope item 18.
+- **Must resolve before:** Library view diagram (DG-07).
+
+---
+
+### C6 — Like button — no recall surface *(LOW SEVERITY — accepted pattern)*
+
+- Delivery plan Sprint 3 Week 5 confirms Like button: "toggle `LocalAction` in IndexedDB; update icon state."
+- Like has no recall surface (no "liked content" view). This is consistent with MVP Spec Out-of-Scope and data model.
+- **Accepted pattern:** Like is a "vanity interaction" (tap → heart fills → state persists locally). Document this explicitly once rather than reopening the issue.
+- No action needed for diagrams; note it in the edge SPA interaction diagram if generated.
+
+---
+
+### C7 — Video duration validation *(SUBSTANTIALLY RESOLVED)*
+
+- Delivery plan Sprint 5 Week 9: "Video duration validation: parse MP4 duration using `ffprobe` or a JS library (`mp4-box` / `mp4-parser`); reject if > 180s."
+- API Contract §6.1 (POST /api/admin/content): "Duration > 180 seconds → `400` (if duration parsing is implemented; treat as soft constraint if not ready in sprint)."
+- **Resolved as:** Should-priority with a concrete implementation path. Treat as soft constraint if Sprint 5 runs behind — consistent with API contract language.
+- **No further action needed.**
+
+---
+
+### C8 — Edge-proxy package ownership inconsistency *(LOW SEVERITY — new finding)*
 
 | Document | What it says |
 |----------|-------------|
-| MVP Spec CAP-2.4 | "Video prefetch (buffer first N seconds of next video)" |
-| Architecture §9.7 | Fetch with `Range: bytes=0-{N}` triggers proxy to cache **full file** |
+| Delivery Plan §2 (package ownership table) | `packages/edge-proxy`: **Dev B** |
+| Delivery Plan Sprint 1 Week 1 (Dev C section) | Dev C sets up Dockerfile + nginx.conf for edge proxy |
 
-- **Gap:** The MVP Spec describes prefetch as "first N seconds buffer." The architecture describes a range request that causes the proxy to cache the entire file. The result is that "prefetch" is actually "trigger full file caching + provide first N bytes to Chrome." This is not a contradiction — the outcome is better than described — but the two documents use different mental models.
-- **Impact:** Diagram for prefetch flow must be precise about what happens at the proxy vs. in the browser.
-- **Recommendation:** Clarify in a note; add a comment in the diagram when generated.
-
----
-
-### C4 — Cache invalidation gap on content update
-
-**Severity:** Medium — architectural gap with user-visible impact.
-
-- **Current state:** When HQ admin updates a content file (version++), the edge proxy cache holds the old file for up to 30 days (cache validity setting). The "updated" badge will appear (version mismatch), but clicking "view" may serve the stale cached file.
-- **No document addresses** how the edge proxy is told to invalidate cached content files on update.
-- **Options not yet decided:** (a) include a version string in the content URL so new version → new cache key; (b) short-lived content cache validity; (c) cache-busting query param on update; (d) proxy-side cache purge API.
-- **Impact:** If unresolved, the offline flow diagram will be inaccurate (it shows correct behavior, but the actual behavior may differ for updated content).
-- **Recommendation:** Decide cache-busting strategy before architecture is finalized. Simplest MVP approach: include version in content URL (`/api/content/{id}/file?v={version}`) so updates always produce a cache miss.
-- **Must resolve before:** Offline/sync flow diagram, content delivery sequence diagram.
-
----
-
-### C5 — "Saved" items — no UI surface for recall
-
-**Severity:** Low-Medium — feature exists in data model with no UX home.
-
-| Document | What it says |
-|----------|-------------|
-| MVP Spec CAP-2.8 | Save/bookmark button | Should priority |
-| MVP Spec Out-of-Scope 18 | "Saved items view (separate from Downloads) — Like/Save are indicators only in MVP" |
-| Open Question Q17 / MQ5 | "Marked in Library with a filter toggle; no separate view" — **recommended default, not a decision** |
-
-- **Gap:** The Save button exists (Should priority), LocalAction stores save state, but Q17 is not formally closed as a decision. If Save is implemented with no recall UI, it's a "write-only" feature with no user value.
-- **Recommendation:** Either (a) close Q17 as decision D47: "Saved filter toggle in Library — Should priority"; or (b) drop Save button to Could/de-scope. The data model already supports it.
-- **Must resolve before:** Library view diagram, UI navigation diagram.
-
----
-
-### C6 — Like button — no recall or display surface
-
-**Severity:** Low — same structural issue as C5 for Like.
-
-- Like is a Should-priority capability (CAP-2.7) with no display surface in any diagram or journey (what does the user see that reflects their likes?).
-- The data model stores `LocalAction` with `action='like'` but no query path surfaces "liked content" to the user.
-- **Recommendation:** For MVP, Like is a vanity interaction (heart animates, state persists locally, no recall). This is acceptable if clearly documented. Should be stated explicitly in MVP Spec and reflected in diagrams.
-
----
-
-### C7 — Video duration validation mechanism unspecified
-
-**Severity:** Low — implementation detail gap.
-
-- MVP Spec CAP-6.12: "Video duration validation (reject >3 min) | Should"
-- Architecture upload flow makes no mention of how duration is checked.
-- Without transcoding, duration must be read from the uploaded file (e.g., ffprobe or a Node.js library like `fluent-ffmpeg`). This is a non-trivial dependency.
-- **Recommendation:** Either (a) accept it as a Should and implement with a lightweight library; or (b) de-scope to validation by trust (admin is responsible for uploading ≤3 min clips). The upload flow diagram should reflect whichever is chosen.
+- **Minor inconsistency:** Week 1 assigns the initial edge-proxy scaffold to Dev C; the ownership table assigns it to Dev B.
+- **Likely intent:** Dev C scaffolds in Week 1 (as part of the admin SPA sprint 1 task); Dev B takes ownership for deeper edge-proxy work in Sprints 3–4.
+- **Recommendation:** Clarify in delivery plan — e.g., note "Dev C bootstraps in Week 1; Dev B owns from Sprint 2 onward." Not a blocker for any diagram.
 
 ---
 
 ## 5. Missing or Weakly Specified Areas
 
-### M1 — API Contract (doc 06) is missing — CRITICAL
+### N1 — `GET /api/health` endpoint missing from API contract (NEW — BLOCKER)
 
-- All sequence diagrams, content delivery flows, and admin workflow diagrams depend on specific endpoint shapes.
-- The architecture implies these endpoints: `GET /api/catalog`, `GET /api/content/{id}/file`, `GET /api/content/{id}/thumbnail`, `POST /api/admin/content`, `PUT /api/admin/content/{id}`, `DELETE /api/admin/content/{id}`, `GET/POST/PUT/DELETE /api/admin/categories`, `GET/POST/PUT/DELETE /api/admin/interests`, `POST /api/admin/login`.
-- **Cannot finalize sequence diagrams without doc 06.**
+**Severity:** Medium.
 
-### M2 — Delivery Plan (doc 07) is missing
+- **Delivery Plan Sprint 1 Week 1 (Dev A):** "Health check endpoint: `GET /api/health → 200 { status: 'ok' }`"
+- **Delivery Plan Sprint 4 Week 8 (Dev B):** "poll `GET /api/health` via edge proxy; if fails or returns stale-served response, show 'Offline' indicator"
+- **API Contract §12 (endpoint summary table):** `GET /api/health` is **not listed**. It does not appear anywhere in doc 06.
+- **Impact:** The network status detection mechanism in the edge SPA depends on this endpoint. It is used in Sprint 4 Week 8 implementation and is part of the offline UX (AC-12). Without it in the contract, developers may not implement it consistently.
+- **Recommended action:** Add `GET /api/health` to the API contract as a public endpoint (no auth; no caching; returns `{ status: 'ok', version: string, timestamp: string }`). Should also specify edge proxy behavior: health check is NOT cached (so a stale response from the proxy correctly indicates offline state).
+- **Must add before:** Implementation Sprint 1 (Dev A builds it in Week 1).
 
-- Sprint structure, milestones, and task breakdown are needed for:
-  - Developer onboarding deck (what to build in what order)
-  - Execution overview deck (timeline for stakeholders)
-  - Dependency diagram (what blocks what in implementation)
-- **Cannot generate delivery/execution diagrams or dev onboarding deck until doc 07 exists.**
+---
 
-### M3 — Thumbnail serving endpoint not explicit
+### N2 — nginx proxy_cache not invalidated by ETag for same URL (NEW — BLOCKER for offline flow diagram)
 
-- Data Model and Architecture both reference `thumbnailPath` and `/api/content/{id}/thumbnail` in cache tables.
-- No document explicitly defines this as an API endpoint or whether thumbnails are optional in the response payload.
-- **Recommendation:** Explicit in API Contract (doc 06).
+**Severity:** Medium-High.
 
-### M4 — Orphaned record cleanup not in MVP Spec
+- **Root cause:** nginx `proxy_cache` uses the request URL as the cache key by default (`$scheme$proxy_host$request_uri`). A changed `ETag` or `Cache-Control` response header from the upstream does NOT evict the cached entry while it is still within its TTL (30 days). The proxy serves the old file for the full 30-day window regardless of server-side changes.
+- **Claimed behavior (doc 06 §6.2):** "When content is updated (version++), the ETag changes, invalidating the edge proxy cache entry for that item." — **This claim is incorrect** for nginx proxy_cache default behavior. ETag-based invalidation applies to browser-level conditional requests, not to nginx proxy_cache entries.
+- **Consequence:** After an admin updates a content file, the "Updated" badge appears correctly (version comparison in IndexedDB). But viewing the content via the edge SPA serves the old file from proxy cache for up to 30 days.
+- **Demo risk:** Demo Step 15 is specifically "HQ uploads updated video → edge device shows 'updated' badge after sync." If the evaluator then plays the updated video, they see the old version. This is a visible demo failure.
 
-- Data Model §7 states edge client should clean up orphaned `DownloadRecords` and `LocalActions` on sync when content is deleted server-side.
-- This behavior is **not captured as a capability in MVP Spec** (no CAP entry, no acceptance criterion).
-- **Recommendation:** Add as CAP-7.7 or note as an implicit behavior of the metadata sync flow.
+**Resolution options (in order of preference for MVP):**
 
-### M5 — Admin portal URL structure not specified
+| Option | Mechanism | Complexity | Recommended? |
+|--------|-----------|-----------|-------------|
+| **A: Version in content URL** | `/api/content/{id}/file?v={version}` — new version = new cache key = automatic cache miss | Low | ✅ **Yes — recommended** |
+| B: Short content cache TTL | Reduce from 30 days to, say, 4–8 hours | Very low | Acceptable if Option A is not implemented; degrades offline reliability |
+| C: nginx cache_purge module | `ngx_cache_purge` module + purge request from server after content update | Medium | Not recommended for MVP (adds module dependency) |
 
-- The admin portal is on the cloud server, but the URL path (e.g., `/admin`, separate subdomain, or root) is not specified in any document.
-- Minor for most diagrams but needed for deployment diagrams and presentation demos.
+**Recommended resolution:** Implement Option A — include version as a query parameter in the content URL. The catalog already carries the `version` field; the edge SPA constructs `/api/content/{id}/file?v={version}` from the cached catalog. The proxy cache key is now URL+query, so a version bump = cache miss = fresh fetch. This requires:
+1. Update API contract: content file URL spec to include optional `?v={version}` param (ignored by server, used as cache key).
+2. Update edge proxy nginx config: ensure `proxy_cache_key` includes query string (default nginx behavior includes it if `$request_uri` is used).
+3. Edge SPA constructs content URL with version from catalog.
 
-### M6 — "Last synced" timestamp display not specified
+**Must resolve before:** Offline/sync flow diagram (DG-08), edge proxy cache state diagram (DG-09), and Sprint 3 implementation.
 
-- CAP-1.9 (Should) and CAP-7.6 (Should) both specify showing "last synced" timestamp.
-- No document specifies where in the UI this is shown (header? settings screen? subtle indicator?).
-- Not a blocker for product diagrams, but affects UI flow diagrams.
+---
+
+### M5 — Admin portal URL path not specified *(LOW SEVERITY — unchanged)*
+
+- Not blocking any core diagrams; admin portal is accessible at `https://{CLOUD_DOMAIN}` from the API contract base URLs table. Admin SPA URL structure (e.g., `/admin` path vs. root) is still not specified.
+- **Acceptable gap for MVP diagrams.** Resolve before deployment.
+
+---
+
+### M6 — "Last synced" timestamp display location *(LOW SEVERITY — unchanged)*
+
+- CAP-1.9 and CAP-7.6 specify the feature; Sprint 4 Week 8 (Dev B) implements it. No doc specifies the exact UI location.
+- Not a blocker for product-level diagrams.
 
 ---
 
 ## 6. Terminology / Glossary Normalization Issues
 
-The following terms are used inconsistently across documents. A canonical term is proposed for each.
+*(Unchanged from v0.1 — standardization has not been applied to existing docs.)*
 
-| Area | Non-canonical usages found | Canonical term | Action |
+| Area | Non-canonical usages found | Canonical term | Status |
 |------|--------------------------|----------------|--------|
-| Training tag | "tag," "interest tag," "tags/interests" | **interest** | Standardize to "interest" everywhere; "tag" is informal only |
-| Content identifier | "item," "content," "content item," "piece" | **content item** | Use "content item" in product docs; "item" acceptable in lists |
-| Edge application | "edge client," "edge SPA," "edge app," "Edge SPA" | **Edge SPA** (technical), **edge app** (user-facing) | Use Edge SPA in technical docs (04, 05, 06); "edge app" in user-facing docs (01, 03) |
-| Catalog fetch | "metadata sync," "catalog sync," "metadata pull" | **catalog sync** | Standardize to "catalog sync" — more precise than "metadata sync" (metadata could mean anything) |
-| Backend | "server," "cloud server," "API server," "cloud VM" | **cloud server** (system boundary level), **API server** (component level) | Maintain distinction: "cloud server" for infrastructure, "API server" or "API" for the Node.js component |
-| Local save | "Download," "local download," "save for offline" | **download** (the action), **downloaded item** (the result) | "Download" is correct; avoid "local download" redundancy |
+| Training tag | "tag," "interest tag," "tags/interests" | **interest** | Apply in new artifacts only |
+| Content identifier | "item," "content," "content item," "piece" | **content item** | Apply in new artifacts only |
+| Edge application | "edge client," "edge SPA," "edge app" | **Edge SPA** (technical), **edge app** (user-facing) | Apply in new artifacts only |
+| Catalog fetch | "metadata sync," "catalog sync," "metadata pull" | **catalog sync** | Apply in new artifacts only |
+| Backend | "server," "cloud server," "API server," "cloud VM" | **cloud server** (infra level), **API server** (component level) | Apply in new artifacts only |
+| Local save | "Download," "local download," "save for offline" | **download** (action), **downloaded item** (result) | Apply in new artifacts only |
+
+Do not retroactively edit existing documents for terminology only. Apply canonical terms in all newly generated artifacts (diagrams, presentations).
 
 ---
 
 ## 7. Implications for Diagrams
 
-- **System context diagram** — fully supportable from docs 01–02. Actors, surfaces, network boundaries are all clear.
-- **Container/component architecture diagram** — fully supportable from docs 02 and 04. The three-tier topology (cloud VM, edge Docker, Chrome on Windows) is precise.
-- **Deployment/runtime view** — fully supportable from doc 04 §8. Process model, port model, Docker structure are all specified.
-- **Content upload flow (sequence)** — partially blocked: architecture §9.1 gives the outline; needs API endpoint details from doc 06 for full accuracy.
-- **Catalog sync flow (sequence)** — largely supportable from docs 02, 03, 04. Minor detail needed from doc 06.
-- **Video playback / prefetch flow (sequence)** — supportable from doc 04 §9.3 and §9.7. C3 (prefetch language gap) should be noted in diagram.
-- **Download + offline flow (sequence)** — supportable from docs 04 §9.4–9.6. C4 (cache invalidation gap) must be resolved first for accuracy on "updated content" sub-flow.
-- **Data model / ERD** — fully supportable from doc 05. Well-specified.
-- **Library browse & search flow** — partially blocked by C1 ("updated" badge scope must be resolved first).
-- **Admin CRUD flow** — blocked by doc 06 (API endpoint shapes needed).
-- **First-time setup / interest selection flow** — fully supportable from docs 01, 03.
-- **Offline capability matrix diagram** — fully supportable from doc 04 §10.2.
-- **Network state diagram** — fully supportable from docs 02 and 04.
+**Status changes from v0.1** — diagrams unblocked by docs 06 and 07:
+
+| Diagram | Previous status | Updated status | Why |
+|---------|----------------|---------------|-----|
+| DG-05 Content Publishing Flow | 🟡 Partial (B1) | 🟢 **Unblocked** | API endpoints fully defined in doc 06 |
+| DG-06 Reels Feed / Video Playback | 🟡 Partial (B1) | 🟢 **Unblocked** | API endpoints defined; prefetch detail in doc 07 |
+| DG-07 Library Browse & Search | 🟠 Blocked (B3, B5) | 🟠 **Still blocked** | C1 (Q23) and C5 (Q17) still open |
+| DG-08 Offline Download + Sync | 🟠 Blocked (B3, B4) | 🟠 **Still blocked** | N2 (proxy cache invalidation) must resolve first |
+| DG-09 Edge Proxy Cache States | 🟠 Blocked (B4) | 🟠 **Still blocked** | N2 must resolve first |
+| DG-10 Network Connectivity States | 🟡 Partial (B4) | 🟡 **Partial** | N1 (health endpoint) needed for accuracy |
+| DG-11 Admin Content Management | 🟠 Blocked (B1) | 🟢 **Unblocked** | Full admin API defined in doc 06 |
+
+**Unchanged unblocked diagrams:** DG-01, DG-02, DG-03, DG-04, DG-12, DG-13, DG-14, DG-15, DG-16.
+
+**New diagram now supported:** Delivery plan structure justifies adding a sprint/milestone overview diagram (recommended, depends on doc 07 — now available).
 
 ---
 
 ## 8. Implications for Presentations
 
-- **Stakeholder / evaluator overview deck** — fully supportable from docs 01–04. North Star, problem statement, flows, architecture overview.
-- **Architecture deep-dive deck** — fully supportable from docs 02, 04. Needs diagrams to be complete first.
-- **Developer onboarding deck** — **blocked by doc 07** (delivery plan / sprint structure needed). Can draft sections on architecture and data model but not the "what to build first" section.
-- **Demo walkthrough deck** — supportable from doc 03 §4 (15-step demo script). Needs screenshots/prototype to be complete.
-- **MVP execution overview** — **blocked by doc 07** (sprint timeline, milestones).
+**Status changes from v0.1** — decks unblocked by docs 06 and 07:
+
+| Deck | Previous status | Updated status | Why |
+|------|----------------|---------------|-----|
+| DK-03 Architecture Deep-Dive | 🟠 Blocked (B1) | 🟡 **Partially unblocked** | Doc 06 available; needs diagrams DG-02–04 first |
+| DK-04 Developer Onboarding | 🟠 Blocked (B1, B2) | 🟡 **Partially unblocked** | Docs 06 + 07 available; needs some diagrams first |
+| DK-05 MVP Execution Overview | 🔴 Blocked (B2) | 🟢 **Unblocked** | Doc 07 fully available |
 
 ---
 
 ## 9. Priority Fixes Before Downstream Artifact Generation
 
-Ordered by urgency:
+| Priority | Issue | What it blocks | Action | Status |
+|----------|-------|---------------|--------|--------|
+| **P1** | N2 — nginx proxy_cache not invalidated by ETag | DG-08, DG-09, offline UX, demo step 15 | Decide cache-busting strategy (recommend: version in URL `?v={version}`); update doc 06 and nginx config | 🔴 Open |
+| **P2** | N1 — `GET /api/health` missing from API contract | DG-10, DG-11, network status implementation | Add to doc 06 as public endpoint; specify no-cache behavior at proxy | 🔴 Open |
+| **P3** | C1 — "Updated" badge scope Q23 | DG-07, DG-08 | Close Q23: recommend "downloads-only"; API contract already implements this | 🔴 Open |
+| **P4** | C5 — "Saved" items no recall surface Q17 | DG-07 | Close Q17: accept "indicators only in MVP, no recall surface" | 🔴 Open |
+| **P5** | C8 — edge-proxy ownership inconsistency | Developer confusion | Clarify delivery plan: Dev C bootstraps Week 1; Dev B owns from Sprint 2 | 🟡 Low urgency |
 
-| Priority | Issue | What it blocks | Action |
-|----------|-------|---------------|--------|
-| **P1** | Doc 06 (API Contract) not generated | All sequence diagrams; admin flow diagrams; presentation API sections | Generate doc 06 using `prompts/claude/06_api-contract_prompt.md` |
-| **P2** | Doc 07 (Delivery Plan) not generated | Developer onboarding deck; execution overview deck; sprint/milestone diagrams | Generate doc 07 using `prompts/claude/07_delivery-plan_prompt.md` |
-| **P3** | C1 — "Updated" badge scope (Q23) unresolved | Library view diagram; edge client sequence diagrams | Close Q23: proposed default = downloads-only for MVP |
-| **P4** | C4 — Cache invalidation on content update unspecified | Offline/sync flow diagram; content delivery sequence diagram | Decide cache-busting strategy; simplest: version in URL |
-| **P5** | C5 — "Saved" items has no UI surface decision | Library view diagram; navigation diagram | Close Q17 as a formal decision |
-| **P6** | C2 — Stale assumption A23 in notes | Developer reference accuracy | Update A23 in `notes/assumptions.md` |
-| **P7** | M4 — Orphaned record cleanup not in MVP Spec | Sync flow diagram accuracy | Add as capability or implicit behavior note in doc 03 |
-| **P8** | C7 — Video duration validation mechanism | Upload flow diagram | Decide: implement with library or defer to admin trust |
+**Previously P1–P2 (now resolved):**
+- ~~Doc 06 and 07 missing~~ — ✅ Resolved: both docs now generated
+- ~~Thumbnail endpoint undefined~~ — ✅ Resolved: `GET /api/content/:id/thumbnail` defined in doc 06
+- ~~Orphan cleanup undefined~~ — ✅ Resolved: explicit in doc 06 §10.4
 
 ---
 
 ## 10. Open Questions / Pending Decisions
 
-| # | Question | Source | Blocks | Recommended default |
-|---|---------|--------|--------|-------------------|
-| Q23 | Updated badge — all library items or downloaded items only? | Data Model §9.3 vs MVP Spec J3S8 | Library diagram, sequence diagrams | Downloads-only (simpler) |
-| Q17 | Saved items — filter toggle in Library or no recall surface? | MQ5 / C5 | Navigation diagram | Filter toggle in Library (Should priority) |
-| Q5 | Minimum demo security posture — network isolation only, or admin password too? | Notes OQ Q5 | Deployment diagram, demo prep | Both |
-| Q11 | TLS: Let's Encrypt, self-signed, or organizational cert? | Notes OQ Q11 | Deployment diagram | Let's Encrypt if domain; self-signed fallback |
-| Q18 | ORM: Prisma vs. Knex vs. raw SQL? | Notes OQ Q18 | Architecture finalization | Prisma |
-| Q21 | Reels scroll: CSS scroll-snap vs. Swiper.js? | Notes OQ Q21 | Reels UX diagram | CSS scroll-snap first |
-| Q26 | Linux VM type: WSL2 vs. VirtualBox? | Notes OQ Q26 | Deployment diagram | WSL2 |
-| NEW | Cache-busting strategy for updated content files | C4 | Offline/sync flow diagram | Version in content URL |
-| NEW | Video duration validation mechanism (ffprobe or admin trust)? | C7 | Upload flow diagram | Admin trust for MVP (Should → de-scoped) |
+| # | Question | Source | Blocks | Status | Recommended default |
+|---|---------|--------|--------|--------|-------------------|
+| Q23 | Updated badge — all library items or downloaded items only? | C1 | DG-07, DG-08 | 🔴 Open | **Downloads-only** (API contract already implements this) |
+| Q17 | Saved items — filter toggle in Library or no recall surface? | C5 | DG-07 | 🔴 Open | **Indicators only in MVP; no recall surface** (consistent with OOS item 18) |
+| Q24 | Thumbnails — same directory as content or separate? | Doc 05 | Implementation | 🟡 Low urgency | Separate `./data/thumbnails/` |
+| Q25 | Admin assigns content to zero categories — allowed? | Doc 05 | Implementation | 🟡 Low urgency | Allow; show under "Uncategorized" |
+| Q30 | Content file served by Node.js streaming or nginx X-Accel-Redirect? | Doc 06 | Performance | 🟡 Sprint 2+ | Node.js in MVP; switch if load is a problem |
+| Q33 | Server sets `Cache-Control: no-store` or `public, max-age=0` on `/api/catalog`? | Doc 06 | nginx config | 🟡 Sprint 1 | `no-store` + `proxy_ignore_headers`; test and adjust |
+| Q27 | Cloud server URL hardcoded in nginx.conf or env var? | Architecture | Deployment | 🟡 Before implementation | Environment variable |
+| **NEW** | Cache-busting strategy for updated content files | N2 | DG-08, DG-09 | 🔴 **Open** | Version in URL `?v={version}` |
+| **NEW** | Should `GET /api/health` be explicitly defined in the API contract? | N1 | DG-10, DG-11 | 🔴 **Open** | Yes — add to doc 06 |
+
+**Resolved since v0.1:**
+- Q2 → D47 (catalog sync = pull on app open + manual refresh)
+- Q5 → D13, Architecture §11 (TLS + admin password + network isolation)
+- Q15 → D49, doc 06 §11 (100 MB upload limit, multipart/form-data)
+- Q16 → D50, doc 06 §2 (full pull; `?since` accepted, ignored)
+- Q18 → D48 (JWT stateless auth)
+- Q26 → D59 (WSL2 preferred)
+- Q29 → D48 (JWT vs opaque)
+- Q31 → D51 (cascade-delete children)
+- Q32 → D49 (multipart/form-data)
 
 ---
 
 ## 11. Continuation Notes
 
-- Once docs 06 and 07 are generated, re-run this cross-doc review to verify consistency before diagram generation begins.
-- The v0.2 topology change (edge proxy in Docker) was correctly propagated into all substantive documents. This is the canonical architecture — do not regress to the v0.1 direct-browser model in any diagram.
-- The 9 entities in the data model (5 server, 4 edge) are well-specified and should be the primary source for ERD generation.
-- The 15-step demo script in MVP Spec §4 is the primary source for demo walkthrough presentation content.
-- Terminology standardization (section 6) should be applied when generating diagrams and presentations — not retroactively to existing docs.
+- **N2 (proxy cache invalidation)** is the highest-priority remaining issue. It must be resolved before Sprint 3 starts (when the reels prefetch and content delivery paths are built). Recommend resolving in the API contract as a minor update (add `?v={version}` to the content file URL spec) and testing the cache-busting behavior in Sprint 2 alongside the range request caching test.
+- **N1 (health endpoint)** should be added to the API contract before Sprint 1 implementation begins. It is a trivial endpoint but architecturally important for offline detection.
+- Once Q23 and Q17 are closed, diagram generation can begin in earnest. The highest-value first-pass diagrams (DG-01 to DG-06, DG-11, DG-12, DG-13) are all either fully unblocked or close to it.
+- The delivery plan (doc 07) is well-structured. Its dependency map and milestone checkpoints should be visualized as DG-12 (sprint/milestone diagram) for the developer onboarding and execution overview decks.
+- Terminology standardization should be applied in all diagram and presentation artifacts. Do not retroactively edit existing docs.
 
 ---
 
-*This review is the first artifact in the TactiTok visuals planning pass. It feeds into: `product/visuals/diagram-todo.md`, `product/visuals/diagram-index.md`, `product/presentations/presentation-plan.md`, `product/presentations/presentation-index.md`.*
+*This review supersedes v0.1. It feeds into: `product/visuals/diagram-todo.md`, `product/visuals/diagram-index.md`, `product/presentations/presentation-plan.md`, `product/presentations/presentation-index.md`.*

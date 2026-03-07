@@ -1,10 +1,11 @@
 # Diagram Backlog — TactiTok
 
-> **Version:** 0.1
+> **Version:** 0.2
 > **Status:** Draft
 > **Date:** 2026-03-07
-> **Source:** Cross-doc review pass (`product/reviews/01_cross-doc-review.md`)
+> **Source:** Cross-doc review v0.2 (`product/reviews/01_cross-doc-review.md`)
 > **Binding source of truth:** `product/north-star.md`
+> **Change from v0.1:** All 7 documents now reviewed. Docs 06 and 07 are substantive. Blocker B1 and B2 resolved. New blockers N1 and N2 identified. DG-05, DG-06, DG-11 are now unblocked. DG-07, DG-08, DG-09 remain blocked. DG-10 remains partially blocked. New diagram DG-17 added for sprint/milestone view.
 
 This file is the working backlog for all planned diagram artifacts. It tracks status, priority, blockers, and source basis. Update status as diagrams are generated.
 
@@ -12,15 +13,16 @@ This file is the working backlog for all planned diagram artifacts. It tracks st
 
 ## Blocker Summary
 
-The following issues must be resolved **before** specific diagrams can be finalized. See cross-doc review for details.
+The following issues must be resolved **before** specific diagrams can be finalized. See cross-doc review v0.2 for details.
 
-| Blocker | Affects diagrams | Resolution |
-|---------|-----------------|-----------|
-| **B1** — Doc 06 (API Contract) not generated | DG-05, DG-06, DG-07, DG-08, DG-11 | Generate doc 06 first |
-| **B2** — Doc 07 (Delivery Plan) not generated | DG-12 | Generate doc 07 first |
-| **B3** — "Updated" badge scope unresolved (Q23) | DG-07, DG-08 | Close Q23 before those diagrams |
-| **B4** — Cache invalidation strategy unresolved | DG-09, DG-10 | Decide cache-busting strategy |
-| **B5** — "Saved" items UI surface unresolved (Q17) | DG-07 | Close Q17 before that diagram |
+| Blocker | Affects diagrams | Status | Resolution |
+|---------|-----------------|--------|-----------|
+| ~~**B1** — Doc 06 (API Contract) not generated~~ | ~~DG-05, DG-06, DG-07, DG-08, DG-11~~ | ✅ **Resolved** | Doc 06 is now complete |
+| ~~**B2** — Doc 07 (Delivery Plan) not generated~~ | ~~DG-17~~ | ✅ **Resolved** | Doc 07 is now complete |
+| **B3** — "Updated" badge scope unresolved (Q23) | DG-07, DG-08 | 🔴 Open | Close Q23 (recommend: downloads-only) |
+| **B5** — "Saved" items UI surface unresolved (Q17) | DG-07 | 🔴 Open | Close Q17 (recommend: indicators-only MVP) |
+| **N1** — `GET /api/health` missing from API contract | DG-10 | 🔴 Open | Add endpoint to doc 06 |
+| **N2** — nginx proxy_cache not invalidated by ETag on same URL | DG-08, DG-09 | 🔴 Open | Decide cache-busting strategy (recommend: `?v={version}` in content URL) |
 
 ---
 
@@ -96,12 +98,12 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 |-------|-------|
 | **Purpose** | Show the full upload → publish → sync → consumption sequence |
 | **Audience** | Evaluators, developers |
-| **Source basis** | `04_system-architecture.md` §9.1–9.2, `03_mvp-spec.md` Journey 5, `01_product-brief.md` Flow C |
+| **Source basis** | `04_system-architecture.md` §9.1–9.2, `06_api-contract.md` §7.2, `03_mvp-spec.md` Journey 5, `01_product-brief.md` Flow C |
 | **Priority** | Required |
-| **Status** | 🟡 Partially blocked |
-| **Blockers** | B1 (doc 06 needed for exact endpoint names) |
+| **Status** | 🟢 **Unblocked** |
+| **Blockers** | None |
 | **Output** | `product/visuals/DG-05_content-publishing-flow.mmd` + PNG/SVG |
-| **Notes** | Participants: HQ staff, Admin SPA, API server, PostgreSQL, File store. Then: Edge SPA, Edge proxy, Cloud catalog endpoint. Show: file upload, validation, storage, metadata write, catalog sync pull, proxy cache. |
+| **Notes** | Participants: HQ staff, Admin SPA, API server (`POST /api/admin/content`), PostgreSQL, File store. Then: Edge SPA, Edge proxy, `GET /api/catalog`. Show: multipart upload, MIME + magic-byte validation, filesystem store, DB insert, catalog sync pull, proxy cache. Include thumbnail upload as optional sub-flow. |
 
 ---
 
@@ -111,12 +113,12 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 |-------|-------|
 | **Purpose** | Show how the reels feed loads, how video prefetch works, and how the edge proxy cache is involved |
 | **Audience** | Developers |
-| **Source basis** | `04_system-architecture.md` §9.3, §9.7, `03_mvp-spec.md` Journey 2, CAP-2 |
+| **Source basis** | `04_system-architecture.md` §9.3, §9.7, `06_api-contract.md` §6.1–6.2, `03_mvp-spec.md` Journey 2, CAP-2, `07_delivery-plan.md` Sprint 3 |
 | **Priority** | Required |
-| **Status** | 🟡 Partially blocked |
-| **Blockers** | B1 (endpoint names); C3 (prefetch language — note in diagram) |
+| **Status** | 🟢 **Unblocked** |
+| **Blockers** | None |
 | **Output** | `product/visuals/DG-06_reels-playback-flow.mmd` + PNG/SVG |
-| **Notes** | Show: SPA requests catalog → filters by interest → renders feed → first video auto-plays → prefetch range request triggers proxy to cache full next video file → swipe → instant start from cached file. Note C3 ambiguity in diagram comment. |
+| **Notes** | Show: `GET /api/catalog` → interest filter → render feed → first video: tap-to-start overlay (Chrome auto-play policy) → subsequent auto-play → at 30% playback: `Range: bytes=0-{N}` for next video → proxy caches full file → swipe → instant start from cache. Note that prefetch range request triggers full file caching at proxy (not just the partial bytes). |
 
 ---
 
@@ -141,12 +143,12 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 |-------|-------|
 | **Purpose** | Show how a user downloads content, how proxy caching works, how offline access is served, and how sync interacts with downloaded items |
 | **Audience** | Evaluators, developers |
-| **Source basis** | `04_system-architecture.md` §9.4–9.6, §10, `03_mvp-spec.md` Journey 4, CAP-5, CAP-7 |
+| **Source basis** | `04_system-architecture.md` §9.4–9.6, §10, `06_api-contract.md` §10, `03_mvp-spec.md` Journey 4, CAP-5, CAP-7, `07_delivery-plan.md` Sprint 4 |
 | **Priority** | Required |
-| **Status** | 🟠 Blocked |
-| **Blockers** | B3 (updated badge on downloaded items — resolved version needed); B4 (cache invalidation on content update) |
+| **Status** | 🟠 **Blocked** |
+| **Blockers** | B3 (Q23: updated badge scope); N2 (proxy cache invalidation on content update — must resolve before the "updated content" sub-path can be accurately diagrammed) |
 | **Output** | `product/visuals/DG-08_offline-download-sync.mmd` + PNG/SVG |
-| **Notes** | Show two paths: (a) Download action → fetch via proxy → proxy caches full file → SPA writes DownloadRecord to IndexedDB; (b) Offline access → SPA reads DownloadRecord → requests file from proxy → proxy serves from cache (STALE). Also show catalog sync path and version comparison for updated badge. Resolve B4 before finalizing the "content updated" sub-path. |
+| **Notes** | Show two main paths: (a) Download tap → `fetch("/api/content/{id}/file")` via proxy → read response to completion → proxy caches full file → SPA writes DownloadRecord to IndexedDB; (b) Offline access → SPA reads DownloadRecord → requests file from proxy → proxy serves STALE. Also show catalog sync + version comparison for updated badge. For the "content updated" sub-path: the accurate diagram depends on N2 resolution (whether URL includes `?v={version}` for cache-busting). |
 
 ---
 
@@ -162,12 +164,12 @@ These diagrams add significant value for understanding and debugging but are not
 |-------|-------|
 | **Purpose** | Show the edge proxy's three cache states (HIT/MISS/STALE) and how each affects the SPA and user experience |
 | **Audience** | Developers |
-| **Source basis** | `04_system-architecture.md` §7 (C7), §10, `02_system-boundaries.md` §9 |
+| **Source basis** | `04_system-architecture.md` §7 (C7), §10, `06_api-contract.md` §9, `02_system-boundaries.md` §9 |
 | **Priority** | Recommended |
-| **Status** | 🟠 Partially blocked (B4 — cache invalidation) |
-| **Blockers** | B4 |
+| **Status** | 🟠 **Blocked** |
+| **Blockers** | N2 (proxy cache invalidation on content update — the "cache key" behavior must be decided before this diagram accurately reflects the invalidation path) |
 | **Output** | `product/visuals/DG-09_edge-proxy-cache-states.mmd` + PNG/SVG |
-| **Notes** | State diagram: MISS → proxy fetches from cloud → caches → returns; HIT → serves from cache immediately; STALE (cloud unreachable) → serves stale cache + X-Cache-Status header. |
+| **Notes** | State diagram: MISS → proxy fetches from cloud → caches → returns; HIT → serves from cache immediately; STALE (cloud unreachable) → serves stale cache + `X-Cache-Status: STALE` header. Include: content update sub-path (version bump → new cache key if `?v={version}` adopted; old entry naturally expires at 30d TTL). Resolve N2 before finalizing. |
 
 ---
 
@@ -177,12 +179,12 @@ These diagrams add significant value for understanding and debugging but are not
 |-------|-------|
 | **Purpose** | Show the three connectivity states (Online, Degraded, Offline) and what the system does in each |
 | **Audience** | Developers, evaluators |
-| **Source basis** | `02_system-boundaries.md` §9.1, `04_system-architecture.md` §10.2 |
+| **Source basis** | `02_system-boundaries.md` §9.1, `04_system-architecture.md` §10.2, `07_delivery-plan.md` Sprint 4 Week 8 |
 | **Priority** | Recommended |
-| **Status** | 🟡 Mostly unblocked |
-| **Blockers** | B4 (offline behavior for updated content) |
+| **Status** | 🟡 **Partially blocked** |
+| **Blockers** | N1 (`GET /api/health` not yet in API contract — this is the detection mechanism; diagram needs to show it accurately) |
 | **Output** | `product/visuals/DG-10_network-connectivity-states.mmd` + PNG/SVG |
-| **Notes** | States: Online → full functionality; Degraded → prefetch, loading indicators, graceful degradation; Offline → serve from proxy cache, IndexedDB catalog, Downloads tab. Show transitions and SPA behavior in each state. |
+| **Notes** | States: Online → full functionality; Degraded → prefetch, loading indicators, graceful degradation; Offline → serve from proxy cache, IndexedDB catalog, Downloads tab. Show: connectivity detection via poll of `GET /api/health`; `X-Cache-Status: STALE` response indicates offline mode. Transitions and SPA behavior in each state. Resolve N1 first for accuracy. |
 
 ---
 
@@ -192,12 +194,12 @@ These diagrams add significant value for understanding and debugging but are not
 |-------|-------|
 | **Purpose** | Show admin login, content upload, category/interest management, and content update/delete |
 | **Audience** | Developers |
-| **Source basis** | `03_mvp-spec.md` Journey 5, CAP-6, `04_system-architecture.md` §9.1 |
+| **Source basis** | `06_api-contract.md` §7, `03_mvp-spec.md` Journey 5, CAP-6, `04_system-architecture.md` §9.1, `07_delivery-plan.md` Sprint 2 + Sprint 5 |
 | **Priority** | Recommended |
-| **Status** | 🟠 Blocked |
-| **Blockers** | B1 (doc 06 needed for admin API endpoint names) |
+| **Status** | 🟢 **Unblocked** |
+| **Blockers** | None |
 | **Output** | `product/visuals/DG-11_admin-content-management.mmd` + PNG/SVG |
-| **Notes** | Show: login → password check → session token; upload form → file + metadata → API → validate → store → 201; edit metadata; category CRUD; interest CRUD; delete → cascade. |
+| **Notes** | Show: `POST /api/admin/login` → JWT returned → stored in sessionStorage; upload form → `POST /api/admin/content` (multipart) → MIME + magic-byte validation → filesystem store → DB insert → 201; `PUT /api/admin/content/:id` (metadata); `PUT /api/admin/content/:id/file` (version++); `PUT /api/admin/content/:id/thumbnail`; `DELETE /api/admin/content/:id` (cascade); category and interest CRUD endpoints. |
 
 ---
 
@@ -207,12 +209,12 @@ These diagrams add significant value for understanding and debugging but are not
 |-------|-------|
 | **Purpose** | Show the first-time app open experience: interest selection screen, device profile creation, and transition to reels feed |
 | **Audience** | Evaluators, developers |
-| **Source basis** | `03_mvp-spec.md` Journey 1, CAP-1.4–1.5, `05_data-model.md` §6.6 |
+| **Source basis** | `03_mvp-spec.md` Journey 1, CAP-1.4–1.5, `05_data-model.md` §6.6, `07_delivery-plan.md` Sprint 3 Week 6 |
 | **Priority** | Recommended |
 | **Status** | 🟢 Unblocked |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-12_first-time-setup.mmd` + PNG/SVG |
-| **Notes** | Show: app open → check IndexedDB for DeviceProfile → if absent: show interest selection screen → user selects 1+ interests → write DeviceProfile → navigate to Reels feed. If profile exists: skip to Reels directly. |
+| **Notes** | Show: app open → check IndexedDB for DeviceProfile → if absent: show interest selection screen → user selects 1+ interests → write DeviceProfile → navigate to Reels feed. If profile exists: skip to Reels directly. Also show: re-access interests from settings/profile area. |
 
 ---
 
@@ -282,35 +284,46 @@ These diagrams add depth for specific audiences or edge cases but can be deferre
 
 ---
 
+### DG-17 — Sprint / Milestone Overview
+
+| Field | Value |
+|-------|-------|
+| **Purpose** | Show the 6-sprint delivery plan, 6 milestones, and critical path in a visual timeline |
+| **Audience** | Developers, academic supervisors, project managers |
+| **Source basis** | `07_delivery-plan.md` §3–6 |
+| **Priority** | Recommended |
+| **Status** | 🟢 Unblocked |
+| **Blockers** | None |
+| **Output** | `product/visuals/DG-17_sprint-milestone-overview.mmd` + PNG/SVG |
+| **Notes** | Show: 6 × 2-week sprints with goals; 6 milestones (M1–M6) with their week and what they prove; critical path (monorepo → types → schema → catalog endpoint → catalog sync → reels on device → M3). Use Mermaid Gantt chart or timeline diagram. |
+
+---
+
 ## Diagram Priority Order for Generation
 
 When generating diagrams, follow this order to maximize the value of each generation pass:
 
-**Pass 1 — Unblocked, high-value (generate immediately):**
+**Pass 1 — Fully unblocked, high-value (generate immediately):**
 1. DG-01 System Context
 2. DG-02 Container Architecture
 3. DG-03 Deployment / Runtime
 4. DG-04 Data Model ERD
-5. DG-12 First-Time Setup Flow
-6. DG-13 Monorepo Structure
+5. DG-05 Content Publishing Flow *(newly unblocked)*
+6. DG-06 Reels Feed / Video Playback *(newly unblocked)*
+7. DG-11 Admin Content Management *(newly unblocked)*
+8. DG-12 First-Time Setup Flow
+9. DG-13 Monorepo Structure
+10. DG-17 Sprint / Milestone Overview *(newly unblocked)*
 
-**Pass 2 — Resolve blockers B3/B5 first, then generate:**
-7. DG-07 Library Browse & Search
-8. DG-10 Network Connectivity States
+**Pass 2 — Resolve N1 first (add `/api/health` to API contract), then generate:**
+11. DG-10 Network Connectivity States
 
-**Pass 3 — Resolve blocker B1 (generate doc 06) first:**
-9. DG-05 Content Publishing Flow
-10. DG-06 Reels Feed / Video Playback
-11. DG-11 Admin Content Management
+**Pass 3 — Resolve N2 (cache-busting strategy) and close Q23 + Q17, then generate:**
+12. DG-07 Library Browse & Search
+13. DG-08 Offline Download + Sync
+14. DG-09 Edge Proxy Cache States
 
-**Pass 4 — Resolve blocker B4 (cache invalidation) first:**
-12. DG-08 Offline Download + Sync
-13. DG-09 Edge Proxy Cache States
-
-**Pass 5 — Resolve blocker B2 (generate doc 07) first:**
-14. DG-12 Sprint/Milestone (delivery plan diagram — TBD in doc 07)
-
-**Pass 6 — Optional, anytime:**
+**Pass 4 — Optional, anytime:**
 15. DG-14 Content Lifecycle
 16. DG-15 Download Record Lifecycle
 17. DG-16 Security Trust Zones

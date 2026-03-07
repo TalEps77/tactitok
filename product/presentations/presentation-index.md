@@ -1,9 +1,10 @@
 # Presentation Index — TactiTok
 
-> **Version:** 0.1
+> **Version:** 0.2
 > **Status:** Draft
 > **Date:** 2026-03-07
-> **Source:** Cross-doc review pass (`product/reviews/01_cross-doc-review.md`)
+> **Source:** Cross-doc review v0.2 (`product/reviews/01_cross-doc-review.md`)
+> **Change from v0.1:** DK-03, DK-04 partially unblocked; DK-05 fully unblocked. Blocker table updated.
 
 This is the registry of all planned and generated presentation artifacts for the TactiTok project.
 For detail on each deck (sections, sources, blockers), see `product/presentations/presentation-plan.md`.
@@ -27,9 +28,9 @@ For detail on each deck (sections, sources, blockers), see `product/presentation
 
 | ID | Name | Audience | Slides | Status | Blockers | File |
 |----|------|----------|--------|--------|----------|------|
-| DK-01 | Stakeholder / Evaluator Overview | Military evaluators, sponsors | 15–20 | 🟡 Partial | Needs DG-01, DG-05, DG-08 | — |
+| DK-01 | Stakeholder / Evaluator Overview | Military evaluators, sponsors | 15–20 | 🟡 Partial | Needs DG-01, DG-05 | — |
 | DK-02 | Demo Walkthrough | Demo facilitator, evaluators | 18–22 | 🟡 Partial | Needs prototype screenshots | — |
-| DK-03 | Architecture Deep-Dive | Technical evaluators, supervisors | 20–25 | 🟠 Blocked | B1 (doc 06), DG-02–04 needed | — |
+| DK-03 | Architecture Deep-Dive | Technical evaluators, supervisors | 20–25 | 🟡 **Partially unblocked** | Needs DG-02–04 (doc 06 ✅) | — |
 
 ---
 
@@ -37,8 +38,8 @@ For detail on each deck (sections, sources, blockers), see `product/presentation
 
 | ID | Name | Audience | Slides | Status | Blockers | File |
 |----|------|----------|--------|--------|----------|------|
-| DK-04 | Developer Onboarding | Student developers, follow-on team | 20–30 | 🟠 Blocked | B1 (doc 06), B2 (doc 07) | — |
-| DK-05 | MVP Execution Overview | Supervisors, sponsors, team leads | 15–18 | 🔴 Blocked | B2 (doc 07) | — |
+| DK-04 | Developer Onboarding | Student developers, follow-on team | 20–30 | 🟡 **Partially unblocked** | Needs DG-02–04, DG-13, DG-17 | — |
+| DK-05 | MVP Execution Overview | Supervisors, sponsors, team leads | 15–18 | 🟢 **Unblocked** | None (doc 07 ✅) | — |
 
 ---
 
