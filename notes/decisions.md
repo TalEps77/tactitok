@@ -89,3 +89,14 @@ Use this file to track explicit project decisions and why they were made.
 | D51 | `DELETE /api/admin/categories/:id` cascade-deletes child categories | Simpler admin UX; avoids forcing admin to manually delete children before parent | 2026-03-07 |
 | D52 | MIME validation uses magic-byte check (`file-type` library) in addition to client-provided MIME header | Client-provided MIME header is trivially spoofed; magic bytes are the authoritative check | 2026-03-07 |
 | D53 | ETag format for content files = `"{version}-{id}"` | ETag changes on every content update (version increment); edge proxy cache entry is automatically invalidated | 2026-03-07 |
+
+## From Delivery Plan (07)
+
+| # | Decision | Rationale | Date |
+|---|---------|-----------|------|
+| D54 | Role assignment: Dev A = backend, Dev B = edge SPA, Dev C = admin SPA | Cleanest separation; shared types in `packages/shared` owned by Dev A; roles shift for integration in Sprint 5 | 2026-03-07 |
+| D55 | 6 × 2-week sprints (12 weeks total): sprints 1–5 build, sprint 6 stabilises | Aligns with North Star §8 (8–10 weeks build + stabilisation through week 12) | 2026-03-07 |
+| D56 | Milestone 3 (reels on device, end of week 6) is the primary risk checkpoint | Reels UX is the highest-risk, highest-impact capability; if it fails, 6 weeks remain to recover or de-scope | 2026-03-07 |
+| D57 | De-scope levers applied in priority order from MVP Spec §13; decision logged in notes/decisions.md | Consistent with the agreed de-scope ladder; prevents ad-hoc scope cuts | 2026-03-07 |
+| D58 | Demo content sourcing: team provides 15 items (10 PDFs + 5 videos) by week 11; placeholder content acceptable | Avoids dependency on external stakeholder for content; team can use public-domain material | 2026-03-07 |
+| D59 | WSL2 preferred over VirtualBox for Linux VM on edge Windows devices | WSL2 maps Docker ports to Windows localhost automatically; VirtualBox requires manual port forwarding configuration | 2026-03-07 |
