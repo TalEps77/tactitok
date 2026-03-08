@@ -20,7 +20,7 @@ Use this file to track unresolved questions that may affect future documents or 
 |---|---------|---------|-------------------|----------|
 | Q8 | ~~Content store: filesystem vs. object store?~~ **RESOLVED → D27: Local filesystem behind abstraction** | Architecture, deployment | Local filesystem behind abstraction | Resolved 2026-03-07 |
 | Q9 | ~~Database choice?~~ **RESOLVED → D26: PostgreSQL** | Architecture, deployment | PostgreSQL | Resolved 2026-03-07 |
-| Q10 | ~~Admin portal: SPA or server-rendered?~~ **RESOLVED → D30: Separate SPA served by same server** | Architecture, build pipeline | Separate SPA (React) | Resolved 2026-03-07 |
+| Q10 | ~~Admin portal: SPA or server-rendered?~~ **RESOLVED → Separate SPA (React/TS). Note: D30 (both SPAs served by same server) was superseded by D42 — Edge SPA is now bundled in Docker on the edge device; Admin SPA is still served by the cloud server.** | Architecture, build pipeline | Separate SPA (React) | Resolved 2026-03-07 |
 | Q11 | TLS: Let's Encrypt, self-signed, or organizational cert? | Deployment | Let's Encrypt if domain; self-signed fallback | Before Delivery Plan |
 | Q12 | ~~Edge client SPA: served by server or static bundle?~~ **SUPERSEDED → D42: SPA bundled into Docker image on edge; served by local nginx** | Deployment, offline | Bundled in Docker | Superseded 2026-03-07 |
 

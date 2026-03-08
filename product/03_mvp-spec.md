@@ -135,7 +135,7 @@ A hands-on session where evaluators interact directly with a 10″ tablet in a l
 | 5 | Search results show item type | Clear icon/badge distinguishing video vs. PDF |
 | 6 | User taps a video item | Video opens in player view (same as reels but standalone); can download |
 | 7 | User taps a PDF item | PDF opens in in-browser viewer; page-by-page navigation; can download |
-| 8 | Content items show "updated" badge | If content has been updated since last metadata sync, badge is visible |
+| 8 | Downloaded items show "updated" badge | If a downloaded item's catalog version exceeds the download record version, badge is visible |
 | 9 | Empty category | Shows clear "No items in this category" message |
 | 10 | Search with no results | Shows clear "No results found" message |
 
@@ -147,8 +147,8 @@ A hands-on session where evaluators interact directly with a 10″ tablet in a l
 |------|--------|-------------------|
 | 1 | User taps Downloads tab | List of all downloaded items shown (videos + PDFs) |
 | 2 | List shows item metadata | Title, type (video/PDF), file size, download date |
-| 3 | User taps a downloaded video | Video plays from local storage; no network required |
-| 4 | User taps a downloaded PDF | PDF renders from local storage; no network required |
+| 3 | User taps a downloaded video | Video plays from edge proxy cache; no network required |
+| 4 | User taps a downloaded PDF | PDF renders from edge proxy cache; no network required |
 | 5 | User deletes a downloaded item | Confirmation prompt → item removed from local storage and list |
 | 6 | Downloads list is empty | Clear "No downloads yet" message with guidance |
 | 7 | App is fully offline | Downloads tab works; Reels and Library show offline indicator; cached metadata still browsable |
@@ -356,7 +356,7 @@ Carried forward from Product Brief section 10, with additions:
 | MA2 | TikTok-style auto-play works reliably in Chrome kiosk mode without user gesture requirement | Chrome may require initial gesture to enable auto-play; fallback: tap-to-play first video |
 | MA3 | HTML5 `<video>` with MP4 + HTTP range requests is sufficient for prefetch + streaming at ≤3 min | May need HLS/DASH; significant complexity increase |
 | MA4 | PDF.js renders all demo PDFs correctly (various page counts, embedded images) | Need fallback viewer or constrain PDF complexity |
-| MA5 | IndexedDB + Cache API provide enough storage for 15 downloaded items on kiosk Chrome | Storage limits hit; need to limit download count or file sizes |
+| MA5 | Edge proxy cache (nginx `proxy_cache`, up to 10 GB) provides enough storage for 15 downloaded content files; IndexedDB stores only metadata records (<50 KB total) | Edge proxy cache disk space limit hit (unlikely at 10 GB for demo); or Docker volume cleared unexpectedly |
 | MA6 | Swipe gestures work reliably in Chrome on the target 10″ tablet | Touch events may need polyfill or tuning |
 | MA7 | 2-level category tree is sufficient for organizing 15 demo items meaningfully | Flat list may be needed as de-scope; or deeper tree needed |
 | MA8 | Video prefetch (buffer next video while current plays) is achievable with standard browser APIs | May need Service Worker or custom buffering strategy |

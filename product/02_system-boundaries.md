@@ -85,7 +85,7 @@ These are built and owned by the TactiTok team:
 | **Library view** | Category tree browsing + text search |
 | **Video player** | In-browser playback with prefetch-first-seconds behavior |
 | **PDF viewer** | In-browser page-by-page PDF rendering (e.g., PDF.js) |
-| **Download manager** | User-initiated download of content to browser local storage; list + delete |
+| **Download manager** | User-initiated download triggers edge proxy caching of content file; download record (metadata only) stored in IndexedDB; list + delete |
 | **Device profile** | Local interest selection, persisted in IndexedDB |
 | **Local Like/Save** | Stored locally on device; no server sync in MVP |
 | **Metadata sync client** | Pulls latest catalog from server on app open / manual refresh |

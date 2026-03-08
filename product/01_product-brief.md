@@ -167,11 +167,11 @@ TactiTok is a browser-based learning platform that delivers short training video
 4. **Content types:** short video (≤3 min) and PDF (any page count).
 5. **In-browser playback** — video player + PDF viewer, no external apps.
 6. **Video prefetch** — buffer the first few seconds for fast start; stream the rest.
-7. **Manual download** — user-initiated download of video/PDF for offline use.
-8. **Downloads management** — list of downloaded items with delete option; no storage quota in MVP.
+7. **Manual download** — user-initiated download of video/PDF for offline use (file cached by edge proxy; metadata record stored in IndexedDB).
+8. **Downloads management** — list of downloaded items (from IndexedDB records) with delete option; no storage quota in MVP.
 9. **Device profile** — local interest selection that persists across sessions (no login).
 10. **Like/Save** — local-only in MVP (stored on device; no server reporting).
-11. **Content "updated" indicator** — badge on edge device when a content item has a newer version.
+11. **Content "updated" indicator** — badge on downloaded items when the server has a newer version (compare download version with catalog version on sync).
 12. **Admin portal** — web UI for HQ staff to upload, organize, and publish content.
 13. **Category tree CRUD** — create, rename, reorder, delete categories in admin portal.
 14. **Interest/tag management** — HQ staff defines the interest list in admin portal.
@@ -211,7 +211,7 @@ TactiTok is a browser-based learning platform that delivers short training video
 | S4 | Browser containment | 100% of viewing inside Chrome — no external apps, no pop-ups |
 | S5 | Interest filtering | At least 3 selectable interests that consistently filter feed and library |
 | S6 | Offline playback | Previously downloaded video and PDF viewable with zero network |
-| S7 | Content update visibility | Updated content shows "updated" badge on edge device after metadata sync |
+| S7 | Content update visibility | Downloaded items show "updated" badge when catalog version exceeds download version after sync |
 | S8 | Demo corpus | 15 items (10 PDFs + 5 videos) loaded and navigable |
 
 ### Structural success (secondary — code quality)
@@ -227,7 +227,7 @@ TactiTok is a browser-based learning platform that delivers short training video
 
 | # | Assumption | Impact if wrong |
 |---|-----------|----------------|
-| A1 | Chrome in kiosk mode supports IndexedDB / Cache API sufficiently for storing downloaded content | Core offline feature breaks; would need native wrapper |
+| A1 | Chrome in kiosk mode supports IndexedDB sufficiently for storing device state (profile, download records, local actions); content files are cached by edge proxy (nginx `proxy_cache`) | Core local state feature breaks; would need native wrapper for IndexedDB; edge proxy cache failure would break offline content access |
 | A2 | A standard video format (e.g., MP4/H.264) with HTTP range requests provides adequate prefetch + streaming for ≤3 min clips | Reels experience degrades; may need HLS/DASH which adds complexity |
 | A3 | PDFs can be rendered reliably in-browser (e.g., PDF.js) without external plugins | PDF viewing fails in kiosk; would need alternative viewer |
 | A4 | The demo lab environment provides a server reachable by edge devices on the same network | Metadata sync and content fetch fail; demo breaks |

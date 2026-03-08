@@ -300,12 +300,12 @@ This is the last document in the specification set. All prior documents (Product
 
 ### Sprint 5 — Admin Portal Completion + Integration (Weeks 9–10)
 
-**Goal:** The admin portal is complete. All 20 API endpoints are wired end-to-end. The full demo flow (15 demo steps from MVP Spec §4) works end-to-end in a staging environment.
+**Goal:** The admin portal is complete. All 21 API endpoints are wired end-to-end. The full demo flow (15 demo steps from MVP Spec §4) works end-to-end in a staging environment.
 
 #### Week 9
 
 **Dev A:**
-- End-to-end integration pass: test all 20 API endpoints manually with a REST client (e.g., Insomnia / Bruno)
+- End-to-end integration pass: test all 21 API endpoints manually with a REST client (e.g., Insomnia / Bruno)
 - Fix any validation gaps (MIME type + magic-byte check; file size enforcement; category depth enforcement)
 - Video duration validation: parse MP4 duration using `ffprobe` or a JS library (`mp4-box` / `mp4-parser`); reject if > 180s
 - Error response audit: confirm all error responses use the standard envelope `{ error, code }`
@@ -333,7 +333,7 @@ This is the last document in the specification set. All prior documents (Product
 - De-scope decisions: if any "Must" capability is not achievable by end of week 10, escalate and apply de-scope levers (see §8)
 
 **Sprint 5 exit criteria:**
-- [ ] All 20 API endpoints respond correctly (manual integration test)
+- [ ] All 21 API endpoints respond correctly (manual integration test)
 - [ ] Full demo script runs end-to-end without errors on staging
 - [ ] AC-1 through AC-12 documented; all "Must" criteria green
 - [ ] Cloud VM is deployed and reachable via HTTPS
