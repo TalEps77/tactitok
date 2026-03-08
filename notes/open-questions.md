@@ -32,7 +32,7 @@ Use this file to track unresolved questions that may affect future documents or 
 | Q14 | Standalone video player (from Library) — same full-screen UI as reels, or different? | UI consistency | Same player, no swipe | Before UI design |
 | Q15 | Upload size limit for video files? | Admin UX, server | 100MB per file | Before API Contract |
 | Q16 | Metadata sync: full catalog pull or delta-based? | API design, bandwidth | Full pull (≤15 items) | Before API Contract |
-| Q17 | Saved items — separate sub-view or marked in Library? | Edge UX | Marked in Library with filter toggle | Before UI design |
+| Q17 | ~~Saved items — separate sub-view or marked in Library?~~ **RESOLVED → D61: Save/Like indicators only in MVP; no recall surface. Stored in IndexedDB (LocalAction); no "Saved" filter or sub-view. Continuation item.** | Edge UX | Indicators only; no recall surface | Resolved 2026-03-07 |
 
 ## From System Architecture (04)
 
@@ -48,7 +48,7 @@ Use this file to track unresolved questions that may affect future documents or 
 
 | # | Question | Affects | Recommended default | Deadline |
 |---|---------|---------|-------------------|----------|
-| Q23 | Should the "updated" badge appear on all items in library, or only on downloaded items? | Edge UX, logic complexity | Only on downloaded items (version mismatch is clear) | Before UI implementation |
+| Q23 | ~~Should the "updated" badge appear on all items in library, or only on downloaded items?~~ **RESOLVED → D60: Downloads tab only — compare DownloadRecord.version to catalog version on sync** | Edge UX, logic complexity | Only on downloaded items (version mismatch is clear) | Resolved 2026-03-07 |
 | Q24 | Should thumbnails be stored in same `./data/content/` directory or separate `./data/thumbnails/`? | File organization | Separate `./data/thumbnails/` for clarity | Before implementation |
 | Q25 | Should the admin be able to assign a content item to zero categories? | Data integrity | Allow zero (uncategorized); show under "All" or "Uncategorized" | Before implementation |
 

@@ -38,7 +38,7 @@ Use this file to track cross-document assumptions that affect product, architect
 | A20 | TikTok-style auto-play works in Chrome kiosk without user gesture requirement | MVP Spec | Chrome may block; need tap-to-play fallback for first video |
 | A21 | HTML5 video + MP4 + HTTP range requests sufficient for prefetch + streaming ≤3 min | MVP Spec | May need HLS/DASH; significant complexity increase |
 | A22 | PDF.js renders all demo PDFs correctly | MVP Spec | Need fallback viewer or constrain PDF complexity |
-| A23 | IndexedDB + Cache API provide enough storage for 15 downloaded items in kiosk Chrome | MVP Spec | Storage limits hit; limit download count or sizes |
+| A23 | ~~IndexedDB + Cache API provide enough storage for 15 downloaded items in kiosk Chrome~~ **SUPERSEDED by D43/D44/D45** — Cache API no longer used; content files are cached by edge proxy (nginx `proxy_cache` on Linux VM, up to 10 GB); IndexedDB stores only metadata records (<50 KB total for 15 items) | MVP Spec → superseded by Architecture v0.2 | Edge proxy cache disk space limit hit (unlikely at 10 GB for demo); or Docker volume is cleared unexpectedly |
 | A24 | Swipe gestures work reliably in Chrome on target 10″ tablet | MVP Spec | Touch events may need polyfill or tuning |
 | A25 | 2-level category tree sufficient for organizing 15 demo items | MVP Spec | May need flat list (de-scope) or deeper tree |
 | A26 | Video prefetch (buffer next video) achievable with standard browser APIs | MVP Spec | May need Service Worker or custom buffering |

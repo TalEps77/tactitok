@@ -88,7 +88,16 @@ Use this file to track explicit project decisions and why they were made.
 | D50 | `GET /api/catalog` accepts `?since` param but always returns full catalog in MVP | Forward-compatible; clients can send the param from day one without breaking when delta sync is added | 2026-03-07 |
 | D51 | `DELETE /api/admin/categories/:id` cascade-deletes child categories | Simpler admin UX; avoids forcing admin to manually delete children before parent | 2026-03-07 |
 | D52 | MIME validation uses magic-byte check (`file-type` library) in addition to client-provided MIME header | Client-provided MIME header is trivially spoofed; magic bytes are the authoritative check | 2026-03-07 |
-| D53 | ETag format for content files = `"{version}-{id}"` | ETag changes on every content update (version increment); edge proxy cache entry is automatically invalidated | 2026-03-07 |
+| D53 | ETag format for content files = `"{version}-{id}"` | ETag changes on every content update (version increment); handles browser-level conditional caching. **Note:** nginx proxy_cache invalidation is handled separately via `?v={version}` URL param (D62) — ETag alone does not evict a fresh proxy cache entry | 2026-03-07 |
+
+## From API Contract v0.2 Update (Round 3 fixes)
+
+| # | Decision | Rationale | Date |
+|---|---------|-----------|------|
+| D60 | "Updated" badge shows on downloaded items only — compare `DownloadRecord.version` to `CatalogResponse.items[].version` on catalog sync | Downloads-only is the accurate comparison (DownloadRecord carries the version at time of download); badge on non-downloaded items would require a separate heuristic with no clear baseline. API contract §10.3 already implements this path. Resolves Q23. | 2026-03-07 |
+| D61 | Save/Like interactions are indicators only in MVP — stored in IndexedDB (LocalAction); no recall surface (no "Saved" filter, no "Liked" view) | Out of scope per MVP Spec OOS-18; delivery plan implements the button but not the view. Write-only in MVP; recall surface is a continuation item. Resolves Q17. | 2026-03-07 |
+| D62 | Content file URL includes `?v={version}` query param for nginx proxy cache-busting: `/api/content/{id}/file?v={version}` | nginx `proxy_cache` uses the full request URI as the cache key. A version bump changes the URL → cache miss → fresh fetch from cloud. Server ignores `?v` param. Old entries expire after 30-day TTL. Resolves N2. | 2026-03-07 |
+| D63 | `GET /api/health` is a public, unauthenticated endpoint with `proxy_cache off` at the edge proxy | Health endpoint must return a live response to be a valid cloud-reachability signal. If the proxy cached a stale `200 OK`, offline detection would fail. `proxy_cache off` ensures every poll hits the cloud or fails. Resolves N1. | 2026-03-07 |
 
 ## From Delivery Plan (07)
 
