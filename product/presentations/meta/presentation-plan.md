@@ -112,7 +112,7 @@ These decks are mandatory — without them the project cannot be properly evalua
 9. How offline works (DG-08 or DG-09 — cache states)
 10. The data model — 9 entities, 2 storage locations (DG-04 ERD)
 11. API surface overview (from doc 06 when available)
-12. Technology stack choices (TypeScript monorepo, React, Node, PostgreSQL — AD1–AD12)
+12. Technology stack choices (TypeScript monorepo, HTML/TS, Node, PostgreSQL — AD1–AD12)
 13. What was explicitly deferred and why (from §14 of Architecture)
 14. Continuation architecture: how to extend without rewrites
 15. Key risks and mitigations

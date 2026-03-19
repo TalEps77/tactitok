@@ -80,14 +80,14 @@
 - Endpoint בדיקת תקינות: `GET /api/health → 200 { status: 'ok' }`
 
 **Dev B — שלד Edge SPA:**
-- הגדרת React + TypeScript + Vite ב-`packages/client`
+- הגדרת HTML + TypeScript + Vite ב-`packages/client`
 - סרגל טאבים תחתון עם 3 טאבים: ריילס, ספרייה, הורדות
 - מסך placeholder לכל טאב
-- ניתוב (React Router או TanStack Router)
+- ניתוב (History API — `window.history.pushState`; ללא ספריית ניתוב)
 - בסיס CSS גלובלי: פריסת מסך מלא, מותאמת לטאבלט
 
 **Dev C — שלד Admin SPA + edge proxy:**
-- הגדרת React + TypeScript + Vite ב-`packages/admin`
+- הגדרת HTML + TypeScript + Vite ב-`packages/admin`
 - מסך כניסה עם שדה סיסמה (לא מחובר לשום דבר עדיין)
 - מסך dashboard placeholder
 - Dockerfile + `nginx.conf` עבור edge proxy (`packages/edge-proxy`):
@@ -516,7 +516,7 @@ Edge proxy Docker פועל (Dev C → Dev B, שבוע 1)
 | # | הנחה | השפעה אם שגויה |
 |---|------|----------------|
 | PA1 | 3 מפתחים זמינים במשרה מלאה ל-12 שבועות | צמצום היקף מוקדם יותר; דחיסת ספרינטים |
-| PA2 | המפתחים נוחים עם React + TypeScript + Node.js | הוספת 1–2 שבועות לעלייה על הרכבת; צמצום היקף |
+| PA2 | המפתחים נוחים עם HTML + TypeScript + Node.js | הוספת 1–2 שבועות לעלייה על הרכבת; צמצום היקף |
 | PA3 | המפתחים יכולים להגדיר WSL2 + Docker על מחשבי Windows של מכשיר הקצה ללא תמיכת IT מורחבת | הוספת 3–5 ימים להגדרת מכשיר |
 | PA4 | VM ענן מסופק ונגיש עד שבוע 1 | עיכוב פריסת ענן; שימוש בשרת פיתוח מקומי (Node.js על localhost) כגיבוי |
 | PA5 | טאבלט 10 אינץ' הייעודי זמין לבדיקה עד שבוע 5 (M3) | אימות ריילס מתעכב; סיכון לאיכות הדמו |

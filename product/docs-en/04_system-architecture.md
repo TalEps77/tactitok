@@ -114,7 +114,7 @@ These constraints and requirements shape every architectural choice:
     │                         │                      │
     │                         │  ┌────────────────┐  │
     │                         │  │ Admin SPA      │  │
-    │                         │  │ (React/TS)     │  │
+    │                         │  │ (HTML/TS)      │  │
     │                         │  └────────────────┘  │
     │                         └─────────────────────┘
     │
@@ -136,7 +136,7 @@ These constraints and requirements shape every architectural choice:
 │  │  │ IndexedDB     │  │  │  │         │         │  │ │
 │  │  │ (profile,     │  │  │  │ ┌───────┴───────┐ │  │ │
 │  │  │  actions,     │  │  │  │ │ SPA bundle    │ │  │ │
-│  │  │  download     │  │  │  │ │ (React/TS)    │ │  │ │
+│  │  │  download     │  │  │  │ │ (HTML/TS)     │ │  │ │
 │  │  │  records)     │  │  │  │ └───────────────┘ │  │ │
 │  │  └───────────────┘  │  │  │                   │  │ │
 │  │                     │  │  │ ┌───────────────┐ │  │ │
@@ -165,8 +165,8 @@ Chrome on Windows connects to `localhost` only. It never connects directly to th
 
 | # | Component | Location | Tech | Built by team? |
 |---|-----------|----------|------|---------------|
-| C1 | **Edge SPA** | Edge device (Chrome on Windows) | React + TypeScript | ✅ Yes |
-| C2 | **Admin SPA** | HQ desktop (browser) | React + TypeScript | ✅ Yes |
+| C1 | **Edge SPA** | Edge device (Chrome on Windows) | HTML + TypeScript | ✅ Yes |
+| C2 | **Admin SPA** | HQ desktop (browser) | HTML + TypeScript | ✅ Yes |
 | C3 | **API Server** | Cloud VM | Node.js + Express + TypeScript | ✅ Yes |
 | C4 | **Service Layer** | Cloud VM (inside API Server) | TypeScript modules | ✅ Yes |
 | C5 | **PostgreSQL** | Cloud VM | PostgreSQL 15+ | ✅ Configure; not build |
@@ -179,8 +179,8 @@ Chrome on Windows connects to `localhost` only. It never connects directly to th
 ```
 tactitok/
 ├── packages/
-│   ├── client/          ← Edge SPA (React/TS)
-│   ├── admin/           ← Admin SPA (React/TS)
+│   ├── client/          ← Edge SPA (HTML/TS)
+│   ├── admin/           ← Admin SPA (HTML/TS)
 │   ├── server/          ← API Server (Node/Express/TS)
 │   ├── shared/          ← Shared types, constants, validation
 │   └── edge-proxy/      ← Dockerfile + nginx.conf for edge caching proxy
@@ -602,7 +602,6 @@ Edge SPA (while current video plays)
 | **Node.js** | 20 LTS | API server runtime (cloud) | Low — stable LTS |
 | **PostgreSQL** | 15+ | Metadata storage (cloud) | Low — standard |
 | **nginx** | Latest stable | TLS termination (cloud) + caching proxy (edge) | Low — standard |
-| **React** | 18+ | UI framework (edge + admin) | Low — dominant ecosystem |
 | **TypeScript** | 5+ | Type safety across stack | Low — standard |
 | **PDF.js** | Latest | In-browser PDF rendering | Low — Mozilla-maintained |
 | **Express** | 4.x | HTTP server framework | Low — mature |
@@ -619,7 +618,7 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 | # | Decision | Rationale | Alternatives considered |
 |---|---------|-----------|----------------------|
 | AD1 | **TypeScript monorepo** (client + admin + server + shared + edge-proxy) | Single language; shared types prevent API contract drift; simple CI | Separate repos (harder to share types); JS without TS (less safe) |
-| AD2 | **React for both SPAs** | Largest ecosystem; best support for scroll-snap/TikTok patterns; students likely familiar | Vue (simpler but smaller ecosystem); Svelte (newer, less resources) |
+| AD2 | **HTML + TypeScript for both SPAs** | No framework dependency; simpler stack; sufficient for SPA complexity; avoids React learning curve | React (adds framework overhead); Vue (smaller ecosystem); Svelte (newer, less resources) |
 | AD3 | **Node.js + Express backend** | Same language as frontend; simple file streaming; adequate for ~20 clients | Python/FastAPI (different language); Go (overkill for MVP) |
 | AD4 | **PostgreSQL for metadata** | Production-grade; supports text search; handles concurrent reads; continuation-ready | SQLite (simpler but poor concurrency); MongoDB (less structured) |
 | AD5 | **Local filesystem for content files** behind abstraction | Simplest; no external service; abstraction allows S3/MinIO swap | S3 directly (adds cloud dependency); MinIO (extra process) |
@@ -657,7 +656,7 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 
 | # | Assumption | Impact if wrong |
 |---|-----------|----------------|
-| AA1 | React + TypeScript is accessible to the 3 student developers | Need alternative framework; delays project start |
+| AA1 | Vanilla HTML + TypeScript (no framework) is accessible to 3 student developers | May need to add a lightweight framework if DOM complexity grows; delays project start |
 | AA2 | Node.js + Express handles ~20 concurrent video streams without bottleneck | Need load testing; may need worker threads or nginx file serving |
 | AA3 | PostgreSQL runs comfortably alongside Node.js + nginx on a single VM (4+ GB RAM) | Need larger VM or optimize resource usage |
 | AA4 | npm/pnpm workspaces monorepo is manageable for 3 students | May need separate repos if workspace tooling causes friction |
@@ -678,7 +677,7 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 | AR2 | Docker / Linux VM setup is unfamiliar to students and takes too long | Medium | Medium | Provide pre-built Dockerfile template; keep config minimal; pair-program setup |
 | AR3 | Monorepo workspace tooling causes developer friction | Low | Medium | Fall back to separate repos with shared types via npm package; adds 1 day setup |
 | AR4 | PostgreSQL text search is insufficient for demo quality | Low | Low | Use `ILIKE` for MVP; upgrade to `tsvector` if needed; or client-side filter (15 items) |
-| AR5 | React scroll-snap for TikTok-style reels is janky on tablet | Medium | High | Prototype in week 1; consider react-virtualized or custom touch handler |
+| AR5 | CSS scroll-snap for TikTok-style reels may be janky on tablet | Medium | High | Prototype in week 1; consider Swiper.js or custom touch handler if native scroll-snap insufficient |
 | AR6 | File upload (100MB) is slow or times out over unstable admin network | Low | Medium | Chunked upload library (e.g., tus-js-client); or accept that admin uses stable HQ network |
 | AR7 | nginx proxy_cache evicts downloaded content before user accesses offline | Low | Medium | Set generous inactive timeout (30d); monitor cache hit rate; cache size 10 GB is ample for 15 items |
 | AR8 | Port mapping between Linux VM and Windows (for localhost:8080) requires non-trivial config | Medium | Medium | Test VM networking early (WSL2 maps ports automatically; VirtualBox needs port forwarding) |

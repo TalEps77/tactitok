@@ -1,8 +1,8 @@
 # Diagram Backlog — TactiTok
 
-> **Version:** 0.3
-> **Status:** Draft
-> **Date:** 2026-03-07
+> **Version:** 0.4
+> **Status:** All 17 diagrams generated (Excalidraw)
+> **Date:** 2026-03-08
 > **Source:** Cross-doc review v0.3 (`product/reviews/01_cross-doc-review.md`)
 > **Binding source of truth:** `product/north-star.md`
 > **Change from v0.2:** Round 3 fixes applied. All blockers resolved. N1 resolved (D63: `GET /api/health` added to doc 06). N2 resolved (D62: `?v={version}` in content URL). B3 resolved (D60: Q23 closed, downloads-only badge). B5 resolved (D61: Q17 closed, indicators-only). DG-07, DG-08, DG-09, DG-10 now fully unblocked. All 17 diagrams ready for generation.
@@ -42,7 +42,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Evaluators, stakeholders, new developers |
 | **Source basis** | `02_system-boundaries.md` §3–4, `01_product-brief.md` §4–5 |
 | **Priority** | Required |
-| **Status** | 🔴 Not started |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-01_system-context.mmd` + PNG/SVG |
 | **Notes** | Show: Edge consumer, HQ content manager, Edge SPA (Chrome kiosk), Edge proxy (Docker/nginx), Cloud server, Admin portal, HQ desktop. Show network trust zones. |
@@ -57,7 +57,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Developers, evaluators |
 | **Source basis** | `04_system-architecture.md` §5–7, `02_system-boundaries.md` §5 |
 | **Priority** | Required |
-| **Status** | 🔴 Not started |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-02_container-architecture.mmd` + PNG/SVG |
 | **Notes** | Show: Edge SPA (React), Edge proxy (nginx/Docker), API server (Node/Express), Admin SPA (React), PostgreSQL, File store. Show internal interfaces between components. |
@@ -72,7 +72,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Developers, DevOps |
 | **Source basis** | `04_system-architecture.md` §8, `02_system-boundaries.md` §8 |
 | **Priority** | Required |
-| **Status** | 🔴 Not started |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None (can use recommended defaults for Q26, Q11) |
 | **Output** | `product/visuals/DG-03_deployment-runtime.mmd` + PNG/SVG |
 | **Notes** | Show: Cloud VM (nginx TLS → Node.js → PostgreSQL + filesystem); Edge Device (Windows → Chrome kiosk → localhost; Linux VM → Docker → nginx + SPA bundle + proxy cache); HQ Desktop (browser → admin portal). Show ports. |
@@ -87,7 +87,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Developers |
 | **Source basis** | `05_data-model.md` §5–7 |
 | **Priority** | Required |
-| **Status** | 🔴 Not started |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-04_data-model-erd.mmd` + PNG/SVG |
 | **Notes** | Two regions: Server (PostgreSQL: ContentItem, Category, Interest, ContentCategory, ContentInterest) and Edge Browser (IndexedDB: DeviceProfile, CachedCatalog, DownloadRecord, LocalAction). Show key fields and relationship cardinalities. |
@@ -102,7 +102,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Evaluators, developers |
 | **Source basis** | `04_system-architecture.md` §9.1–9.2, `06_api-contract.md` §7.2, `03_mvp-spec.md` Journey 5, `01_product-brief.md` Flow C |
 | **Priority** | Required |
-| **Status** | 🟢 **Unblocked** |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-05_content-publishing-flow.mmd` + PNG/SVG |
 | **Notes** | Participants: HQ staff, Admin SPA, API server (`POST /api/admin/content`), PostgreSQL, File store. Then: Edge SPA, Edge proxy, `GET /api/catalog`. Show: multipart upload, MIME + magic-byte validation, filesystem store, DB insert, catalog sync pull, proxy cache. Include thumbnail upload as optional sub-flow. |
@@ -117,7 +117,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Developers |
 | **Source basis** | `04_system-architecture.md` §9.3, §9.7, `06_api-contract.md` §6.1–6.2, `03_mvp-spec.md` Journey 2, CAP-2, `07_delivery-plan.md` Sprint 3 |
 | **Priority** | Required |
-| **Status** | 🟢 **Unblocked** |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-06_reels-playback-flow.mmd` + PNG/SVG |
 | **Notes** | Show: `GET /api/catalog` → interest filter → render feed → first video: tap-to-start overlay (Chrome auto-play policy) → subsequent auto-play → at 30% playback: `Range: bytes=0-{N}` for next video → proxy caches full file → swipe → instant start from cache. Note that prefetch range request triggers full file caching at proxy (not just the partial bytes). |
@@ -132,7 +132,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Evaluators, developers |
 | **Source basis** | `03_mvp-spec.md` Journey 3, CAP-3, `05_data-model.md` §13.2 |
 | **Priority** | Required |
-| **Status** | 🟢 **Unblocked** |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | ~~B3 (Q23 → D60), B5 (Q17 → D61)~~ — both resolved |
 | **Output** | `product/visuals/DG-07_library-browse-search.mmd` + PNG/SVG |
 | **Notes** | Show: tab switch → category tree from IndexedDB catalog → user taps category → filtered list → search bar input → client-side filter → open PDF (PDF.js) or video (player). Resolve B3 and B5 before finalizing. |
@@ -147,7 +147,7 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 | **Audience** | Evaluators, developers |
 | **Source basis** | `04_system-architecture.md` §9.4–9.6, §10, `06_api-contract.md` §10, `03_mvp-spec.md` Journey 4, CAP-5, CAP-7, `07_delivery-plan.md` Sprint 4 |
 | **Priority** | Required |
-| **Status** | 🟢 **Unblocked** |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | ~~B3 (Q23 → D60), N2 (→ D62)~~ — both resolved |
 | **Output** | `product/visuals/DG-08_offline-download-sync.mmd` + PNG/SVG |
 | **Notes** | Show two main paths: (a) Download tap → `fetch("/api/content/{id}/file")` via proxy → read response to completion → proxy caches full file → SPA writes DownloadRecord to IndexedDB; (b) Offline access → SPA reads DownloadRecord → requests file from proxy → proxy serves STALE. Also show catalog sync + version comparison for updated badge. For the "content updated" sub-path: the accurate diagram depends on N2 resolution (whether URL includes `?v={version}` for cache-busting). |
@@ -168,7 +168,7 @@ These diagrams add significant value for understanding and debugging but are not
 | **Audience** | Developers |
 | **Source basis** | `04_system-architecture.md` §7 (C7), §10, `06_api-contract.md` §9, `02_system-boundaries.md` §9 |
 | **Priority** | Recommended |
-| **Status** | 🟢 **Unblocked** |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | ~~N2 (→ D62)~~ — resolved |
 | **Output** | `product/visuals/DG-09_edge-proxy-cache-states.mmd` + PNG/SVG |
 | **Notes** | State diagram: MISS → proxy fetches from cloud → caches → returns; HIT → serves from cache immediately; STALE (cloud unreachable) → serves stale cache + `X-Cache-Status: STALE` header. Include: content update sub-path (version bump → new cache key if `?v={version}` adopted; old entry naturally expires at 30d TTL). Resolve N2 before finalizing. |
@@ -183,7 +183,7 @@ These diagrams add significant value for understanding and debugging but are not
 | **Audience** | Developers, evaluators |
 | **Source basis** | `02_system-boundaries.md` §9.1, `04_system-architecture.md` §10.2, `07_delivery-plan.md` Sprint 4 Week 8 |
 | **Priority** | Recommended |
-| **Status** | 🟢 **Unblocked** |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | ~~N1 (→ D63)~~ — resolved |
 | **Output** | `product/visuals/DG-10_network-connectivity-states.mmd` + PNG/SVG |
 | **Notes** | States: Online → full functionality; Degraded → prefetch, loading indicators, graceful degradation; Offline → serve from proxy cache, IndexedDB catalog, Downloads tab. Show: connectivity detection via poll of `GET /api/health`; `X-Cache-Status: STALE` response indicates offline mode. Transitions and SPA behavior in each state. Resolve N1 first for accuracy. |
@@ -198,7 +198,7 @@ These diagrams add significant value for understanding and debugging but are not
 | **Audience** | Developers |
 | **Source basis** | `06_api-contract.md` §7, `03_mvp-spec.md` Journey 5, CAP-6, `04_system-architecture.md` §9.1, `07_delivery-plan.md` Sprint 2 + Sprint 5 |
 | **Priority** | Recommended |
-| **Status** | 🟢 **Unblocked** |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-11_admin-content-management.mmd` + PNG/SVG |
 | **Notes** | Show: `POST /api/admin/login` → JWT returned → stored in sessionStorage; upload form → `POST /api/admin/content` (multipart) → MIME + magic-byte validation → filesystem store → DB insert → 201; `PUT /api/admin/content/:id` (metadata); `PUT /api/admin/content/:id/file` (version++); `PUT /api/admin/content/:id/thumbnail`; `DELETE /api/admin/content/:id` (cascade); category and interest CRUD endpoints. |
@@ -213,7 +213,7 @@ These diagrams add significant value for understanding and debugging but are not
 | **Audience** | Evaluators, developers |
 | **Source basis** | `03_mvp-spec.md` Journey 1, CAP-1.4–1.5, `05_data-model.md` §6.6, `07_delivery-plan.md` Sprint 3 Week 6 |
 | **Priority** | Recommended |
-| **Status** | 🟢 Unblocked |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-12_first-time-setup.mmd` + PNG/SVG |
 | **Notes** | Show: app open → check IndexedDB for DeviceProfile → if absent: show interest selection screen → user selects 1+ interests → write DeviceProfile → navigate to Reels feed. If profile exists: skip to Reels directly. Also show: re-access interests from settings/profile area. |
@@ -228,7 +228,7 @@ These diagrams add significant value for understanding and debugging but are not
 | **Audience** | Developers |
 | **Source basis** | `04_system-architecture.md` §6.2 |
 | **Priority** | Recommended |
-| **Status** | 🟢 Unblocked |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-13_monorepo-structure.mmd` + PNG/SVG |
 | **Notes** | Show packages: client (Edge SPA), admin (Admin SPA), server (API), shared (types/validation), edge-proxy (Dockerfile + nginx.conf). Show dependency arrows (client → shared, admin → shared, server → shared). |
@@ -249,7 +249,7 @@ These diagrams add depth for specific audiences or edge cases but can be deferre
 | **Audience** | Developers, admin portal users |
 | **Source basis** | `05_data-model.md` §9.1 |
 | **Priority** | Optional |
-| **Status** | 🟢 Unblocked |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-14_content-lifecycle.mmd` + PNG/SVG |
 | **Notes** | States: Created (version=1) → Updated (version++) → Deleted (hard delete). Show what changes in each transition. |
@@ -264,7 +264,7 @@ These diagrams add depth for specific audiences or edge cases but can be deferre
 | **Audience** | Developers |
 | **Source basis** | `05_data-model.md` §9.2 |
 | **Priority** | Optional |
-| **Status** | 🟢 Unblocked |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-15_download-record-lifecycle.mmd` + PNG/SVG |
 | **Notes** | States: Not Downloaded → Downloading (in-memory progress) → Downloaded (proxy cached + IndexedDB record) → Deleted (record removed; proxy may retain file). Note v0.2 key change: file is in proxy cache, not Chrome Cache API. |
@@ -279,7 +279,7 @@ These diagrams add depth for specific audiences or edge cases but can be deferre
 | **Audience** | Evaluators, security reviewers |
 | **Source basis** | `02_system-boundaries.md` §10, `04_system-architecture.md` §11 |
 | **Priority** | Optional |
-| **Status** | 🟢 Unblocked |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-16_security-trust-zones.mmd` + PNG/SVG |
 | **Notes** | Three zones: Zone 1 (Server — Trusted), Zone 2 (Edge Device — Semi-trusted), Zone 3 (Admin Client — Authenticated). Show controls: TLS, admin password, no edge auth, local storage sandbox. |
@@ -294,7 +294,7 @@ These diagrams add depth for specific audiences or edge cases but can be deferre
 | **Audience** | Developers, academic supervisors, project managers |
 | **Source basis** | `07_delivery-plan.md` §3–6 |
 | **Priority** | Recommended |
-| **Status** | 🟢 Unblocked |
+| **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-17_sprint-milestone-overview.mmd` + PNG/SVG |
 | **Notes** | Show: 6 × 2-week sprints with goals; 6 milestones (M1–M6) with their week and what they prove; critical path (monorepo → types → schema → catalog endpoint → catalog sync → reels on device → M3). Use Mermaid Gantt chart or timeline diagram. |
@@ -338,6 +338,67 @@ All diagram files should follow this convention:
 - **Naming:** ID is DG-NN (two digits), slug is lowercase with hyphens
 - **Format default:** Mermaid (text-based, version-controllable)
 - **Embedded:** Diagrams may be linked from product docs but are not embedded inline (to keep docs readable in plain text)
+
+---
+
+## Excalidraw Generation Plan
+
+> **Added:** 2026-03-08
+> **Format change:** Diagrams are now created as Excalidraw interactive diagrams (not Mermaid `.mmd`). This provides richer visuals (hand-drawn style, color zones, labeled arrows) better suited for evaluator presentations and developer onboarding.
+
+### Global Color Conventions
+
+All diagrams use these colors consistently by component role:
+
+| Component | Fill | Hex |
+|-----------|------|-----|
+| Edge SPA / Chrome / IndexedDB | Light Blue | `#a5d8ff` |
+| Admin SPA / HQ Actor | Light Orange | `#ffd8a8` |
+| API Server / processing | Light Purple | `#d0bfff` |
+| PostgreSQL / File Store | Light Teal | `#c3fae8` |
+| Edge Proxy / nginx / Docker | Light Green | `#b2f2bb` |
+| Annotations / notes | Light Yellow | `#fff3bf` |
+
+Zone backgrounds:
+
+| Zone | Fill | Hex |
+|------|------|-----|
+| Edge device | Blue zone | `#dbe4ff` |
+| Cloud server | Purple zone | `#e5dbff` |
+| Data / storage | Green zone | `#d3f9d8` |
+| HQ / admin | Yellow zone | `#fff3bf` |
+
+### Execution Batches
+
+| Batch | Diagrams | Focus |
+|-------|----------|-------|
+| 1 | DG-13, DG-01, DG-02, DG-03 | Structural foundations |
+| 2 | DG-04, DG-09, DG-10 | Data model & state diagrams |
+| 3 | DG-05, DG-06, DG-07, DG-08 | Core user flows |
+| 4 | DG-12, DG-11, DG-17 | Secondary flows & timeline |
+| 5 | DG-14, DG-15, DG-16 | Optional lifecycles & security |
+
+### Camera Sizes
+
+| Diagram | Camera | Dimensions |
+|---------|--------|-----------|
+| DG-01 System Context | XL | 1200x900 |
+| DG-02 Container Architecture | XL | 1200x900 |
+| DG-03 Deployment/Runtime | XXL | 1600x1200 |
+| DG-04 Data Model ERD | XXL | 1600x1200 |
+| DG-05 Content Publishing | XL | 1200x900 |
+| DG-06 Reels Playback | XL | 1200x900 |
+| DG-07 Library Browse | L | 800x600 |
+| DG-08 Offline Download | XL | 1200x900 |
+| DG-09 Proxy Cache States | M | 600x450 |
+| DG-10 Network States | M | 600x450 |
+| DG-11 Admin Management | XL | 1200x900 |
+| DG-12 First-Time Setup | S | 400x300 |
+| DG-13 Monorepo Structure | M | 600x450 |
+| DG-14 Content Lifecycle | S | 400x300 |
+| DG-15 Download Lifecycle | S | 400x300 |
+| DG-16 Trust/Security Zones | L | 800x600 |
+| DG-17 Sprint/Milestone | XXL | 1600x1200 |
 
 ---
 

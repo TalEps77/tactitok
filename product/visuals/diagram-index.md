@@ -1,10 +1,10 @@
 # Diagram Index — TactiTok
 
-> **Version:** 0.3
-> **Status:** Draft
-> **Date:** 2026-03-07
+> **Version:** 0.6
+> **Status:** All 17 diagrams generated (Excalidraw) — labels fixed, encryption fixed
+> **Date:** 2026-03-09
 > **Source:** Cross-doc review v0.3 (`product/reviews/01_cross-doc-review.md`)
-> **Change from v0.2:** Round 3 fixes applied. All blockers resolved. DG-07, DG-08, DG-09 unblocked (N2→D62, B3→D60). DG-10 unblocked (N1→D63, B5→D61). All 17 diagrams now ready for generation.
+> **Change from v0.5:** Fixed excalidraw.com export — now uses AES-GCM encryption with proper `#json=<id>,<key>` URL format. Each link loads its own unique diagram content correctly.
 
 For backlog detail, priority order, and blocker tracking, see `product/visuals/diagram-todo.md`.
 
@@ -20,44 +20,45 @@ For backlog detail, priority order, and blocker tracking, see `product/visuals/d
 | 🟢 | Unblocked — ready to generate |
 | ✅ | Generated — source file exists |
 | 📌 | Generated — exported (PNG/SVG available) |
+| 🔗 | Generated — Excalidraw shareable link |
 
 ---
 
 ## Required Diagrams
 
-| ID | Name | Priority | Status | Blockers | Source file | PNG | SVG |
-|----|------|----------|--------|----------|-------------|-----|-----|
-| DG-01 | System Context Diagram | Required | 🟢 Unblocked | — | — | — | — |
-| DG-02 | Container / Component Architecture | Required | 🟢 Unblocked | — | — | — | — |
-| DG-03 | Deployment / Runtime View | Required | 🟢 Unblocked | — | — | — | — |
-| DG-04 | Data Model / ERD | Required | 🟢 Unblocked | — | — | — | — |
-| DG-05 | Content Publishing Flow (Sequence) | Required | 🟢 **Unblocked** | — | — | — | — |
-| DG-06 | Reels Feed / Video Playback Flow (Sequence) | Required | 🟢 **Unblocked** | — | — | — | — |
-| DG-07 | Library Browse & Search Flow (Sequence) | Required | 🟢 **Unblocked** | ~~B3, B5~~ — resolved (D60, D61) | — | — | — |
-| DG-08 | Offline Download + Sync Flow (Sequence) | Required | 🟢 **Unblocked** | ~~B3, N2~~ — resolved (D60, D62) | — | — | — |
+| ID | Name | Priority | Status | Excalidraw URL |
+|----|------|----------|--------|----------------|
+| DG-01 | System Context Diagram | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=m2H5BVnwXn-CcTY6ykag8,ol_aWg9H5j_ATn2_NSz16g) |
+| DG-02 | Container / Component Architecture | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=eGwui9XaJkvQ5b8gF7ZPS,NXds79drLkQ2PDdKnTlo3A) |
+| DG-03 | Deployment / Runtime View | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=7Mtj45WBcOmvqABp2aEvc,m0clX0ptpLq0C8VgAVCXTQ) |
+| DG-04 | Data Model / ERD | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=kS9zEDFbS1ZPMiobq3E8a,uGCiwysIVh8mFmOAR-wSCA) |
+| DG-05 | Content Publishing Flow (Sequence) | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=yov-GdfdUJMPxBEScbQG_,q_lrpkFPHut0BjkT2WG_LA) |
+| DG-06 | Reels Feed / Video Playback Flow (Sequence) | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=--xf1beWa1YLSVgoroXjd,GqNPYMsdSgidjC62F13FSg) |
+| DG-07 | Library Browse & Search Flow (Sequence) | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=mCrkff3Iit10k-r-kNiBh,dudd8ueOjM3RZeXOD_4cYA) |
+| DG-08 | Offline Download + Sync Flow (Sequence) | Required | 🔗 Generated | [Open](https://excalidraw.com/#json=lwVwkkqyLwSK7Hwdea9a9,nE2PAGSRQQawq2xD3UaVkQ) |
 
 ---
 
 ## Recommended Diagrams
 
-| ID | Name | Priority | Status | Blockers | Source file | PNG | SVG |
-|----|------|----------|--------|----------|-------------|-----|-----|
-| DG-09 | Edge Proxy Cache State Flow | Recommended | 🟢 **Unblocked** | ~~N2~~ — resolved (D62) | — | — | — |
-| DG-10 | Network Connectivity State Diagram | Recommended | 🟢 **Unblocked** | ~~N1~~ — resolved (D63) | — | — | — |
-| DG-11 | Admin Content Management Flow (Sequence) | Recommended | 🟢 **Unblocked** | — | — | — | — |
-| DG-12 | First-Time Setup / Interest Selection Flow | Recommended | 🟢 Unblocked | — | — | — | — |
-| DG-13 | Monorepo Package Structure | Recommended | 🟢 Unblocked | — | — | — | — |
-| DG-17 | Sprint / Milestone Overview | Recommended | 🟢 **Unblocked** | — | — | — | — |
+| ID | Name | Priority | Status | Excalidraw URL |
+|----|------|----------|--------|----------------|
+| DG-09 | Edge Proxy Cache State Flow | Recommended | 🔗 Generated | [Open](https://excalidraw.com/#json=riT3KeN9H-y-WN3i5L5jG,Y7o77jzEqNxvezfQSjOCvA) |
+| DG-10 | Network Connectivity State Diagram | Recommended | 🔗 Generated | [Open](https://excalidraw.com/#json=vtywzzpqispqWGDyIOxdo,5u0_XAC0Efia75wL73fz1g) |
+| DG-11 | Admin Content Management Flow (Sequence) | Recommended | 🔗 Generated | [Open](https://excalidraw.com/#json=8cI0p9A1O6JTpUTrqDByT,ziFROXSSjqkXzADlTQajhQ) |
+| DG-12 | First-Time Setup / Interest Selection Flow | Recommended | 🔗 Generated | [Open](https://excalidraw.com/#json=FqoG_03hWkhsTAyS-yTnO,bJCy1liPggeA-ZRQhKi2YA) |
+| DG-13 | Monorepo Package Structure | Recommended | 🔗 Generated | [Open](https://excalidraw.com/#json=dF-Zzea7unFkk0Myx3sI6,X_cPLhE4uqGsulFEseLxUg) |
+| DG-17 | Sprint / Milestone Overview | Recommended | 🔗 Generated | [Open](https://excalidraw.com/#json=3NAh-giD82UiMB9HWh6tn,hAG9lW_oMS9QKt5OYU2dyA) |
 
 ---
 
 ## Optional Diagrams
 
-| ID | Name | Priority | Status | Blockers | Source file | PNG | SVG |
-|----|------|----------|--------|----------|-------------|-----|-----|
-| DG-14 | Content Lifecycle State Diagram | Optional | 🟢 Unblocked | — | — | — | — |
-| DG-15 | Download Record Lifecycle | Optional | 🟢 Unblocked | — | — | — | — |
-| DG-16 | Trust / Security Zones | Optional | 🟢 Unblocked | — | — | — | — |
+| ID | Name | Priority | Status | Excalidraw URL |
+|----|------|----------|--------|----------------|
+| DG-14 | Content Lifecycle State Diagram | Optional | 🔗 Generated | [Open](https://excalidraw.com/#json=FOmdtbFMWy70wozToMPRc,MyUT4oX-XlNaZ1tON73vlQ) |
+| DG-15 | Download Record Lifecycle | Optional | 🔗 Generated | [Open](https://excalidraw.com/#json=Omx0QnVm9Yajm5WWOA5Li,O7xsw6b8vSQYEgMQcG6YVw) |
+| DG-16 | Trust / Security Zones | Optional | 🔗 Generated | [Open](https://excalidraw.com/#json=yj9CXVYfnlk2MN_7VTh8r,rJgM31lAPsysNHpc5v2-mQ) |
 
 ---
 
@@ -67,12 +68,12 @@ For backlog detail, priority order, and blocker tracking, see `product/visuals/d
 |---------|--------|---------|
 | ~~B1 — Doc 06 missing~~ | ✅ Resolved | DG-05, DG-06, DG-11 unblocked |
 | ~~B2 — Doc 07 missing~~ | ✅ Resolved | DG-17 unblocked |
-| ~~B3 — Q23 (updated badge scope)~~ | ✅ **Resolved → D60** | DG-07, DG-08 unblocked |
-| ~~B5 — Q17 (saved items UI surface)~~ | ✅ **Resolved → D61** | DG-07 unblocked |
-| ~~N1 — `/api/health` not in API contract~~ | ✅ **Resolved → D63** | DG-10 unblocked |
-| ~~N2 — proxy cache invalidation via ETag (same URL)~~ | ✅ **Resolved → D62** | DG-08, DG-09 unblocked |
+| ~~B3 — Q23 (updated badge scope)~~ | ✅ Resolved → D60 | DG-07, DG-08 unblocked |
+| ~~B5 — Q17 (saved items UI surface)~~ | ✅ Resolved → D61 | DG-07 unblocked |
+| ~~N1 — `/api/health` not in API contract~~ | ✅ Resolved → D63 | DG-10 unblocked |
+| ~~N2 — proxy cache invalidation via ETag (same URL)~~ | ✅ Resolved → D62 | DG-08, DG-09 unblocked |
 
-**All blockers resolved. All 17 diagrams are ready for generation.**
+**All blockers resolved. All 17 diagrams generated and label rendering verified.**
 
 ---
 
@@ -111,41 +112,4 @@ For backlog detail, priority order, and blocker tracking, see `product/visuals/d
 
 ---
 
-## File Location Convention
-
-```
-product/visuals/
-├── diagram-todo.md                        ← backlog and tracking
-├── diagram-index.md                       ← this file
-├── DG-01_system-context.mmd
-├── DG-01_system-context.png
-├── DG-02_container-architecture.mmd
-├── DG-02_container-architecture.png
-├── DG-03_deployment-runtime.mmd
-├── DG-03_deployment-runtime.png
-├── DG-04_data-model-erd.mmd
-├── DG-04_data-model-erd.png
-├── DG-05_content-publishing-flow.mmd
-├── DG-05_content-publishing-flow.png
-├── DG-06_reels-playback-flow.mmd
-├── DG-06_reels-playback-flow.png
-├── DG-07_library-browse-search.mmd        (blocked)
-├── DG-08_offline-download-sync.mmd        (blocked)
-├── DG-09_edge-proxy-cache-states.mmd      (blocked)
-├── DG-10_network-connectivity-states.mmd  (partial)
-├── DG-11_admin-content-management.mmd
-├── DG-11_admin-content-management.png
-├── DG-12_first-time-setup.mmd
-├── DG-12_first-time-setup.png
-├── DG-13_monorepo-structure.mmd
-├── DG-13_monorepo-structure.png
-├── DG-14_content-lifecycle.mmd
-├── DG-15_download-record-lifecycle.mmd
-├── DG-16_security-trust-zones.mmd
-├── DG-17_sprint-milestone-overview.mmd
-└── DG-17_sprint-milestone-overview.png
-```
-
----
-
-*Update this index when diagrams are generated. Set status to ✅ and fill in the source file path. Set to 📌 when PNG/SVG exports are available.*
+*All 17 diagrams generated via Excalidraw. Labels fixed on 2026-03-09 using native bound text elements. Each URL is a shareable, editable Excalidraw link with properly rendered text.*

@@ -79,14 +79,14 @@ This is the last document in the specification set. All prior documents (Product
 - Health check endpoint: `GET /api/health → 200 { status: 'ok' }`
 
 **Dev B — Edge SPA skeleton:**
-- React + TypeScript + Vite setup in `packages/client`
+- HTML + TypeScript + Vite setup in `packages/client`
 - Bottom tab bar with 3 tabs: Reels, Library, Downloads
 - Placeholder screen for each tab
-- Routing (React Router or TanStack Router)
+- Routing (History API — `window.history.pushState`; no routing library)
 - Global CSS baseline: full-screen layout, tablet-optimised
 
 **Dev C — Admin SPA skeleton + edge proxy:**
-- React + TypeScript + Vite setup in `packages/admin`
+- HTML + TypeScript + Vite setup in `packages/admin`
 - Login screen with password field (wired to nothing yet)
 - Placeholder dashboard screen
 - Dockerfile + `nginx.conf` for edge proxy (`packages/edge-proxy`):
@@ -515,7 +515,7 @@ The team must validate all 12 acceptance criteria from MVP Spec §7 on the actua
 | # | Assumption | Impact if wrong |
 |---|-----------|----------------|
 | PA1 | 3 developers are available full-time for 12 weeks | Reduce scope earlier; compress sprints |
-| PA2 | Developers are comfortable with React + TypeScript + Node.js | Add 1–2 weeks for ramp-up; reduce scope |
+| PA2 | Developers are comfortable with HTML + TypeScript + Node.js | Add 1–2 weeks for ramp-up; reduce scope |
 | PA3 | Developers can set up WSL2 + Docker on the edge device Windows PCs without extended IT support | Add 3–5 days for device setup |
 | PA4 | Cloud VM is provisioned and accessible by week 1 | Delay cloud deployment; use local development server as fallback |
 | PA5 | Target 10″ tablet is available for testing by week 5 (M3) | Reels validation is delayed; risk to demo quality |

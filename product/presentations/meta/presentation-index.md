@@ -1,10 +1,10 @@
 # Presentation Index — TactiTok
 
-> **Version:** 1.1
-> **Status:** DK-01 (EN ✅ HE ✅ EN-PPTX ✅ HE-PPTX 🔴) · DK-02 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-03 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-04 (EN ✅ HE 🟢 EN-PPTX 🟠 HE-PPTX 🟠) · DK-05 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠) · DK-06 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠)
+> **Version:** 1.2
+> **Status:** DK-01 (EN ✅ HE ✅ EN-PPTX ✅ HE-PPTX 🔴) · DK-02 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-03 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-04 (EN ✅ HE 🟢 EN-PPTX 🟠 HE-PPTX 🟠) · DK-05 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠) · DK-06 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠) · DK-07 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠)
 > **Date:** 2026-03-19
 > **Source:** File system review 2026-03-19
-> **Change from v1.0:** DK-06 EN HTML generated (16 slides, developer audience). DK-06 HE HTML and PPTX variants blocked pending EN HTML review.
+> **Change from v1.1:** DK-07 EN HTML generated (10 slides, security reviewers / military evaluators audience). DK-07 HE HTML and PPTX variants blocked pending EN HTML review.
 
 This is the registry of all planned and generated presentation artifacts for the TactiTok project.
 For detail on each deck (sections, sources, blockers), see `product/presentations/meta/presentation-plan.md`.
@@ -110,12 +110,12 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 
 ### DK-07 — Security & Deployment Posture
 
-| ID | Format | Audience | Slides | Status | Blockers |
-|----|--------|----------|--------|--------|----------|
-| DK-07 | EN HTML | Security reviewers, military evaluators | 8–12 | 🟢 Unblocked | None |
-| DK-07-HE | HE HTML | — Hebrew | 8–12 | 🟠 Blocked | Awaiting EN HTML |
-| DK-07-EN-PPTX | EN PPTX | — editable EN | 8–12 | 🟠 Blocked | Awaiting EN HTML |
-| DK-07-HE-PPTX | HE PPTX | — editable HE | 8–12 | 🟠 Blocked | Awaiting HE HTML |
+| ID | Format | Audience | Slides | Status | File |
+|----|--------|----------|--------|--------|------|
+| DK-07 | EN HTML | Security reviewers, military evaluators | 10 | ✅ Generated | `product/presentations/slides-en/DK-07_security-deployment-posture.html` |
+| DK-07-HE | HE HTML | — Hebrew | 10 | 🟠 Blocked | Awaiting review of EN HTML |
+| DK-07-EN-PPTX | EN PPTX | — editable EN | 10 | 🟠 Blocked | Awaiting HE HTML |
+| DK-07-HE-PPTX | HE PPTX | — editable HE | 10 | 🟠 Blocked | Awaiting HE HTML |
 
 ---
 
@@ -183,7 +183,7 @@ product/presentations/
 │   ├── DK-05_mvp-execution-overview_en.pptx        🟠 Blocked
 │   ├── DK-06_data-model-reference.html             ✅ EN HTML
 │   ├── DK-06_data-model-reference_en.pptx          🟠 Blocked
-│   └── DK-07_security-deployment.html              🔴 Not started
+│   └── DK-07_security-deployment-posture.html      ✅ EN HTML
 │
 └── slides-he/
     ├── DK-01_stakeholder-overview_he.html          ✅ HE HTML
@@ -198,7 +198,7 @@ product/presentations/
     ├── DK-05_mvp-execution-overview_he.pptx        🟠 Blocked
     ├── DK-06_data-model-reference_he.html          🟠 Blocked
     ├── DK-06_data-model-reference_he.pptx          🟠 Blocked
-    └── DK-07_security-deployment_he.html           🔴 Not started
+    └── DK-07_security-deployment-posture_he.html   🟠 Blocked
 ```
 
 ---

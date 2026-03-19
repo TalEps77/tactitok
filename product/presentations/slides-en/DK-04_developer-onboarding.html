@@ -277,11 +277,11 @@
           </div>
           <div class="card card-b">
             <p class="card-title" style="font-size:0.75rem;">packages/client</p>
-            <p class="card-body" style="font-size:0.78rem;">Edge SPA (React/TS)<br>Reels · Library · Downloads<br>IndexedDB layer<br>PDF.js + video player<br><em>Owner: Dev B</em></p>
+            <p class="card-body" style="font-size:0.78rem;">Edge SPA (HTML/TS)<br>Reels · Library · Downloads<br>IndexedDB layer<br>PDF.js + video player<br><em>Owner: Dev B</em></p>
           </div>
           <div class="card card-o">
             <p class="card-title" style="font-size:0.75rem;">packages/admin</p>
-            <p class="card-body" style="font-size:0.78rem;">Admin SPA (React/TS)<br>Upload form + list<br>Category / interest CRUD<br>Login screen<br><em>Owner: Dev C</em></p>
+            <p class="card-body" style="font-size:0.78rem;">Admin SPA (HTML/TS)<br>Upload form + list<br>Category / interest CRUD<br>Login screen<br><em>Owner: Dev C</em></p>
           </div>
           <div class="card" style="border-top:3px solid var(--text-muted);">
             <p class="card-title" style="font-size:0.75rem;">packages/edge-proxy</p>
@@ -294,8 +294,8 @@
         </div>
         <div class="code-block" style="font-size:0.8rem;line-height:1.5;">tactitok/
 ├── packages/
-│   ├── client/        ← Edge SPA (React/TS, Vite)
-│   ├── admin/         ← Admin SPA (React/TS, Vite)
+│   ├── client/        ← Edge SPA (HTML/TS, Vite)
+│   ├── admin/         ← Admin SPA (HTML/TS, Vite)
 │   ├── server/        ← API Server (Node/Express/TS)
 │   ├── shared/        ← Shared types, validation
 │   └── edge-proxy/    ← Dockerfile + nginx.conf
@@ -573,7 +573,7 @@ docker run -p 8080:8080 \
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:0.5rem;">
             <div class="card card-g"><p class="card-title">AD1 — TypeScript Monorepo</p><p class="card-body">Shared types prevent API drift at compile time. Single CI pipeline.</p></div>
-            <div class="card card-g"><p class="card-title">AD2 — React for Both SPAs</p><p class="card-body">Largest ecosystem; best scroll-snap + TikTok pattern support.</p></div>
+            <div class="card card-g"><p class="card-title">AD2 — HTML + TypeScript for Both SPAs</p><p class="card-body">No framework dependency; simpler stack; sufficient for SPA complexity.</p></div>
             <div class="card card-g"><p class="card-title">AD3 — Node.js + Express</p><p class="card-body">Same language as frontend; simple range-request file streaming.</p></div>
             <div class="card card-b"><p class="card-title">AD4 — PostgreSQL</p><p class="card-body">Production-grade; ILIKE text search; migration-based from day one.</p></div>
             <div class="card card-b"><p class="card-title">AD5 — Filesystem Storage Abstraction</p><p class="card-body"><code style="color:var(--accent-green);">store/retrieve/delete</code> interface — swap to S3/MinIO without changing service layer.</p></div>
@@ -670,7 +670,7 @@ docker run -p 8080:8080 \
               <p class="card-title">Sprint 1 Deliverables (Weeks 1–2)</p>
               <ul class="bullets" style="margin-top:0.3rem;">
                 <li><strong>Dev A:</strong> monorepo + shared types + schema (migration 001) + Express skeleton + health check + admin auth</li>
-                <li><strong>Dev B:</strong> Edge SPA (React/TS/Vite) + 3 tabs + IndexedDB init + DeviceProfile + wire to edge proxy</li>
+                <li><strong>Dev B:</strong> Edge SPA (HTML/TS/Vite) + 3 tabs + IndexedDB init + DeviceProfile + wire to edge proxy</li>
                 <li><strong>Dev C:</strong> Admin SPA skeleton + login screen + Docker nginx.conf + edge proxy container running</li>
               </ul>
             </div>

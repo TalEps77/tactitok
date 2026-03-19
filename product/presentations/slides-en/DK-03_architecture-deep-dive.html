@@ -225,10 +225,10 @@
           <div class="card card-g">
             <p class="card-title" style="color:var(--accent-green);">&#10003; In Scope — Built by the Team</p>
             <ul class="bullets" style="margin-top:0.5rem;">
-              <li><strong>Edge SPA</strong> — Reels, Library, Downloads (React/TS)</li>
+              <li><strong>Edge SPA</strong> — Reels, Library, Downloads (HTML/TS)</li>
               <li><strong>Edge Proxy</strong> — Docker/nginx; SPA serving, proxy cache, offline</li>
               <li><strong>API Server</strong> — Node.js/Express; Content API, Admin API</li>
-              <li><strong>Admin SPA</strong> — Upload, catalog, categories (React/TS)</li>
+              <li><strong>Admin SPA</strong> — Upload, catalog, categories (HTML/TS)</li>
               <li><strong>PostgreSQL</strong> — Metadata, categories, interests</li>
               <li><strong>File Store</strong> — MP4 + PDF on server filesystem</li>
             </ul>
@@ -269,7 +269,7 @@
             <text x="80" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="#ffd8a8" font-family="Inter,system-ui,sans-serif" letter-spacing="1">HQ / ADMIN</text>
             <rect x="18" y="38" width="125" height="60" rx="4" fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
             <text x="80" y="59" text-anchor="middle" font-size="11" font-weight="700" fill="#3d2800" font-family="Inter,system-ui,sans-serif">Admin SPA</text>
-            <text x="80" y="75" text-anchor="middle" font-size="9" fill="#5d4800" font-family="Inter,system-ui,sans-serif">React · TypeScript</text>
+            <text x="80" y="75" text-anchor="middle" font-size="9" fill="#5d4800" font-family="Inter,system-ui,sans-serif">HTML · TypeScript</text>
             <text x="80" y="89" text-anchor="middle" font-size="8.5" fill="#5d4800" font-family="Inter,system-ui,sans-serif">desktop browser</text>
             <!-- Arrow Admin → Cloud -->
             <line x1="153" y1="68" x2="175" y2="68" stroke="#ffd8a8" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-o)"/>
@@ -317,7 +317,7 @@
             <!-- Edge SPA -->
             <rect x="693" y="35" width="188" height="175" rx="4" fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
             <text x="787" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Edge SPA</text>
-            <text x="787" y="73" text-anchor="middle" font-size="9" fill="#1a4060" font-family="Inter,system-ui,sans-serif">React · TS · Chrome kiosk</text>
+            <text x="787" y="73" text-anchor="middle" font-size="9" fill="#1a4060" font-family="Inter,system-ui,sans-serif">HTML · TS · Chrome kiosk</text>
             <line x1="705" y1="82" x2="869" y2="82" stroke="#1a5e8a" stroke-width="0.7" opacity="0.5"/>
             <text x="787" y="101" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Reels · Library · Downloads</text>
             <text x="787" y="118" text-anchor="middle" font-size="8.5" fill="#1a4060" font-family="Inter,system-ui,sans-serif">localhost:8080 only</text>
@@ -755,7 +755,7 @@ location / {
         <table class="data-table">
           <thead><tr><th>Layer</th><th>Technology</th><th>Why Chosen</th></tr></thead>
           <tbody>
-            <tr><td>Frontend (Edge + Admin)</td><td><strong>React 18 + TypeScript</strong></td><td class="muted">Largest ecosystem; scroll-snap support; students likely familiar</td></tr>
+            <tr><td>Frontend (Edge + Admin)</td><td><strong>HTML + TypeScript</strong></td><td class="muted">No framework dependency; simpler stack; sufficient for SPA complexity</td></tr>
             <tr><td>Backend</td><td><strong>Node.js 20 LTS + Express 4</strong></td><td class="muted">Same language as frontend; file streaming; adequate for ~20 clients</td></tr>
             <tr><td>Database</td><td><strong>PostgreSQL 15+</strong></td><td class="muted">Text search (ILIKE); concurrent reads; continuation-ready</td></tr>
             <tr><td>File storage</td><td><strong>Local filesystem + abstraction</strong></td><td class="muted">Simplest; interface allows S3/MinIO swap without service-layer changes</td></tr>
@@ -778,7 +778,7 @@ location / {
         <h1 class="title-h1">Part 1 — <span class="highlight-g">Foundation Choices</span></h1>
         <div class="three-col">
           <div class="card card-g"><p class="card-title">AD1 — TypeScript Monorepo</p><p class="card-body">Single language. Shared types between client and server prevent API contract drift at compile time. One CI pipeline.</p></div>
-          <div class="card card-g"><p class="card-title">AD2 — React for Both SPAs</p><p class="card-body">Largest ecosystem. Best support for scroll-snap and TikTok-style patterns. Students likely familiar.</p></div>
+          <div class="card card-g"><p class="card-title">AD2 — HTML + TypeScript for Both SPAs</p><p class="card-body">No framework dependency. Simpler stack. Sufficient for SPA complexity. Avoids React learning curve.</p></div>
           <div class="card card-g"><p class="card-title">AD3 — Node.js + Express</p><p class="card-body">Same language as frontend. Simple file streaming (206 range). Adequate for ~20 concurrent clients.</p></div>
           <div class="card card-b"><p class="card-title">AD4 — PostgreSQL</p><p class="card-body">Production-grade. Text search (ILIKE for MVP; tsvector later). Concurrent reads. Migration-based schema from day one.</p></div>
           <div class="card card-b"><p class="card-title">AD5 — Filesystem for Content</p><p class="card-body">Simplest. No external service. <code style="color:var(--accent-green);">store/retrieve/delete</code> abstraction allows S3/MinIO swap without changing service layer.</p></div>
@@ -861,7 +861,7 @@ location / {
           <thead><tr><th>Risk</th><th>L</th><th>I</th><th>Mitigation</th></tr></thead>
           <tbody>
             <tr><td><strong>AR1</strong> — Node.js bottleneck serving video to 20 concurrent clients</td><td class="muted">Med</td><td class="muted" style="color:#f87171;"><strong>High</strong></td><td class="muted">Test with simulated load; fallback: nginx X-Accel-Redirect serves files directly from disk</td></tr>
-            <tr><td><strong>AR5</strong> — React scroll-snap janky on tablet</td><td class="muted">Med</td><td class="muted" style="color:#f87171;"><strong>High</strong></td><td class="muted">Prototype in Week 1; switch to Swiper.js or custom touch handler if needed</td></tr>
+            <tr><td><strong>AR5</strong> — CSS scroll-snap may be janky on tablet</td><td class="muted">Med</td><td class="muted" style="color:#f87171;"><strong>High</strong></td><td class="muted">Prototype in Week 1; consider Swiper.js or custom touch handler if native scroll-snap insufficient</td></tr>
             <tr><td><strong>AR2</strong> — Docker / Linux VM setup unfamiliar to students</td><td class="muted">Med</td><td class="muted">Med</td><td class="muted">Pre-built Dockerfile template; pair-program setup in Sprint 1</td></tr>
             <tr><td><strong>AR8</strong> — Port mapping Linux VM → Windows localhost requires config</td><td class="muted">Med</td><td class="muted">Med</td><td class="muted">Test VM networking early; WSL2 maps ports automatically; VirtualBox needs explicit forwarding</td></tr>
             <tr><td><strong>AR9</strong> — nginx proxy_cache doesn't cache range request responses correctly</td><td class="muted">Low</td><td class="muted" style="color:#f87171;"><strong>High</strong></td><td class="muted">Test early; if needed, configure proxy to fetch full file and serve ranges from cache</td></tr>
