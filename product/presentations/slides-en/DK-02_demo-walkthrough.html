@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TactiTok: Live Demo — DK-02 Demo Walkthrough</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS ───────────────────────────────────────────── */
+    :root {
+      --bg-primary:        #0a0f1e;
+      --bg-secondary:      #111827;
+      --bg-tertiary:       #1a2438;
+      --bg-card:           #0f1a2e;
+      --accent-green:      #22c55e;
+      --accent-green-dim:  #166534;
+      --accent-green-glow: rgba(34,197,94,0.15);
+      --accent-blue:       #60a5fa;
+      --accent-blue-dim:   #1e3a5f;
+      --accent-blue-glow:  rgba(96,165,250,0.15);
+      --accent-orange:     #fb923c;
+      --accent-orange-dim: #9a3412;
+      --text-primary:      #f1f5f9;
+      --text-secondary:    #94a3b8;
+      --text-muted:        #475569;
+      --border-subtle:     rgba(255,255,255,0.06);
+      --border-green:      rgba(34,197,94,0.35);
+      --border-blue:       rgba(96,165,250,0.35);
+      --border-orange:     rgba(251,146,60,0.35);
+
+      --font:              'Inter', system-ui, -apple-system, sans-serif;
+
+      --sz-hero:   clamp(2.4rem, 4.5vw, 4.2rem);
+      --sz-h1:     clamp(1.7rem, 3vw, 2.8rem);
+      --sz-h2:     clamp(1.3rem, 2.2vw, 1.9rem);
+      --sz-h3:     clamp(1.05rem, 1.8vw, 1.45rem);
+      --sz-body:   clamp(0.88rem, 1.5vw, 1.1rem);
+      --sz-small:  clamp(0.78rem, 1.2vw, 0.95rem);
+      --sz-label:  clamp(0.64rem, 1vw, 0.78rem);
+
+      --pad:       clamp(2.5rem, 5vw, 5.5rem);
+      --gap-sm:    0.75rem;
+      --gap-md:    1.5rem;
+      --gap-lg:    2.5rem;
+      --gap-xl:    3.5rem;
+
+      --radius:    6px;
+      --radius-lg: 10px;
+
+      --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-slide:  420ms;
+    }
+
+    /* ─── RESET ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg-primary);
+      font-family: var(--font);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ─── PROGRESS BAR ────────────────────────────────────────────── */
+    #progress-bar {
+      position: fixed; top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-green), #4ade80);
+      width: 5%; /* 1/20 */
+      z-index: 200;
+      transition: width 300ms var(--ease-slide);
+      box-shadow: 0 0 8px rgba(34,197,94,0.6);
+    }
+
+    /* ─── SLIDE COUNTER ───────────────────────────────────────────── */
+    #slide-counter {
+      position: fixed; top: 1rem; right: 1.5rem;
+      font-size: var(--sz-label);
+      font-weight: 600; letter-spacing: 0.1em;
+      color: var(--text-muted);
+      z-index: 200;
+      user-select: none;
+    }
+    #slide-counter .cur { color: var(--accent-green); font-weight: 700; }
+
+    /* ─── NAV BUTTONS ─────────────────────────────────────────────── */
+    #nav-controls {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      display: flex; gap: 0.4rem;
+      z-index: 200;
+    }
+    #nav-controls button {
+      width: 2.4rem; height: 2.4rem;
+      border: 1px solid var(--border-green);
+      border-radius: var(--radius);
+      background: rgba(34,197,94,0.07);
+      color: var(--accent-green);
+      font-size: 1rem; cursor: pointer;
+      transition: background 180ms ease, transform 120ms ease;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #nav-controls button:hover { background: rgba(34,197,94,0.18); transform: scale(1.05); }
+    #nav-controls button:disabled { opacity: 0.25; pointer-events: none; }
+
+    /* ─── KEYBOARD HINT ───────────────────────────────────────────── */
+    #kb-hint {
+      position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%);
+      font-size: var(--sz-label); color: var(--text-muted);
+      letter-spacing: 0.06em; z-index: 200; user-select: none;
+      white-space: nowrap;
+    }
+
+    /* ─── SPEAKER NOTES ───────────────────────────────────────────── */
+    #notes-overlay {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-height: 32vh;
+      background: rgba(5,8,18,0.97);
+      border-top: 2px solid var(--accent-green);
+      padding: 1.1rem 2rem 1.1rem 1.5rem;
+      z-index: 300; overflow-y: auto;
+      backdrop-filter: blur(8px);
+    }
+    #notes-overlay[hidden] { display: none; }
+    #notes-label {
+      font-size: var(--sz-label); font-weight: 700;
+      color: var(--accent-green); letter-spacing: 0.12em;
+      text-transform: uppercase; margin-bottom: 0.5rem;
+    }
+    #notes-content { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.65; }
+    #notes-close {
+      position: absolute; top: 0.8rem; right: 1rem;
+      background: none; border: none;
+      color: var(--text-muted); font-size: 1.1rem; cursor: pointer;
+      transition: color 150ms;
+    }
+    #notes-close:hover { color: var(--text-primary); }
+
+    /* ─── SLIDES CONTAINER ────────────────────────────────────────── */
+    #slides-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+    /* ─── SLIDE BASE ──────────────────────────────────────────────── */
+    .slide {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--pad);
+      opacity: 0;
+      transform: translateX(60px);
+      pointer-events: none;
+      transition: opacity var(--dur-slide) var(--ease-slide),
+                  transform var(--dur-slide) var(--ease-slide);
+      will-change: transform, opacity;
+    }
+    .slide.active {
+      opacity: 1; transform: translateX(0);
+      pointer-events: auto; z-index: 1;
+    }
+    .slide.exit-left {
+      opacity: 0; transform: translateX(-60px);
+      pointer-events: none;
+    }
+
+    /* ─── SLIDE INNER ─────────────────────────────────────────────── */
+    .slide-inner {
+      width: 100%; max-width: 1200px;
+      display: flex; flex-direction: column;
+      gap: var(--gap-md);
+    }
+    .slide-inner.centered {
+      align-items: center; text-align: center; justify-content: center;
+    }
+
+    /* ─── SECTION LABEL ───────────────────────────────────────────── */
+    .label {
+      font-size: var(--sz-label); font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent-green);
+    }
+    .label-o { color: var(--accent-orange); }
+    .label-b { color: var(--accent-blue); }
+    .accent-bar {
+      width: 2.5rem; height: 3px;
+      background: var(--accent-green); border-radius: 2px;
+      margin-top: 0.35rem;
+    }
+    .accent-bar-o { background: var(--accent-orange); }
+    .accent-bar-b { background: var(--accent-blue); }
+    .label-block { display: flex; flex-direction: column; gap: 0; }
+
+    /* ─── TITLES ──────────────────────────────────────────────────── */
+    .title-hero { font-size: var(--sz-hero); font-weight: 900; line-height: 1.1; }
+    .title-h1   { font-size: var(--sz-h1);   font-weight: 800; line-height: 1.15; }
+    .title-h2   { font-size: var(--sz-h2);   font-weight: 700; line-height: 1.2; }
+    .title-h3   { font-size: var(--sz-h3);   font-weight: 700; line-height: 1.25; }
+    .highlight-g { color: var(--accent-green); }
+    .highlight-b { color: var(--accent-blue); }
+    .highlight-o { color: var(--accent-orange); }
+
+    /* ─── CARDS ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.4rem;
+    }
+    .card-g { border-top: 3px solid var(--accent-green); }
+    .card-b { border-top: 3px solid var(--accent-blue); }
+    .card-o { border-top: 3px solid var(--accent-orange); }
+    .card-gl { border-left: 3px solid var(--accent-green); }
+    .card-bl { border-left: 3px solid var(--accent-blue); }
+    .card-ol { border-left: 3px solid var(--accent-orange); }
+    .card-title {
+      font-size: var(--sz-small); font-weight: 700;
+      letter-spacing: 0.06em; color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .card-body { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+
+    /* ─── GRIDS ───────────────────────────────────────────────────── */
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+
+    /* ─── BULLET LIST ─────────────────────────────────────────────── */
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bullets li {
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      font-size: var(--sz-body); color: var(--text-primary); line-height: 1.55;
+    }
+    .bullets li::before {
+      content: '▸'; color: var(--accent-green);
+      font-size: 0.8em; flex-shrink: 0; margin-top: 0.22em;
+    }
+    .bullets.blue li::before  { color: var(--accent-blue); }
+    .bullets.orange li::before { color: var(--accent-orange); }
+    .bullets li strong { color: var(--text-primary); font-weight: 600; }
+
+    /* ─── BADGE ───────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block; padding: 0.18em 0.55em;
+      border-radius: 3px; font-size: var(--sz-label);
+      font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .badge-g { background: rgba(34,197,94,0.12); color: var(--accent-green); border: 1px solid var(--border-green); }
+    .badge-b { background: rgba(96,165,250,0.12); color: var(--accent-blue);  border: 1px solid var(--border-blue); }
+    .badge-o { background: rgba(251,146,60,0.12); color: var(--accent-orange);border: 1px solid var(--border-orange); }
+
+    /* ─── DIVIDER ─────────────────────────────────────────────────── */
+    .divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg, var(--accent-green), transparent);
+      border: none; margin: 0;
+    }
+    .divider-b { background: linear-gradient(90deg, var(--accent-blue), transparent); }
+    .divider-o { background: linear-gradient(90deg, var(--accent-orange), transparent); }
+
+    /* ─── DATA TABLE ──────────────────────────────────────────────── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      background: var(--bg-tertiary); color: var(--accent-green);
+      font-size: var(--sz-label); font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.6rem 0.9rem; text-align: left;
+      border-bottom: 1px solid var(--border-green);
+    }
+    .data-table td {
+      padding: 0.55rem 0.9rem; font-size: var(--sz-small);
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary); vertical-align: top;
+      line-height: 1.5;
+    }
+    .data-table tr:nth-child(even) td { background: rgba(26,36,56,0.5); }
+    .data-table .td-muted { color: var(--text-secondary); }
+
+    /* ─── STEP HERO (large step number for demo slides) ──────────── */
+    .step-hero {
+      display: flex; align-items: flex-start; gap: var(--gap-lg);
+    }
+    .step-hero-num {
+      flex-shrink: 0;
+      font-size: clamp(5rem, 10vw, 9rem);
+      font-weight: 900; line-height: 1;
+      opacity: 0.12; letter-spacing: -0.04em;
+    }
+    .step-hero-num-g { color: var(--accent-green); }
+    .step-hero-num-b { color: var(--accent-blue); }
+    .step-hero-num-o { color: var(--accent-orange); }
+    .step-hero-body {
+      display: flex; flex-direction: column; gap: var(--gap-sm);
+      padding-top: 0.5rem; flex: 1;
+    }
+    .step-action {
+      font-size: clamp(1.3rem, 2.5vw, 2.1rem);
+      font-weight: 800; line-height: 1.2; color: var(--text-primary);
+    }
+    .step-see-label {
+      font-size: var(--sz-label); font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.2rem;
+    }
+    .step-see-list {
+      list-style: none; display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .step-see-list li {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      font-size: var(--sz-body); color: var(--text-secondary); line-height: 1.5;
+    }
+    .step-see-list li::before {
+      content: '→'; font-size: 0.85em; flex-shrink: 0; margin-top: 0.15em;
+    }
+    .step-see-list.g li::before { color: var(--accent-green); }
+    .step-see-list.b li::before { color: var(--accent-blue); }
+    .step-see-list.o li::before { color: var(--accent-orange); }
+    .step-see-list li strong { color: var(--text-primary); font-weight: 600; }
+
+    /* ─── FLOW BADGE (phase indicator) ───────────────────────────── */
+    .flow-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.22em 0.7em;
+      border-radius: 3px; font-size: var(--sz-label);
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .flow-badge-g { background: rgba(34,197,94,0.10); color: var(--accent-green); border: 1px solid var(--border-green); }
+    .flow-badge-b { background: rgba(96,165,250,0.10); color: var(--accent-blue); border: 1px solid var(--border-blue); }
+    .flow-badge-o { background: rgba(251,146,60,0.10); color: var(--accent-orange); border: 1px solid var(--border-orange); }
+
+    /* ─── CTA ─────────────────────────────────────────────────────── */
+    .cta-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .cta-icon { font-size: 2rem; margin-bottom: 0.7rem; display: block; }
+
+    /* ─── PRINT ───────────────────────────────────────────────────── */
+    .print-only { display: none !important; }
+
+    @media print {
+      html, body { overflow: auto; height: auto; background: white; color: #111; }
+      #progress-bar, #slide-counter, #nav-controls, #kb-hint, #notes-overlay { display: none !important; }
+      #slides-container { overflow: visible; height: auto; position: static; }
+      .slide {
+        position: relative !important; transform: none !important;
+        opacity: 1 !important; pointer-events: auto !important;
+        display: flex !important; width: 100%; min-height: 100vh;
+        page-break-after: always; break-after: page;
+        background: white; padding: 2cm 2.5cm;
+        align-items: flex-start;
+      }
+      .title-hero, .title-h1, .title-h2, .title-h3, .step-action { color: #111; }
+      .highlight-g { color: #166534; }
+      .highlight-b { color: #1d4ed8; }
+      .highlight-o { color: #b45309; }
+      .label { color: #166534; }
+      .label-o { color: #b45309; }
+      .label-b { color: #1d4ed8; }
+      .accent-bar { background: #166534; }
+      .accent-bar-o { background: #b45309; }
+      .accent-bar-b { background: #1d4ed8; }
+      .card { background: #f9fafb; border-color: #d1d5db; }
+      .card-g { border-top-color: #166534; }
+      .card-b { border-top-color: #1d4ed8; }
+      .card-o { border-top-color: #b45309; }
+      .card-body, .td-muted, .step-see-list li { color: #4b5563; }
+      .data-table th { background: #f3f4f6; color: #166534; border-bottom-color: #86efac; }
+      .data-table td { color: #111; border-bottom-color: #e5e7eb; }
+      .data-table tr:nth-child(even) td { background: #f9fafb; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <div id="slide-counter">
+    <span class="cur" id="cur">1</span> / <span id="tot">20</span>
+  </div>
+
+  <nav id="nav-controls" aria-label="Slide navigation">
+    <button id="btn-prev" aria-label="Previous slide" title="Previous (←)">&#8592;</button>
+    <button id="btn-next" aria-label="Next slide" title="Next (→)">&#8594;</button>
+  </nav>
+
+  <div id="kb-hint">&#9654; Arrow keys or swipe &nbsp;·&nbsp; F fullscreen &nbsp;·&nbsp; N notes</div>
+
+  <div id="notes-overlay" hidden>
+    <p id="notes-label">Speaker Notes</p>
+    <button id="notes-close" aria-label="Close notes">&#10005;</button>
+    <p id="notes-content"></p>
+  </div>
+
+  <main id="slides-container">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 1 — COVER
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-slide="1"
+      data-notes="Welcome to the TactiTok live demo session. This deck guides you step-by-step through exactly what you will see and do in the next 20–30 minutes. There are 15 demo steps organized across three phases: admin content upload, consumer experience on the tablet (reels + library), and offline access. You will have hands-on time after the walkthrough. The system running behind this screen is the actual MVP — not a mockup.">
+
+      <div class="slide-inner centered" style="gap: var(--gap-lg); min-height: 70vh; justify-content: center;">
+
+        <!-- Logo mark -->
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+          <polygon points="36,4 68,21 68,51 36,68 4,51 4,21"
+            fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+          <polygon points="36,10 62,24 62,48 36,62 10,48 10,24"
+            fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="36" y="41" text-anchor="middle" dominant-baseline="middle"
+            font-size="18" font-weight="800" fill="#22c55e"
+            font-family="Inter,system-ui,sans-serif" letter-spacing="-0.5">TT</text>
+        </svg>
+
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+          <p class="label">DK-02 &mdash; Demo Walkthrough</p>
+          <h1 class="title-hero" style="max-width:800px;">
+            TactiTok:<br>
+            <span class="highlight-g">Live Demo</span>
+          </h1>
+        </div>
+
+        <p style="font-size:var(--sz-h3);color:var(--text-secondary);max-width:560px;line-height:1.55;">
+          15 steps &nbsp;·&nbsp; 3 flows &nbsp;·&nbsp; hands-on at the end
+        </p>
+
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+          <div style="width:3rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+          <span style="font-size:var(--sz-label);color:var(--text-muted);letter-spacing:0.14em;text-transform:uppercase;">
+            Demo Session &middot; 2026
+          </span>
+          <div style="width:3rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 2 — WHAT YOU'LL EXPERIENCE
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="2"
+      data-notes="The demo has three acts. First, we show the HQ side — how content is uploaded and published. Second, we show the edge consumer experience — scrolling reels, browsing the library, downloading content. Third, we simulate a network disconnect and show that downloaded content is fully available offline. The three acts mirror the three core user flows described in the product brief.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Session Overview</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">What You'll <span class="highlight-g">Experience Today</span></h1>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-o" style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.2rem;">
+              <span style="font-size:1.5rem;">🖥️</span>
+              <span class="badge badge-o">Phase 1</span>
+            </div>
+            <h3 class="title-h3" style="color:var(--accent-orange);">Admin Upload</h3>
+            <p class="card-body">HQ staff uploads a video and a PDF via the admin portal. Content is tagged with categories and interests, then published to the catalog.</p>
+            <p style="font-size:var(--sz-label);color:var(--text-muted);margin-top:auto;">Steps 1 – 2</p>
+          </div>
+
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.2rem;">
+              <span style="font-size:1.5rem;">📱</span>
+              <span class="badge badge-b">Phase 2</span>
+            </div>
+            <h3 class="title-h3" style="color:var(--accent-blue);">Reels &amp; Library</h3>
+            <p class="card-body">Edge device first launch — interest selection, scrolling reels, downloading a video, browsing the library, searching, viewing a PDF.</p>
+            <p style="font-size:var(--sz-label);color:var(--text-muted);margin-top:auto;">Steps 3 – 10</p>
+          </div>
+
+          <div class="card card-g" style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.2rem;">
+              <span style="font-size:1.5rem;">✈️</span>
+              <span class="badge badge-g">Phase 3</span>
+            </div>
+            <h3 class="title-h3" style="color:var(--accent-green);">Offline &amp; Sync</h3>
+            <p class="card-body">Network is disconnected. Downloaded content stays fully accessible. Network is restored and the device syncs — showing an "updated" badge.</p>
+            <p style="font-size:var(--sz-label);color:var(--text-muted);margin-top:auto;">Steps 11 – 15</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 3 — DEMO SETUP
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="3"
+      data-notes="Orient the audience to the physical setup before starting. One laptop or desktop runs the admin portal (HQ side). One 10-inch tablet runs the edge consumer app in Chrome. Both are on the same local lab network. The facilitator controls the demo from the tablet during steps 3–15. Network disconnect in step 11 is simulated by toggling the tablet's WiFi off. Make sure the tablet is on the projected display before beginning.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Demo Environment</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">Demo <span class="highlight-g">Setup</span></h1>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-ol" style="display:flex;flex-direction:column;gap:0.5rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="font-size:1.3rem;">🖥️</span>
+                <span class="card-title">Admin Machine (HQ side)</span>
+              </div>
+              <p class="card-body">Standard laptop or desktop. Browser open to the TactiTok Admin Portal. Used for steps 1–2 (content upload). Content is immediately visible on the catalog.</p>
+            </div>
+            <div class="card card-bl" style="display:flex;flex-direction:column;gap:0.5rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="font-size:1.3rem;">📱</span>
+                <span class="card-title">Edge Tablet (fighter side)</span>
+              </div>
+              <p class="card-body">~10&Prime; tablet running Chrome. Connected to the lab network. Shows the TactiTok consumer app. Used for steps 3–15. Screen is projected for all evaluators to see.</p>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.5rem;">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="font-size:1.3rem;">📶</span>
+                <span class="card-title">Network Conditions</span>
+              </div>
+              <p class="card-body">Local lab network simulating constrained bandwidth. Step 11 simulates a full disconnect by toggling tablet WiFi off. This is intentional — not a malfunction.</p>
+            </div>
+            <div class="card" style="display:flex;flex-direction:column;gap:0.5rem;border-left:3px solid var(--text-muted);">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span style="font-size:1.3rem;">📦</span>
+                <span class="card-title">Pre-loaded Content</span>
+              </div>
+              <p class="card-body">15 demo items already in the catalog: 10 PDFs + 5 videos. Steps 1–2 add 2 additional items live. All content is representative training material.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 4 — STEP 01
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="4"
+      data-notes="Switch to the admin machine. Navigate to the admin portal URL. Click 'Upload Content'. Fill in the title, description, select the category (e.g., 'Tactics > Infantry'), assign interest tags (e.g., 'Urban Combat'), and upload the MP4 file. Click 'Publish'. The video should appear in the catalog within a few seconds. Tell the audience: this is how HQ staff adds new content without any technical knowledge.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-o">Phase 1 — Admin Upload</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-o">01</div>
+          <div class="step-hero-body">
+            <p class="step-action">HQ staff uploads a <span class="highlight-o">new video</span> via the admin portal</p>
+            <hr class="divider divider-o" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list o">
+              <li>Admin portal opens to the upload form</li>
+              <li>Staff fills in title, description, category, and interest tags</li>
+              <li>File picker accepts the MP4; content type is auto-detected</li>
+              <li><strong>After submit:</strong> video appears in the catalog with metadata and thumbnail</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 5 — STEP 02
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="5"
+      data-notes="Still on the admin machine. Upload a PDF this time. Show that the category tree is pre-populated (2-level hierarchy). Assign a different category and different interest tags so the library demo in steps 7–8 is meaningful. After publish, open the catalog view and scroll to confirm both items are visible. Note for the audience: this content will be synced to the edge device automatically on next catalog refresh.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-o">Phase 1 — Admin Upload</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-o">02</div>
+          <div class="step-hero-body">
+            <p class="step-action">HQ staff uploads a <span class="highlight-o">PDF</span> and assigns categories &amp; interests</p>
+            <hr class="divider divider-o" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list o">
+              <li>Same upload form — now selecting a PDF file</li>
+              <li>Category selector shows the 2-level category tree</li>
+              <li>Interest tags are assigned (different from step 1)</li>
+              <li><strong>After submit:</strong> PDF appears in catalog, organized under the chosen category</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 6 — STEP 03
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="6"
+      data-notes="Switch to the tablet. Open Chrome to the TactiTok app URL. This is the first launch — IndexedDB has no saved device profile yet. The interest selection screen should appear immediately, before any catalog content is shown. Tell the audience: this is a one-time setup. On subsequent opens, the device goes straight to the reels feed using the saved interests.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-b">Phase 2 — Edge Consumer</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-b">03</div>
+          <div class="step-hero-body">
+            <p class="step-action">Edge device opens the app <span class="highlight-b">for the first time</span></p>
+            <hr class="divider divider-b" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list b">
+              <li>App loads fully in Chrome — no splash longer than 2 seconds</li>
+              <li><strong>Interest selection screen</strong> appears before any content feed</li>
+              <li>Available interests shown as selectable chips or toggle buttons</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 7 — STEP 04
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="7"
+      data-notes="On the tablet, tap 2 or 3 interest chips. Choose interests that map to the content uploaded in steps 1–2 so the reels feed immediately shows matching videos. Tap 'Continue' or 'Start'. The app should navigate directly to the reels feed. Interests are persisted in IndexedDB — they survive app reload. Tell the audience: interests are editable later from settings. This replaces the need for a user login for content personalization.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-b">Phase 2 — Edge Consumer</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-b">04</div>
+          <div class="step-hero-body">
+            <p class="step-action">User selects <span class="highlight-b">2–3 interests</span></p>
+            <hr class="divider divider-b" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list b">
+              <li>Tapping a chip highlights it — selections are visually clear</li>
+              <li>Tapping "Continue" navigates to the Reels feed</li>
+              <li><strong>Feed immediately filtered</strong> — only videos matching selected interests appear</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 8 — STEP 05
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="8"
+      data-notes="This is the core UX moment — the TikTok-like experience. The first video should auto-play immediately (target: ≤ 2 seconds). Show a slow swipe-up gesture so the audience can see the transition. The next video should start quickly thanks to prefetch. Let 2–3 videos play. Point out the overlay UI: title, description (truncated), Like, Save, and Download buttons. Do not tap Download yet — that is step 6.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-g">Phase 2 — Reels</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-g">05</div>
+          <div class="step-hero-body">
+            <p class="step-action">User scrolls through <span class="highlight-g">reels</span></p>
+            <hr class="divider" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list g">
+              <li>First video <strong>auto-plays</strong> — no tap required — within 2 seconds</li>
+              <li>Swipe up: current video stops; next video auto-plays</li>
+              <li>Swipe down: returns to previous video</li>
+              <li>Overlay shows: <strong>title</strong>, description (truncated), Like, Save, Download buttons</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 9 — STEP 06
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="9"
+      data-notes="Tap the Download button on a video in the reels feed. A progress indicator should appear. After download completes, the item should appear in the Downloads tab. This download is stored in the edge proxy nginx cache — not in browser local storage. Tell the audience this video will play fully offline in step 13. Do not navigate to the Downloads tab yet — keep the audience on the reels feed momentarily.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-g">Phase 2 — Reels</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-g">06</div>
+          <div class="step-hero-body">
+            <p class="step-action">User taps <span class="highlight-g">"Download"</span> on a video</p>
+            <hr class="divider" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list g">
+              <li>Download progress indicator appears on the video overlay</li>
+              <li>On completion: button state updates (downloaded state)</li>
+              <li><strong>Item is now cached</strong> on the edge proxy — ready for offline playback</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 10 — STEP 07
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="10"
+      data-notes="Tap the Library tab at the bottom of the screen. The category tree should load — show the 2-level hierarchy (top-level categories, expandable children). Tap a category to expand it and show the filtered item list. Confirm the content uploaded in steps 1–2 appears in the correct category. Also show the search bar at the top of the library view. This is the structured alternative to the passive reels experience.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-b">Phase 2 — Library</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-b">07</div>
+          <div class="step-hero-body">
+            <p class="step-action">User navigates to <span class="highlight-b">Library</span> tab</p>
+            <hr class="divider divider-b" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list b">
+              <li>Library view loads with the <strong>2-level category tree</strong></li>
+              <li>Tapping a category expands it and shows filtered content items</li>
+              <li>Video and PDF items are visually distinguishable (type icon/badge)</li>
+              <li>Search bar visible at the top of the library</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 11 — STEP 08
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="11"
+      data-notes="Tap the search bar. Type a keyword related to one of the uploaded items (e.g., a word from the title). Results should filter in real-time or on submit — searching title and description fields. Show that the results are relevant. Type a word with no match to show the 'No results found' empty state. This is the active, intentional lookup flow — the counterpart to passive reel scrolling.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-b">Phase 2 — Library</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-b">08</div>
+          <div class="step-hero-body">
+            <p class="step-action">User <span class="highlight-b">searches</span> for a topic</p>
+            <hr class="divider divider-b" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list b">
+              <li>Typing into the search bar filters results <strong>in real-time</strong> (or on submit)</li>
+              <li>Searches across title and description fields</li>
+              <li>Relevant items appear within seconds</li>
+              <li>Each result shows type badge (video / PDF) for quick identification</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 12 — STEP 09
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="12"
+      data-notes="From the search results or the category tree, tap a PDF item. The PDF viewer should open in-browser (powered by PDF.js). Navigate a few pages by tapping or scrolling. No external app opens — everything stays inside Chrome. This is a critical acceptance criterion. If the PDF is long, jump to a later page to demonstrate page navigation. Then tap the back button or the Library tab to return.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-b">Phase 2 — Library</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-b">09</div>
+          <div class="step-hero-body">
+            <p class="step-action">User opens a <span class="highlight-b">PDF</span> from the library</p>
+            <hr class="divider divider-b" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list b">
+              <li>PDF opens in the <strong>in-browser viewer</strong> — no external apps, no pop-ups</li>
+              <li>Page-by-page navigation works via tap or scroll</li>
+              <li>Entire experience stays inside Chrome</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 13 — STEP 10
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="13"
+      data-notes="Still viewing the PDF (or navigate back to it from the library). Tap the Download button on the PDF. Wait for the progress indicator. After completion, the PDF appears in the Downloads tab. Tell the audience: this PDF will be readable fully offline in step 14. Navigate to the Downloads tab briefly to show both downloaded items (the video from step 6 + the PDF just downloaded).">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-b">Phase 2 — Library</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-b">10</div>
+          <div class="step-hero-body">
+            <p class="step-action">User downloads the <span class="highlight-b">PDF</span></p>
+            <hr class="divider divider-b" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list b">
+              <li>Download button on the PDF viewer triggers a progress indicator</li>
+              <li>On completion: PDF saved locally (edge proxy cache)</li>
+              <li>PDF appears in the <strong>Downloads tab</strong> alongside the previously downloaded video</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 14 — STEP 11
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="14"
+      data-notes="This is the moment of truth for the offline story. Turn off the tablet's WiFi now. The app should detect the network drop and show an offline indicator (banner or status badge). The Reels and Library tabs will show an offline state — they cannot load new content. This is intentional and expected. Tell the audience: the app handles this gracefully — no crashes, no errors. The Downloads tab still works.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-o">Phase 3 — Offline</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-o">11</div>
+          <div class="step-hero-body">
+            <p class="step-action"><span class="highlight-o">Network disconnected</span> (simulated)</p>
+            <hr class="divider divider-o" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list o">
+              <li>Tablet WiFi turned off — network drop is intentional</li>
+              <li><strong>Offline indicator</strong> appears in the app (banner or status badge)</li>
+              <li>Reels and Library tabs show graceful offline state — no crash</li>
+              <li>App remains stable and responsive</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 15 — STEP 12
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="15"
+      data-notes="Tap the Downloads tab. Both previously downloaded items (video + PDF) should be listed. Show the metadata: title, type, file size, download date. Nothing is loading from the network — all data is local. This is the Downloads tab as a self-contained offline library. If there is time, swipe to delete one item and show the confirmation prompt, then undo or reload to restore.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-o">Phase 3 — Offline</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-o">12</div>
+          <div class="step-hero-body">
+            <p class="step-action">User opens <span class="highlight-o">Downloads tab</span></p>
+            <hr class="divider divider-o" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list o">
+              <li>Downloads tab loads instantly — <strong>no network needed</strong></li>
+              <li>Both downloaded items listed: video (step 6) + PDF (step 10)</li>
+              <li>Each item shows: title, type (video / PDF), file size, download date</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 16 — STEP 13
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="16"
+      data-notes="Tap the downloaded video from the Downloads tab. It should open in the player and begin playing immediately — no network required. Let it play for 10–15 seconds. Point out that there is no buffering, no loading spinner, no network call. The video is served entirely from the edge proxy cache. This is the core offline value proposition for the reels experience.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-o">Phase 3 — Offline</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-o">13</div>
+          <div class="step-hero-body">
+            <p class="step-action">User plays <span class="highlight-o">downloaded video</span> offline</p>
+            <hr class="divider divider-o" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list o">
+              <li>Video player opens from the Downloads tab</li>
+              <li><strong>Plays immediately</strong> — no buffering, no network required</li>
+              <li>Full video playback from edge proxy cache — completely offline</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 17 — STEP 14
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="17"
+      data-notes="Go back to the Downloads tab. Tap the downloaded PDF. The PDF viewer should open and render all pages — no network. Navigate a few pages. This proves that the hybrid offline architecture covers both content types. Tell the audience: a fighter can download mission-relevant content at base, then operate fully offline in the field.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-o">Phase 3 — Offline</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-o">14</div>
+          <div class="step-hero-body">
+            <p class="step-action">User opens <span class="highlight-o">downloaded PDF</span> offline</p>
+            <hr class="divider divider-o" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list o">
+              <li>PDF viewer opens from the Downloads tab</li>
+              <li><strong>Renders fully</strong> — all pages available, no network required</li>
+              <li>Page navigation works exactly as when online</li>
+              <li>Everything stays inside Chrome — no external app</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 18 — STEP 15
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="18"
+      data-notes="Turn WiFi back on. On the admin machine, upload an updated version of the video from step 1 (or update its metadata to increment the version counter). On the tablet, the app will sync the catalog on the next network event. Navigate to the Downloads tab or the Library — the downloaded item should show an 'updated' badge indicating its cached version is older than the catalog version. This closes the content lifecycle loop.">
+
+      <div class="slide-inner">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--gap-sm);">
+          <span class="flow-badge flow-badge-g">Phase 3 — Reconnect &amp; Sync</span>
+        </div>
+
+        <div class="step-hero">
+          <div class="step-hero-num step-hero-num-g">15</div>
+          <div class="step-hero-body">
+            <p class="step-action">Network restored; HQ uploads an <span class="highlight-g">updated video</span></p>
+            <hr class="divider" style="margin:var(--gap-sm) 0;">
+            <p class="step-see-label">What you'll see</p>
+            <ul class="step-see-list g">
+              <li>WiFi turned back on — offline indicator disappears</li>
+              <li>App <strong>syncs the catalog</strong> automatically on reconnect</li>
+              <li>Downloaded item shows an <span class="highlight-g">"updated" badge</span> — catalog version exceeds local version</li>
+              <li>Reels and Library return to normal online operation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 19 — SUCCESS CRITERIA
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="19"
+      data-notes="These 7 criteria are the formal definition of a successful demo. D1 is the gate — all 15 steps must complete without errors. D2 through D7 are performance and completeness criteria. If D1 passes but a performance criterion misses slightly, note it and move on — the evaluators are looking for viability, not perfection. After reviewing these, move to Q&A and hands-on time.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Evaluation Criteria</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">Demo <span class="highlight-g">Success Criteria</span></h1>
+
+        <table class="data-table" style="margin-top:var(--gap-sm);">
+          <thead>
+            <tr>
+              <th style="width:3rem;">#</th>
+              <th>Criterion</th>
+              <th>Target</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-g">D1</span></td>
+              <td>End-to-end flow completes</td>
+              <td>All 15 demo steps work without errors</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-b">D2</span></td>
+              <td>Reels playback start</td>
+              <td class="td-muted">&le; 2 seconds on reasonable network</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-b">D3</span></td>
+              <td>Library lookup</td>
+              <td class="td-muted">&le; 60 seconds to find a specific item</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">D4</span></td>
+              <td>Offline playback</td>
+              <td>100% functional for downloaded items</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-b">D5</span></td>
+              <td>Browser containment</td>
+              <td class="td-muted">Zero external apps, pop-ups, or OS interactions</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-b">D6</span></td>
+              <td>Content corpus</td>
+              <td class="td-muted">15 items loaded (10 PDFs + 5 videos)</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">D7</span></td>
+              <td>Interest filtering</td>
+              <td>At least 3 interests; feed filters correctly</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 20 — Q&A / HANDS-ON
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="20"
+      data-notes="Hand the tablet to evaluators. Give them 10–15 minutes of free hands-on time. Common things evaluators explore: swiping through reels on their own, searching the library for specific terms, and verifying the offline behavior independently. Be available for questions. Common questions: how does content update timing work? how many devices can use the system? what happens if the edge proxy loses power? Have answers ready from the architecture document.">
+
+      <div class="slide-inner centered" style="gap:var(--gap-lg);min-height:65vh;justify-content:center;">
+
+        <div class="label-block" style="align-items:center;">
+          <p class="label" style="text-align:center;">Now It's Your Turn</p>
+          <div class="accent-bar" style="margin:0.35rem auto 0;"></div>
+        </div>
+
+        <h1 class="title-hero" style="max-width:800px;">
+          Questions &amp; <span class="highlight-g">Hands-On</span>
+        </h1>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);max-width:900px;">
+          <div class="cta-card">
+            <span class="cta-icon">🎯</span>
+            <p class="card-title" style="margin-bottom:0.4rem;">Try It Yourself</p>
+            <p class="card-body">The tablet is yours. Scroll reels, search the library, go offline, come back.</p>
+          </div>
+          <div class="cta-card">
+            <span class="cta-icon">❓</span>
+            <p class="card-title" style="margin-bottom:0.4rem;">Ask Anything</p>
+            <p class="card-body">Architecture, security, offline mechanism, continuation roadmap — all fair game.</p>
+          </div>
+          <div class="cta-card">
+            <span class="cta-icon">📋</span>
+            <p class="card-title" style="margin-bottom:0.4rem;">Evaluation Form</p>
+            <p class="card-body">Feedback form available after hands-on time. 7 criteria, open comments welcome.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.75rem;align-items:center;margin-top:var(--gap-sm);">
+          <div style="width:2rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+          <span style="font-size:var(--sz-label);color:var(--text-muted);letter-spacing:0.14em;text-transform:uppercase;">
+            TactiTok &middot; DK-02 Demo Walkthrough &middot; 2026
+          </span>
+          <div style="width:2rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+        </div>
+
+        <!-- Print footer -->
+        <p class="print-only" style="font-size:0.7rem;color:#6b7280;text-align:center;margin-top:2rem;">
+          TactiTok &middot; DK-02 Demo Walkthrough &middot; Generated 2026-03-11
+        </p>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ─── STATE ──────────────────────────────────────────────────────
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL = slides.length;
+    const state = {
+      current: 0,
+      notesVisible: false,
+      transitioning: false
+    };
+
+    // ─── DOM REFS ────────────────────────────────────────────────────
+    const progressBar  = document.getElementById('progress-bar');
+    const curEl        = document.getElementById('cur');
+    const totEl        = document.getElementById('tot');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const notesOverlay = document.getElementById('notes-overlay');
+    const notesContent = document.getElementById('notes-content');
+
+    totEl.textContent = TOTAL;
+
+    // ─── GO TO SLIDE ────────────────────────────────────────────────
+    function goTo(index) {
+      if (state.transitioning) return;
+      if (index < 0 || index >= TOTAL) return;
+      if (index === state.current) return;
+
+      state.transitioning = true;
+
+      const prev = slides[state.current];
+      const next = slides[index];
+      const forward = index > state.current;
+
+      // Position next off-screen
+      next.style.transition = 'none';
+      next.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      next.style.opacity = '0';
+      next.classList.remove('active', 'exit-left');
+
+      // Force reflow
+      next.getBoundingClientRect();
+
+      // Animate prev out
+      prev.style.transition = '';
+      prev.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      prev.style.opacity = '0';
+      prev.classList.remove('active');
+
+      // Animate next in
+      next.style.transition = '';
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+      next.classList.add('active');
+
+      state.current = index;
+      updateUI();
+
+      setTimeout(() => {
+        state.transitioning = false;
+        prev.style.transform = 'translateX(60px)';
+      }, 480);
+    }
+
+    // ─── UPDATE UI ──────────────────────────────────────────────────
+    function updateUI() {
+      // Progress bar
+      const pct = ((state.current + 1) / TOTAL) * 100;
+      progressBar.style.width = pct + '%';
+
+      // Counter
+      curEl.textContent = state.current + 1;
+
+      // Buttons
+      btnPrev.disabled = state.current === 0;
+      btnNext.disabled = state.current === TOTAL - 1;
+
+      // Notes
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'No notes for this slide.';
+      }
+    }
+
+    // ─── NOTES ──────────────────────────────────────────────────────
+    function toggleNotes() {
+      state.notesVisible = !state.notesVisible;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'No notes for this slide.';
+        notesOverlay.removeAttribute('hidden');
+      } else {
+        notesOverlay.setAttribute('hidden', '');
+      }
+    }
+
+    // ─── FULLSCREEN ──────────────────────────────────────────────────
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // ─── KEYBOARD ───────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case ' ':
+          e.preventDefault(); goTo(state.current + 1); break;
+        case 'ArrowLeft': case 'ArrowUp':
+          e.preventDefault(); goTo(state.current - 1); break;
+        case 'Home':
+          e.preventDefault(); goTo(0); break;
+        case 'End':
+          e.preventDefault(); goTo(TOTAL - 1); break;
+        case 'n': case 'N':
+          e.preventDefault(); toggleNotes(); break;
+        case 'f': case 'F':
+          e.preventDefault(); toggleFullscreen(); break;
+        case 'Escape':
+          if (state.notesVisible) toggleNotes(); break;
+      }
+    });
+
+    // ─── TOUCH / SWIPE ──────────────────────────────────────────────
+    let txStart = 0, tyStart = 0;
+    document.addEventListener('touchstart', e => {
+      txStart = e.touches[0].clientX;
+      tyStart = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - txStart;
+      const dy = e.changedTouches[0].clientY - tyStart;
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (Math.abs(dx) < 50 || angle > 60) return;
+      if (dx < 0) goTo(state.current + 1);
+      else        goTo(state.current - 1);
+    });
+
+    // ─── BUTTON EVENTS ───────────────────────────────────────────────
+    btnPrev.addEventListener('click', () => goTo(state.current - 1));
+    btnNext.addEventListener('click', () => goTo(state.current + 1));
+    document.getElementById('notes-close').addEventListener('click', toggleNotes);
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    slides.forEach((s, i) => {
+      if (i === 0) {
+        s.style.opacity = '1';
+        s.style.transform = 'translateX(0)';
+        s.classList.add('active');
+      } else {
+        s.style.opacity = '0';
+        s.style.transform = 'translateX(60px)';
+        s.classList.remove('active');
+      }
+    });
+
+    updateUI();
+  </script>
+
+</body>
+</html>

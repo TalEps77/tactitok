@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TactiTok: אימון בשטח — DK-01 סקירה לגורמי הערכה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS ───────────────────────────────────────────── */
+    :root {
+      --bg-primary:        #0a0f1e;
+      --bg-secondary:      #111827;
+      --bg-tertiary:       #1a2438;
+      --bg-card:           #0f1a2e;
+      --accent-green:      #22c55e;
+      --accent-green-dim:  #166534;
+      --accent-green-glow: rgba(34,197,94,0.15);
+      --accent-blue:       #60a5fa;
+      --accent-blue-dim:   #1e3a5f;
+      --accent-blue-glow:  rgba(96,165,250,0.15);
+      --accent-orange:     #fb923c;
+      --accent-orange-dim: #9a3412;
+      --text-primary:      #f1f5f9;
+      --text-secondary:    #94a3b8;
+      --text-muted:        #475569;
+      --border-subtle:     rgba(255,255,255,0.06);
+      --border-green:      rgba(34,197,94,0.35);
+      --border-blue:       rgba(96,165,250,0.35);
+      --border-orange:     rgba(251,146,60,0.35);
+
+      --d-spa:    #a5d8ff;
+      --d-admin:  #ffd8a8;
+      --d-api:    #d0bfff;
+      --d-db:     #c3fae8;
+      --d-proxy:  #b2f2bb;
+      --d-note:   #fff3bf;
+
+      --font: 'Heebo', system-ui, -apple-system, sans-serif;
+
+      --sz-hero:   clamp(2.4rem, 4.5vw, 4.2rem);
+      --sz-h1:     clamp(1.7rem, 3vw, 2.8rem);
+      --sz-h2:     clamp(1.3rem, 2.2vw, 1.9rem);
+      --sz-h3:     clamp(1.05rem, 1.8vw, 1.45rem);
+      --sz-body:   clamp(0.88rem, 1.5vw, 1.1rem);
+      --sz-small:  clamp(0.78rem, 1.2vw, 0.95rem);
+      --sz-label:  clamp(0.64rem, 1vw, 0.78rem);
+
+      --pad:       clamp(2.5rem, 5vw, 5.5rem);
+      --gap-sm:    0.75rem;
+      --gap-md:    1.5rem;
+      --gap-lg:    2.5rem;
+      --gap-xl:    3.5rem;
+
+      --radius:    6px;
+      --radius-lg: 10px;
+
+      --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-slide:  420ms;
+    }
+
+    /* ─── RESET ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg-primary);
+      font-family: var(--font);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ─── PROGRESS BAR (stays LTR — universally understood) ──────── */
+    #progress-bar {
+      position: fixed; top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-green), #4ade80);
+      width: 7.69%;
+      z-index: 200;
+      transition: width 300ms var(--ease-slide);
+      box-shadow: 0 0 8px rgba(34,197,94,0.6);
+    }
+
+    /* ─── SLIDE COUNTER ───────────────────────────────────────────── */
+    #slide-counter {
+      position: fixed; top: 1rem; left: 1.5rem;
+      font-size: var(--sz-label);
+      font-weight: 600; letter-spacing: 0.05em;
+      color: var(--text-muted);
+      z-index: 200;
+      user-select: none;
+    }
+    #slide-counter .cur { color: var(--accent-green); font-weight: 700; }
+
+    /* ─── NAV BUTTONS ─────────────────────────────────────────────── */
+    #nav-controls {
+      position: fixed; bottom: 1.5rem; left: 1.5rem;
+      display: flex; gap: 0.4rem;
+      z-index: 200;
+    }
+    #nav-controls button {
+      width: 2.4rem; height: 2.4rem;
+      border: 1px solid var(--border-green);
+      border-radius: var(--radius);
+      background: rgba(34,197,94,0.07);
+      color: var(--accent-green);
+      font-size: 1rem; cursor: pointer;
+      transition: background 180ms ease, transform 120ms ease;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #nav-controls button:hover { background: rgba(34,197,94,0.18); transform: scale(1.05); }
+    #nav-controls button:disabled { opacity: 0.25; pointer-events: none; }
+
+    /* ─── KEYBOARD HINT ───────────────────────────────────────────── */
+    #kb-hint {
+      position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%);
+      font-size: var(--sz-label); color: var(--text-muted);
+      letter-spacing: 0.04em; z-index: 200; user-select: none;
+      white-space: nowrap;
+    }
+
+    /* ─── SPEAKER NOTES ───────────────────────────────────────────── */
+    #notes-overlay {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-height: 32vh;
+      background: rgba(5,8,18,0.97);
+      border-top: 2px solid var(--accent-green);
+      padding: 1.1rem 1.5rem 1.1rem 2rem;
+      z-index: 300; overflow-y: auto;
+      backdrop-filter: blur(8px);
+    }
+    #notes-overlay[hidden] { display: none; }
+    #notes-label {
+      font-size: var(--sz-label); font-weight: 700;
+      color: var(--accent-green); letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 0.5rem;
+    }
+    #notes-content { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.75; }
+    #notes-close {
+      position: absolute; top: 0.8rem; left: 1rem;
+      background: none; border: none;
+      color: var(--text-muted); font-size: 1.1rem; cursor: pointer;
+      transition: color 150ms;
+    }
+    #notes-close:hover { color: var(--text-primary); }
+
+    /* ─── SLIDES CONTAINER ────────────────────────────────────────── */
+    #slides-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+    /* ─── SLIDE BASE ──────────────────────────────────────────────── */
+    .slide {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--pad);
+      opacity: 0;
+      transform: translateX(60px);
+      pointer-events: none;
+      transition: opacity var(--dur-slide) var(--ease-slide),
+                  transform var(--dur-slide) var(--ease-slide);
+      will-change: transform, opacity;
+    }
+    .slide.active {
+      opacity: 1; transform: translateX(0);
+      pointer-events: auto; z-index: 1;
+    }
+
+    /* ─── SLIDE INNER ─────────────────────────────────────────────── */
+    .slide-inner {
+      width: 100%; max-width: 1200px;
+      display: flex; flex-direction: column;
+      gap: var(--gap-md);
+    }
+    .slide-inner.centered {
+      align-items: center; text-align: center; justify-content: center;
+    }
+
+    /* ─── SECTION LABEL ───────────────────────────────────────────── */
+    .label {
+      font-size: var(--sz-label); font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent-green);
+    }
+    .accent-bar {
+      width: 2.5rem; height: 3px;
+      background: var(--accent-green); border-radius: 2px;
+      margin-top: 0.35rem;
+    }
+    .label-block { display: flex; flex-direction: column; gap: 0; }
+
+    /* ─── TITLES ──────────────────────────────────────────────────── */
+    .title-hero { font-size: var(--sz-hero); font-weight: 900; line-height: 1.15; }
+    .title-h1   { font-size: var(--sz-h1);   font-weight: 800; line-height: 1.2; }
+    .title-h2   { font-size: var(--sz-h2);   font-weight: 700; line-height: 1.25; }
+    .title-h3   { font-size: var(--sz-h3);   font-weight: 700; line-height: 1.3; }
+    .highlight-g { color: var(--accent-green); }
+    .highlight-b { color: var(--accent-blue); }
+
+    /* ─── CARDS ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.4rem;
+    }
+    .card-g { border-top: 3px solid var(--accent-green); }
+    .card-b { border-top: 3px solid var(--accent-blue); }
+    .card-o { border-top: 3px solid var(--accent-orange); }
+    /* RTL: start-side border is border-right */
+    .card-gl { border-right: 3px solid var(--accent-green); }
+    .card-title {
+      font-size: var(--sz-small); font-weight: 700;
+      letter-spacing: 0.02em; color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .card-body { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.7; }
+
+    /* ─── GRIDS ───────────────────────────────────────────────────── */
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+
+    /* ─── BULLET LIST ─────────────────────────────────────────────── */
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bullets li {
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      font-size: var(--sz-body); color: var(--text-primary); line-height: 1.6;
+    }
+    /* RTL: bullet marker on the right side (inline-start) */
+    .bullets li::before {
+      content: '◂'; color: var(--accent-green);
+      font-size: 0.8em; flex-shrink: 0; margin-top: 0.22em;
+    }
+    .bullets li strong { color: var(--text-primary); font-weight: 600; }
+
+    /* ─── BADGE ───────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block; padding: 0.18em 0.55em;
+      border-radius: 3px; font-size: var(--sz-label);
+      font-weight: 700; letter-spacing: 0.04em;
+    }
+    .badge-g { background: rgba(34,197,94,0.12); color: var(--accent-green); border: 1px solid var(--border-green); }
+    .badge-b { background: rgba(96,165,250,0.12); color: var(--accent-blue);  border: 1px solid var(--border-blue); }
+    .badge-o { background: rgba(251,146,60,0.12); color: var(--accent-orange);border: 1px solid var(--border-orange); }
+
+    /* ─── STEP ITEMS ──────────────────────────────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: var(--sz-small); color: var(--text-primary); line-height: 1.55;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0; width: 1.45rem; height: 1.45rem; border-radius: 50%;
+      background: rgba(34,197,94,0.12); border: 1px solid var(--border-green);
+      color: var(--accent-green); font-size: 0.68rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 0.1rem;
+    }
+
+    /* ─── DATA TABLE ──────────────────────────────────────────────── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      background: var(--bg-tertiary); color: var(--accent-green);
+      font-size: var(--sz-label); font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.6rem 0.9rem; text-align: right; /* RTL */
+      border-bottom: 1px solid var(--border-green);
+    }
+    .data-table td {
+      padding: 0.55rem 0.9rem; font-size: var(--sz-small);
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary); vertical-align: top;
+      line-height: 1.55;
+    }
+    .data-table tr:nth-child(even) td { background: rgba(26,36,56,0.5); }
+    .data-table .td-target { color: var(--text-secondary); }
+
+    /* ─── DIVIDER — RTL: gradient from right ─────────────────────── */
+    .divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(270deg, var(--accent-green), transparent);
+      border: none; margin: 0;
+    }
+
+    /* ─── PROFILE DETAIL ROWS ─────────────────────────────────────── */
+    .profile-detail {
+      display: flex; gap: 0.5rem; align-items: flex-start;
+      font-size: var(--sz-small); line-height: 1.55;
+      padding: 0.3rem 0; border-bottom: 1px solid var(--border-subtle);
+    }
+    .profile-detail:last-child { border-bottom: none; }
+    .pd-key {
+      flex-shrink: 0; width: 6.5rem; font-weight: 600;
+      color: var(--text-secondary); font-size: var(--sz-label);
+      letter-spacing: 0.04em;
+      padding-top: 0.12em;
+    }
+    .pd-val { color: var(--text-primary); }
+
+    /* ─── LAYER PILLS ─────────────────────────────────────────────── */
+    .layer-pill {
+      padding: 0.5rem 1rem; border-radius: var(--radius);
+      background: var(--bg-tertiary); border: 1px solid var(--border-subtle);
+      font-size: var(--sz-small); font-weight: 600; color: var(--text-secondary);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    /* RTL: start-side accent is border-right */
+    .layer-pill.top { border-right: 3px solid var(--accent-green); color: var(--text-primary); }
+
+    /* ─── BLOCKQUOTE — RTL: accent on right ──────────────────────── */
+    .pull-quote {
+      border-right: 3px solid var(--accent-green);
+      border-left: none;
+      padding: 1rem 1.5rem;
+      background: rgba(34,197,94,0.05);
+      border-radius: var(--radius) 0 0 var(--radius);
+    }
+    .pull-quote p {
+      font-size: var(--sz-h3); font-style: italic;
+      line-height: 1.6; color: var(--text-primary); font-weight: 500;
+    }
+
+    /* ─── FLOW ICON ───────────────────────────────────────────────── */
+    .flow-icon {
+      width: 2.8rem; height: 2.8rem; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 0.75rem;
+    }
+    .flow-icon-g { background: rgba(34,197,94,0.12); }
+    .flow-icon-b { background: rgba(96,165,250,0.12); }
+    .flow-icon-o { background: rgba(251,146,60,0.12); }
+
+    /* ─── CTA CARD ────────────────────────────────────────────────── */
+    .cta-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .cta-icon { font-size: 2rem; margin-bottom: 0.7rem; display: block; }
+
+    /* ─── DOC REF ─────────────────────────────────────────────────── */
+    .doc-ref {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 0.65rem 1rem;
+      font-size: var(--sz-small);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .doc-ref-icon { color: var(--accent-green); flex-shrink: 0; }
+    .doc-ref-path { font-family: 'Courier New', monospace; color: var(--text-secondary); font-size: 0.85em; }
+
+    /* ─── PRINT ───────────────────────────────────────────────────── */
+    .print-only { display: none !important; }
+
+    @media print {
+      html, body { overflow: auto; height: auto; background: white; color: #111; }
+      #progress-bar, #slide-counter, #nav-controls, #kb-hint, #notes-overlay { display: none !important; }
+      #slides-container { overflow: visible; height: auto; position: static; }
+      .slide {
+        position: relative !important; transform: none !important;
+        opacity: 1 !important; pointer-events: auto !important;
+        display: flex !important; width: 100%; min-height: 100vh;
+        page-break-after: always; break-after: page;
+        background: white; padding: 2cm 2.5cm;
+        align-items: flex-start;
+      }
+      .title-hero, .title-h1, .title-h2, .title-h3 { color: #111; }
+      .highlight-g { color: #166534; }
+      .highlight-b { color: #1d4ed8; }
+      .label { color: #166534; }
+      .accent-bar { background: #166534; }
+      .text-secondary, .card-body, .pd-val, .td-target { color: #4b5563; }
+      .card { background: #f9fafb; border-color: #d1d5db; }
+      .card-g { border-top-color: #166534; }
+      .card-b { border-top-color: #1d4ed8; }
+      .card-o { border-top-color: #b45309; }
+      .card-gl { border-right-color: #166534; }
+      .badge-g { background: #dcfce7; color: #166534; border-color: #86efac; }
+      .badge-b { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+      .pull-quote { background: #f0fdf4; border-right-color: #166534; }
+      .pull-quote p { color: #111; }
+      .data-table th { background: #f3f4f6; color: #166534; border-bottom-color: #86efac; }
+      .data-table td { color: #111; border-bottom-color: #e5e7eb; }
+      .data-table tr:nth-child(even) td { background: #f9fafb; }
+      .layer-pill { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
+      .layer-pill.top { border-right-color: #166534; color: #111; }
+      .step-num { background: #dcfce7; border-color: #86efac; color: #166534; }
+      .divider { background: #d1fae5; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <div id="slide-counter">
+    <span class="cur" id="cur">1</span> / <span id="tot">13</span>
+  </div>
+
+  <nav id="nav-controls" aria-label="ניווט שקופיות">
+    <button id="btn-prev" aria-label="שקופית קודמת" title="קודם (←)">&#8592;</button>
+    <button id="btn-next" aria-label="שקופית הבאה" title="הבא (→)">&#8594;</button>
+  </nav>
+
+  <div id="kb-hint">&#9654; מקשי חצים או החלקה לניווט &nbsp;·&nbsp; F מסך מלא &nbsp;·&nbsp; N הערות</div>
+
+  <div id="notes-overlay" hidden>
+    <p id="notes-label">הערות מציג</p>
+    <button id="notes-close" aria-label="סגור הערות">&#10005;</button>
+    <p id="notes-content"></p>
+  </div>
+
+  <main id="slides-container">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 1 — כותרת
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-slide="1"
+      data-notes="ברוכים הבאים. מצגת זו מציגה את TactiTok לגורמי הערכה ולנותני חסות. היא מכסה את הבעיה, חזון המוצר, שלוש הזרימות המרכזיות, המערכת ברמה גבוהה, הדגמת ה-MVP ומה נחשב להצלחה. זמן משוער: 12–15 דקות בתוספת מפגש מעשי. המערכת מאחורי מצגת זו היא ה-MVP האמיתי — לא מוקאפ.">
+
+      <div class="slide-inner centered" style="gap: var(--gap-lg); min-height: 70vh; justify-content: center;">
+
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+          <polygon points="36,4 68,21 68,51 36,68 4,51 4,21"
+            fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+          <polygon points="36,10 62,24 62,48 36,62 10,48 10,24"
+            fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="36" y="41" text-anchor="middle" dominant-baseline="middle"
+            font-size="18" font-weight="800" fill="#22c55e"
+            font-family="Heebo,system-ui,sans-serif" letter-spacing="-0.5">TT</text>
+        </svg>
+
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+          <p class="label">DK-01 &mdash; סקירה לגורמי הערכה</p>
+          <h1 class="title-hero" style="max-width:800px;">
+            TactiTok:<br>
+            <span class="highlight-g">אימון בשטח</span>
+          </h1>
+        </div>
+
+        <p style="font-size:var(--sz-h3);color:var(--text-secondary);max-width:580px;line-height:1.6;">
+          מערכת הדרכה מבוססת דפדפן לכוחות בשטח<br>תחת תקשורת מוגבלת
+        </p>
+
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+          <div style="width:3rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+          <span style="font-size:var(--sz-label);color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;">
+            הצגה לגורמי הערכה &middot; 2026
+          </span>
+          <div style="width:3rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 2 — הבעיה
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="2"
+      data-notes="ארבע הבעיות מחזקות אחת את השנייה. תוכן לא מגיע לשטח בזמן. כשמגיע, אין דרך טובה לצרוך אותו. ומכיוון שאין מנגנון הרגלי, גם תוכן זמין לא נצרך. TactiTok תוכנן לטפל בכל ארבעה בו-זמנית.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">בעיה מבצעית</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">פער ההדרכה <span class="highlight-g">בשטח</span></h1>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">🚫</span>
+              <span class="card-title">אין העברה מרוכזת</span>
+            </div>
+            <p class="card-body">אין דרך נוחה ואמינה להעביר תכני הדרכה עדכניים לכוחות בשטח במהלך מבצעים. התוכן קיים — אך אינו מגיע לשדה.</p>
+          </div>
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">❌</span>
+              <span class="card-title">הדרכה פנים-אל-פנים נכשלת</span>
+            </div>
+            <p class="card-body">המודל הנוכחי מסתמך על מפגשים פרונטליים ושיתוף קבצים לא רשמי בערוצים לא מתאימים. עדכונים מגיעים באיחור — או לא מגיעים כלל.</p>
+          </div>
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">📶</span>
+              <span class="card-title">צריכה תחת רוחב פס מוגבל</span>
+            </div>
+            <p class="card-body">תחת רוחב פס מוגבל ותצורת קיוסק, צריכת וידאו ומסמכים היא מסורבלת ולא עקבית. באפרינג, כשלים וחוויית משתמש ירודה מפריעים ללמידה.</p>
+          </div>
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">🔄</span>
+              <span class="card-title">אין מנגנון משיכה הרגלי</span>
+            </div>
+            <p class="card-body">אין חוויה המחקה צריכת תוכן קצר טבעית — אין דבר שהופך את הלמידה לרוטינה בהפסקות. הלמידה דורשת מאמץ מכוון בכל פעם.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 3 — החזון
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="3"
+      data-notes="המשפט האחד מסכם את כל המוצר: לנצל את זמן המנוחה הקיים ולהפוך את הלמידה להרגל טבעי. המיצוב של TikTok מכוון — הוא מאמת דפוס צריכה שכבר עובד בקנה מידה גלובלי. המילים 'גם בתנאי קישוריות לא אידיאליים' הן האתגר הקשה — והוא נפתר.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">החזון</p>
+          <div class="accent-bar"></div>
+        </div>
+
+        <div class="pull-quote" style="margin:var(--gap-sm) 0;">
+          <p>״להפוך את זמן המנוחה בלחימה ללמידה מבצעית קצרה, נגישה ועדכנית — גם בתנאי קישוריות לא אידיאליים.״</p>
+        </div>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <h3 class="title-h3" style="color:var(--accent-green);">TikTok לאימון</h3>
+            <ul class="bullets">
+              <li>לוחמים גוללים פיד אנכי של קטעי וידאו קצרים (עד 3 דקות), מסוננים לפי תחומי עניין שנבחרו</li>
+              <li>הווידאו מתנגן אוטומטית — אין צורך בחיפוש מכוון</li>
+              <li>הלמידה הופכת להרגל טבעי בהפסקות, ולא למשימה שיש לתכנן</li>
+            </ul>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <h3 class="title-h3" style="color:var(--accent-blue);">ספרייה וגישה לא מקוונת</h3>
+            <ul class="bullets">
+              <li>לשאלות ספציפיות — ספרייה עם עץ קטגוריות וחיפוש לאיתור ממוקד</li>
+              <li>מטאדטה מסתנכרנת כשיש רשת; תוכן נשלף לפי דרישה</li>
+              <li>הורדה ידנית מאפשרת גישה לא מקוונת לכל פריט — וידאו או PDF</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 4 — מי משתמש
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="4"
+      data-notes="שני סוגי המשתמשים אינם מתקשרים ישירות. הלוחם לא רואה את פורטל הניהול. צוות המפקדה לא משתמש בטאבלט. המערכת היא הגשר ביניהם. חשוב: אין כניסת משתמש ללוחם — המכשיר הוא הזהות. זה מפשט את ה-MVP משמעותית.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">משתמשים יעד</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">מי משתמש ב-<span class="highlight-g">TactiTok</span></h1>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-g" style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
+              <div style="width:2.4rem;height:2.4rem;border-radius:6px;background:rgba(34,197,94,0.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🪖</div>
+              <div>
+                <p class="badge badge-g" style="margin-bottom:0.25rem;">משתמש ראשי</p>
+                <h3 class="title-h3">לוחם — צרכן שטח</h3>
+              </div>
+            </div>
+            <hr class="divider">
+            <div class="profile-detail"><span class="pd-key">מכשיר</span><span class="pd-val">טאבלט ‎~10 אינץ׳, Chrome במצב קיוסק</span></div>
+            <div class="profile-detail"><span class="pd-key">מיקום</span><span class="pd-val">שטח / סביבה מבצעית</span></div>
+            <div class="profile-detail"><span class="pd-key">מתי</span><span class="pd-val">הפסקות קצרות בין פעילויות</span></div>
+            <div class="profile-detail"><span class="pd-key">זהות</span><span class="pd-val">ללא כניסה — פרופיל מכשיר שומר תחומי עניין</span></div>
+            <div class="profile-detail"><span class="pd-key">התנהגות</span><span class="pd-val">גלילה פסיבית (ריאלס) או חיפוש אקטיבי (ספרייה)</span></div>
+          </div>
+
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
+              <div style="width:2.4rem;height:2.4rem;border-radius:6px;background:rgba(96,165,250,0.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖥️</div>
+              <div>
+                <p class="badge badge-b" style="margin-bottom:0.25rem;">משתמש משני</p>
+                <h3 class="title-h3">צוות הדרכה — מנהל תוכן</h3>
+              </div>
+            </div>
+            <hr class="divider" style="background:linear-gradient(270deg,var(--accent-blue),transparent);">
+            <div class="profile-detail"><span class="pd-key">מכשיר</span><span class="pd-val">מחשב נייח / נייד, דפדפן מודרני</span></div>
+            <div class="profile-detail"><span class="pd-key">מיקום</span><span class="pd-val">מפקדה / עורף</span></div>
+            <div class="profile-detail"><span class="pd-key">מתי</span><span class="pd-val">שעות עבודה, כשחומר הדרכה חדש מוכן</span></div>
+            <div class="profile-detail"><span class="pd-key">זהות</span><span class="pd-val">סיסמת מנהל פשוטה (MVP)</span></div>
+            <div class="profile-detail"><span class="pd-key">התנהגות</span><span class="pd-val">העלאה, קטלוג ופרסום תכני הדרכה</span></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 5 — איפה זה רץ
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="5"
+      data-notes="הטופולוגיה יוצאת דופן אך חשובה. Chrome על Windows מתחבר ל-localhost. בתוך VM של Linux שרץ על אותו מחשב, מיכל Docker מריץ nginx. ה-nginx הוא שמדבר עם הענן, ומאחסן כל תגובה במטמון מקומי. כך עובד ה-offline — ללא מורכבות של Service Worker. Chrome הוא פשוט דפדפן שמתחבר ל-localhost.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">הקשר מבצעי</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">מתוכנן ל<span class="highlight-g">שטח</span></h1>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-g" style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div style="font-size:1.6rem;margin-bottom:0.2rem;">💻</div>
+            <h3 class="title-h3" style="color:var(--accent-green);">חומרה</h3>
+            <ul class="bullets" style="margin-top:0.35rem;">
+              <li>טאבלט Windows ‎~10 אינץ׳</li>
+              <li>Chrome במצב קיוסק</li>
+              <li>סביבת מחשוב מוקשחת</li>
+              <li>לעתים מוקרן לצוות קטן</li>
+            </ul>
+          </div>
+
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div style="font-size:1.6rem;margin-bottom:0.2rem;">⚙️</div>
+            <h3 class="title-h3" style="color:var(--accent-blue);">מחסנית ריצה</h3>
+            <ul class="bullets" style="margin-top:0.35rem;">
+              <li>מארח Windows &larr; VM של Linux (WSL2)</li>
+              <li>מיכל Docker עם nginx</li>
+              <li>פרוקסי שטח משרת ב-localhost:8080</li>
+              <li>Chrome מתחבר רק ל-localhost</li>
+            </ul>
+          </div>
+
+          <div class="card card-o" style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div style="font-size:1.6rem;margin-bottom:0.2rem;">📡</div>
+            <h3 class="title-h3" style="color:var(--accent-orange);">קישוריות</h3>
+            <ul class="bullets" style="margin-top:0.35rem;">
+              <li>רוחב פס לא יציב / מוגבל</li>
+              <li>היברידי: מטאדטה מסתנכרנת כשמחובר</li>
+              <li>תוכן נשלף לפי דרישה דרך פרוקסי</li>
+              <li>הורדה ידנית לגישה לא מקוונת מובטחת</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="card" style="background:rgba(34,197,94,0.04);border-color:var(--border-green);margin-top:var(--gap-sm);">
+          <p style="font-size:var(--sz-small);color:var(--text-secondary);text-align:center;font-style:italic;">
+            &#9432;&nbsp; Chrome לא מתחבר ישירות לענן — כל התעבורה עוברת דרך פרוקסי השטח המקומי, שמאחסן במטמון את כל מה שהוא שולף.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 6 — שלוש זרימות מרכזיות
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="6"
+      data-notes="זרימה א׳ היא מנגנון השימור המרכזי — הרגל ה-TikTok. זרימה ב׳ משרתת שאלות מבצעיות ספציפיות. זרימה ג׳ היא שרשרת האספקה — איך תוכן עובר מהמפקדה לשטח. שלוש הזרימות מוצגות בתסריט 15 השלבים בשקופית הבאה.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">זרימות מרכזיות</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">שלוש דרכים להשתמש ב-<span class="highlight-g">TactiTok</span></h1>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-g" style="display:flex;flex-direction:column;gap:0.7rem;">
+            <div class="flow-icon flow-icon-g">▶</div>
+            <p class="badge badge-g">א׳ — ריאלס</p>
+            <h3 class="title-h3">גלול את הפיד</h3>
+            <p class="card-body">גלול פיד אנכי של סרטוני הדרכה קצרים (עד 3 דקות). הווידאו מתנגן אוטומטית בגלילה. החלק לשלב הבא. תוכן מסונן לפי תחומי עניין שנבחרו.</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li>סינון לפי תחומי עניין</li>
+              <li>הקש להורדה לשימוש לא מקוון</li>
+              <li>לייק / שמירה נשמרים מקומית</li>
+            </ul>
+          </div>
+
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:0.7rem;">
+            <div class="flow-icon flow-icon-b">☰</div>
+            <p class="badge badge-b">ב׳ — ספרייה</p>
+            <h3 class="title-h3">חפש בספרייה</h3>
+            <p class="card-body">נווט בעץ קטגוריות דו-רמתי או חפש לפי טקסט. פתח כל וידאו או PDF ישירות בדפדפן. ללא אפליקציות חיצוניות, ללא הורדה נדרשת לצפייה.</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li>עץ קטגוריות + חיפוש טקסט</li>
+              <li>מציג PDF בתוך הדפדפן</li>
+              <li>נגן וידאו בתוך הדפדפן</li>
+            </ul>
+          </div>
+
+          <div class="card card-o" style="display:flex;flex-direction:column;gap:0.7rem;">
+            <div class="flow-icon flow-icon-o">&#8593;</div>
+            <p class="badge badge-o">ג׳ — מנהל</p>
+            <h3 class="title-h3">העלה ופרסם</h3>
+            <p class="card-body">צוות המפקדה מעלה וידאו ו-PDF דרך פורטל ניהול. מקצה קטגוריות ותחומי עניין. מפרסם. מכשירי שטח מקבלים קטלוג מעודכן בסנכרון הבא.</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li>העלה וידאו או PDF</li>
+              <li>הקצה קטגוריות ותחומי עניין</li>
+              <li>פרסם &larr; עדכון קטלוג מיידי</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 7 — איך זה עובד (SVG)
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="7"
+      data-notes="תובנת המפתח היא פרוקסי השטח. כל מה ש-Chrome מבקש עובר דרך localhost — דרך מיכל Docker עם nginx על אותו מחשב. ה-nginx הוא שמדבר עם הענן, ומאחסן כל מה שהוא שולף. כשהרשת נופלת, ה-nginx פשוט משרת מהמטמון. ה-SPA אפילו לא יודע את ההבדל. פורטל הניהול הוא משטח נפרד לחלוטין — דפדפן שולחני במפקדה, לא הטאבלט.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">סקירת מערכת</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">איך זה <span class="highlight-g">עובד</span></h1>
+
+        <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
+          <svg viewBox="0 0 900 320" width="100%" style="max-height:280px;display:block;margin:0 auto;"
+            role="img" aria-label="סקירת ארכיטקטורת מערכת: אזורי מפקדה, שרת ענן ומכשיר שטח">
+            <defs>
+              <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#60a5fa"/>
+              </marker>
+              <marker id="arr-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#22c55e"/>
+              </marker>
+              <marker id="arr-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#ffd8a8"/>
+              </marker>
+            </defs>
+
+            <rect width="900" height="320" rx="8" fill="#0d1424"/>
+
+            <!-- Zone: HQ -->
+            <rect x="12" y="12" width="170" height="296" rx="6"
+              fill="rgba(255,216,168,0.06)" stroke="#ffd8a8" stroke-width="1" opacity="0.8"/>
+            <text x="97" y="32" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#ffd8a8" font-family="Heebo,system-ui,sans-serif" letter-spacing="0.5">מפקדה / מנהל</text>
+
+            <!-- Zone: Cloud -->
+            <rect x="200" y="12" width="230" height="296" rx="6"
+              fill="rgba(208,191,255,0.06)" stroke="#d0bfff" stroke-width="1" opacity="0.8"/>
+            <text x="315" y="32" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#d0bfff" font-family="Heebo,system-ui,sans-serif" letter-spacing="0.5">שרת ענן</text>
+
+            <!-- Zone: Edge -->
+            <rect x="448" y="12" width="440" height="296" rx="6"
+              fill="rgba(165,216,255,0.06)" stroke="#a5d8ff" stroke-width="1" opacity="0.8"/>
+            <text x="668" y="32" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#a5d8ff" font-family="Heebo,system-ui,sans-serif" letter-spacing="0.5">מכשיר שטח</text>
+
+            <!-- Admin SPA -->
+            <rect x="28" y="55" width="138" height="58" rx="5"
+              fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
+            <text x="97" y="78" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#3d2800" font-family="Heebo,system-ui,sans-serif">Admin SPA</text>
+            <text x="97" y="96" text-anchor="middle" font-size="9.5"
+              fill="#5d4800" font-family="Heebo,system-ui,sans-serif">React · desktop browser</text>
+
+            <!-- Arrow: Admin → API -->
+            <line x1="166" y1="84" x2="198" y2="84"
+              stroke="#ffd8a8" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+            <text x="183" y="78" text-anchor="middle" font-size="8"
+              fill="#94a3b8" font-family="Heebo,system-ui,sans-serif">HTTPS</text>
+
+            <!-- API Server -->
+            <rect x="213" y="45" width="200" height="64" rx="5"
+              fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <text x="313" y="70" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#2d1b5e" font-family="Heebo,system-ui,sans-serif">API Server</text>
+            <text x="313" y="87" text-anchor="middle" font-size="9.5"
+              fill="#4a2e8a" font-family="Heebo,system-ui,sans-serif">Node.js + Express</text>
+
+            <!-- PostgreSQL -->
+            <rect x="213" y="130" width="88" height="50" rx="5"
+              fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="257" y="152" text-anchor="middle" font-size="10.5" font-weight="700"
+              fill="#0d3d30" font-family="Heebo,system-ui,sans-serif">PostgreSQL</text>
+            <text x="257" y="168" text-anchor="middle" font-size="9"
+              fill="#0d3d30" font-family="Heebo,system-ui,sans-serif">metadata</text>
+
+            <!-- File Store -->
+            <rect x="313" y="130" width="100" height="50" rx="5"
+              fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="363" y="152" text-anchor="middle" font-size="10.5" font-weight="700"
+              fill="#0d3d30" font-family="Heebo,system-ui,sans-serif">File Store</text>
+            <text x="363" y="168" text-anchor="middle" font-size="9"
+              fill="#0d3d30" font-family="Heebo,system-ui,sans-serif">video + PDF</text>
+
+            <!-- Arrow: API → Edge Proxy -->
+            <line x1="413" y1="77" x2="447" y2="120"
+              stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-blue)"/>
+            <text x="443" y="94" text-anchor="middle" font-size="8"
+              fill="#60a5fa" font-family="Heebo,system-ui,sans-serif">HTTPS</text>
+
+            <!-- Edge Proxy -->
+            <rect x="462" y="45" width="175" height="195" rx="5"
+              fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="549" y="72" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#1a3d22" font-family="Heebo,system-ui,sans-serif">Edge Proxy</text>
+            <text x="549" y="89" text-anchor="middle" font-size="9.5"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">nginx in Docker</text>
+            <line x1="480" y1="100" x2="618" y2="100" stroke="#2d7a3a" stroke-width="0.8" opacity="0.5"/>
+            <text x="549" y="122" text-anchor="middle" font-size="10" font-weight="600"
+              fill="#1a3d22" font-family="Heebo,system-ui,sans-serif">Proxy cache</text>
+            <text x="549" y="139" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">content + metadata</text>
+            <text x="549" y="155" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">30-day TTL</text>
+            <text x="549" y="175" text-anchor="middle" font-size="10" font-weight="600"
+              fill="#1a3d22" font-family="Heebo,system-ui,sans-serif">Serves SPA bundle</text>
+            <text x="549" y="191" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">localhost:8080</text>
+            <text x="549" y="207" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">:8080/api/*  proxy</text>
+            <text x="549" y="222" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">:8080/*  static</text>
+
+            <!-- Arrow: Edge Proxy → Chrome -->
+            <line x1="637" y1="142" x2="668" y2="142"
+              stroke="#22c55e" stroke-width="2" marker-end="url(#arr-green)"/>
+            <text x="653" y="134" text-anchor="middle" font-size="8"
+              fill="#22c55e" font-family="Heebo,system-ui,sans-serif">HTTP</text>
+
+            <!-- Chrome / Edge SPA -->
+            <rect x="668" y="45" width="205" height="195" rx="5"
+              fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="770" y="72" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#0d2d44" font-family="Heebo,system-ui,sans-serif">Chrome (kiosk)</text>
+            <text x="770" y="89" text-anchor="middle" font-size="9.5"
+              fill="#1a4060" font-family="Heebo,system-ui,sans-serif">Edge SPA · React</text>
+            <line x1="685" y1="100" x2="855" y2="100" stroke="#1a5e8a" stroke-width="0.8" opacity="0.5"/>
+            <text x="770" y="122" text-anchor="middle" font-size="10" font-weight="600"
+              fill="#0d2d44" font-family="Heebo,system-ui,sans-serif">IndexedDB</text>
+            <text x="770" y="139" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Heebo,system-ui,sans-serif">device profile</text>
+            <text x="770" y="155" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Heebo,system-ui,sans-serif">download records</text>
+            <text x="770" y="171" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Heebo,system-ui,sans-serif">local actions</text>
+            <text x="770" y="195" text-anchor="middle" font-size="9.5" font-weight="600"
+              fill="#0d2d44" font-family="Heebo,system-ui,sans-serif">Reels · Library · Downloads</text>
+            <text x="770" y="213" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Heebo,system-ui,sans-serif">3 core flows in-browser</text>
+            <text x="770" y="229" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Heebo,system-ui,sans-serif">PDF.js · video player</text>
+
+            <!-- Legend -->
+            <rect x="12" y="270" width="12" height="12" rx="2" fill="#ffd8a8"/>
+            <text x="29" y="280" font-size="9" fill="#94a3b8" font-family="Heebo,system-ui,sans-serif">Admin SPA</text>
+            <rect x="105" y="270" width="12" height="12" rx="2" fill="#d0bfff"/>
+            <text x="122" y="280" font-size="9" fill="#94a3b8" font-family="Heebo,system-ui,sans-serif">API Server</text>
+            <rect x="195" y="270" width="12" height="12" rx="2" fill="#c3fae8"/>
+            <text x="212" y="280" font-size="9" fill="#94a3b8" font-family="Heebo,system-ui,sans-serif">PostgreSQL / Files</text>
+            <rect x="320" y="270" width="12" height="12" rx="2" fill="#b2f2bb"/>
+            <text x="337" y="280" font-size="9" fill="#94a3b8" font-family="Heebo,system-ui,sans-serif">Edge Proxy (nginx)</text>
+            <rect x="460" y="270" width="12" height="12" rx="2" fill="#a5d8ff"/>
+            <text x="477" y="280" font-size="9" fill="#94a3b8" font-family="Heebo,system-ui,sans-serif">Edge SPA / Chrome</text>
+          </svg>
+        </div>
+
+        <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;">
+          Chrome לא מתחבר ישירות לענן &mdash; פרוקסי השטח מטפל בכל הניתוב והאחסון במטמון.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 8 — אתגר ה-Offline (SVG)
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="8"
+      data-notes="ארכיטקטורת ה-offline היא החלק הטכנולוגי המעניין. במקום Service Workers ו-Cache API — שהם בצד הדפדפן ומורכבים — שמנו פרוקסי nginx עם מטמון ברמת הרשת. כל מה ש-Chrome ביקש אי-פעם נמצא במטמון. כשהרשת נופלת, nginx פשוט משרת מהמטמון. ה-SPA אפילו לא יודע את ההבדל. הנקודה של 'לא-מקוון שקוף' היא המפתח: אין אפילו שורת קוד אחת ייעודית ל-offline ב-SPA.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">ארכיטקטורת לא-מקוון</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">אתגר ה-Offline — <span class="highlight-g">נפתר</span></h1>
+
+        <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
+          <svg viewBox="0 0 820 210" width="100%" style="max-height:180px;display:block;margin:0 auto;"
+            role="img" aria-label="שני מסלולי offline: הורדה בחיבור, וניגון ללא חיבור">
+            <defs>
+              <marker id="arr2-green" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+                <polygon points="0 0, 7 2.5, 0 5" fill="#22c55e"/>
+              </marker>
+              <marker id="arr2-blue" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+                <polygon points="0 0, 7 2.5, 0 5" fill="#60a5fa"/>
+              </marker>
+            </defs>
+
+            <rect width="820" height="210" rx="8" fill="#0d1424"/>
+
+            <!-- Lane labels -->
+            <text x="16" y="42" font-size="9" font-weight="700" fill="#22c55e"
+              font-family="Heebo,system-ui,sans-serif" letter-spacing="0.5">מסלול א׳ — הורדה (מחובר)</text>
+            <text x="16" y="132" font-size="9" font-weight="700" fill="#60a5fa"
+              font-family="Heebo,system-ui,sans-serif" letter-spacing="0.5">מסלול ב׳ — ניגון לא מקוון</text>
+
+            <!-- Divider -->
+            <line x1="540" y1="20" x2="540" y2="192" stroke="#334155" stroke-width="1" stroke-dasharray="4,3"/>
+            <text x="545" y="30" font-size="8" fill="#475569" font-family="Heebo,system-ui,sans-serif">ענן</text>
+            <text x="533" y="30" font-size="8" fill="#475569" font-family="Heebo,system-ui,sans-serif" text-anchor="end">מקומי למכשיר</text>
+
+            <!-- Path A: User taps Download -->
+            <rect x="14" y="52" width="130" height="44" rx="5"
+              fill="#0f1a2e" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="79" y="71" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#22c55e" font-family="Heebo,system-ui,sans-serif">משתמש מקיש</text>
+            <text x="79" y="86" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#22c55e" font-family="Heebo,system-ui,sans-serif">הורדה</text>
+
+            <line x1="144" y1="74" x2="188" y2="74"
+              stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr2-green)"/>
+
+            <!-- Edge Proxy (shared) -->
+            <rect x="188" y="52" width="145" height="134" rx="5"
+              fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="260" y="78" text-anchor="middle" font-size="11" font-weight="700"
+              fill="#1a3d22" font-family="Heebo,system-ui,sans-serif">Edge Proxy</text>
+            <text x="260" y="95" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">nginx (Docker)</text>
+            <line x1="200" y1="108" x2="320" y2="108" stroke="#2d7a3a" stroke-width="0.8" opacity="0.6"/>
+            <text x="260" y="126" text-anchor="middle" font-size="9.5" font-weight="600"
+              fill="#1a3d22" font-family="Heebo,system-ui,sans-serif">Online: שלוף ואחסן</text>
+            <text x="260" y="143" text-anchor="middle" font-size="9.5" font-weight="600"
+              fill="#1a3d22" font-family="Heebo,system-ui,sans-serif">Offline: הגש STALE</text>
+            <text x="260" y="160" text-anchor="middle" font-size="8.5"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">כותרת X-Cache-Status</text>
+            <text x="260" y="175" text-anchor="middle" font-size="8.5"
+              fill="#2d6032" font-family="Heebo,system-ui,sans-serif">מסמנת את ה-SPA</text>
+
+            <!-- Arrow: Proxy → Cloud -->
+            <line x1="333" y1="74" x2="546" y2="74"
+              stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr2-blue)"/>
+            <text x="440" y="66" text-anchor="middle" font-size="8.5"
+              fill="#60a5fa" font-family="Heebo,system-ui,sans-serif">שולף ומאחסן במטמון</text>
+
+            <!-- Cloud Server -->
+            <rect x="548" y="52" width="130" height="44" rx="5"
+              fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <text x="613" y="71" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#2d1b5e" font-family="Heebo,system-ui,sans-serif">שרת ענן</text>
+            <text x="613" y="86" text-anchor="middle" font-size="9"
+              fill="#4a2e8a" font-family="Heebo,system-ui,sans-serif">API + File Store</text>
+
+            <!-- Arrow: Cloud → IndexedDB -->
+            <line x1="690" y1="74" x2="800" y2="74"
+              stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr2-green)"/>
+            <text x="746" y="66" text-anchor="middle" font-size="8.5"
+              fill="#22c55e" font-family="Heebo,system-ui,sans-serif">קובץ במטמון</text>
+
+            <!-- IndexedDB record -->
+            <rect x="690" y="52" width="118" height="44" rx="5"
+              fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="749" y="71" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#0d2d44" font-family="Heebo,system-ui,sans-serif">IndexedDB</text>
+            <text x="749" y="86" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Heebo,system-ui,sans-serif">רשומה נכתבה</text>
+
+            <!-- Path B: User opens item -->
+            <rect x="14" y="145" width="130" height="44" rx="5"
+              fill="#0f1a2e" stroke="#60a5fa" stroke-width="1.5"/>
+            <text x="79" y="164" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#60a5fa" font-family="Heebo,system-ui,sans-serif">משתמש פותח</text>
+            <text x="79" y="179" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#60a5fa" font-family="Heebo,system-ui,sans-serif">פריט (לא מקוון)</text>
+
+            <line x1="144" y1="167" x2="188" y2="167"
+              stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arr2-blue)"/>
+
+            <!-- Arrow: Proxy → Chrome plays -->
+            <line x1="333" y1="167" x2="485" y2="167"
+              stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr2-green)"/>
+            <text x="409" y="158" text-anchor="middle" font-size="8.5"
+              fill="#94a3b8" font-family="Heebo,system-ui,sans-serif">ללא צורך בענן</text>
+
+            <!-- Chrome plays content -->
+            <rect x="486" y="145" width="130" height="44" rx="5"
+              fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="551" y="164" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#0d2d44" font-family="Heebo,system-ui,sans-serif">Chrome</text>
+            <text x="551" y="179" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#0d2d44" font-family="Heebo,system-ui,sans-serif">מנגן תוכן</text>
+          </svg>
+        </div>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);">
+          <div class="card card-g" style="padding:1rem 1.2rem;">
+            <h4 class="title-h3" style="margin-bottom:0.4rem;font-size:var(--sz-small);font-weight:700;">&#128204; מטמון פרוקסי חכם</h4>
+            <p class="card-body">nginx מאחסן כל קובץ שהוא שולף. עד 10&nbsp;GB במכשיר, TTL של 30 יום. הורדות מפעילות טעינה מלאה לאחסון במטמון.</p>
+          </div>
+          <div class="card card-b" style="padding:1rem 1.2rem;">
+            <h4 class="title-h3" style="margin-bottom:0.4rem;font-size:var(--sz-small);font-weight:700;">&#9889; לא-מקוון שקוף</h4>
+            <p class="card-body">קוד ה-SPA זהה מקוון ולא מקוון. ללא Service Worker, ללא קוד ייעודי. הפרוקסי משרת מהמטמון הישן; ה-SPA קורא כותרת HTTP להצגת אינדיקטור.</p>
+          </div>
+          <div class="card" style="padding:1rem 1.2rem;border-color:var(--border-subtle);">
+            <h4 class="title-h3" style="margin-bottom:0.4rem;font-size:var(--sz-small);font-weight:700;">&#8681; הורדה ידנית</h4>
+            <p class="card-body">הקשה אחת בריאלס או בספרייה. רשומה ב-IndexedDB; קובץ נטען מראש במטמון הפרוקסי. וידאו ו-PDF מלאים — ללא רשת.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 9 — ה-MVP בפעולה
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="9"
+      data-notes="רצף 15 השלבים הוא תסריט הדגמה המלא. הוא מוכיח את שלוש הזרימות המרכזיות ואת יכולת ה-offline מקצה לקצה. אחרי השקופית הזו, גורמי ההערכה יוכלו לנסות זאת בעצמם. זמן משוער לדגמה: 8–10 דקות. שלבי ההגדרה (1–3) יש לבצע לפני תחילת המפגש.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">הדגמה מעשית</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">15 שלבים, <span class="highlight-g">5 שלבי ביצוע</span></h1>
+        <p style="font-size:var(--sz-small);color:var(--text-secondary);margin-top:-0.25rem;">
+          גורמי הערכה מתנסים בצורה מעשית בטאבלט 10 אינץ׳ בסביבת מעבדה עם תנאי רשת מדומים.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-md);margin-top:var(--gap-sm);">
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-g" style="margin-bottom:0.5rem;">שלב 1 — הגדרה</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">1</span><span>צוות המפקדה מעלה סרטון הדרכה חדש דרך פורטל הניהול</span></div>
+                <div class="step"><span class="step-num">2</span><span>צוות המפקדה מעלה PDF ומקצה קטגוריות ותחומי עניין</span></div>
+                <div class="step"><span class="step-num">3</span><span>מכשיר השטח פותח את האפליקציה &larr; מופיע מסך בחירת תחומי עניין</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-g" style="margin-bottom:0.5rem;">שלב 2 — חוויית ריאלס</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">4</span><span>המשתמש בוחר 2–3 תחומי עניין &larr; פיד ריאלס נטען, מסונן</span></div>
+                <div class="step"><span class="step-num">5</span><span>המשתמש גולל ומחליק בריאלס &larr; סרטונים מתנגנים אוטומטית</span></div>
+                <div class="step"><span class="step-num">6</span><span>המשתמש מקיש הורדה על סרטון &larr; נשמר מקומית</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-b" style="margin-bottom:0.5rem;">שלב 3 — ספרייה</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">7</span><span>עוברים ללשונית ספרייה &larr; מוצג עץ קטגוריות</span></div>
+                <div class="step"><span class="step-num">8</span><span>מחפשים נושא &larr; תוצאות מופיעות תוך שניות</span></div>
+                <div class="step"><span class="step-num">9</span><span>פותחים PDF &larr; מוצג בדפדפן, עמוד אחרי עמוד</span></div>
+                <div class="step"><span class="step-num">10</span><span>מורידים את ה-PDF &larr; מופיע בלשונית הורדות</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-o" style="margin-bottom:0.5rem;">שלב 4 — לא מקוון</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">11</span><span>הרשת מנותקת (מדומה) &larr; מופיע אינדיקטור לא מקוון</span></div>
+                <div class="step"><span class="step-num">12</span><span>פותחים לשונית הורדות &larr; וידאו ו-PDF גלויים</span></div>
+                <div class="step"><span class="step-num">13</span><span>מנגנים סרטון שהורד &larr; מתנגן במלואו, ללא באפרינג</span></div>
+                <div class="step"><span class="step-num">14</span><span>פותחים PDF שהורד &larr; מוצג במלואו</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-g" style="margin-bottom:0.5rem;">שלב 5 — עדכון תוכן</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">15</span><span>הרשת משוחזרת &larr; צוות המפקדה מעלה סרטון מעודכן &larr; מכשיר השטח מציג תג <strong>״עודכן״</strong> לאחר סנכרון</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="background:rgba(34,197,94,0.04);border-color:var(--border-green);padding:1rem 1.2rem;">
+              <p style="font-size:var(--sz-small);color:var(--text-secondary);line-height:1.65;">
+                ✅&nbsp; כל 15 השלבים מוכיחים את המערכת מקצה לקצה: <strong style="color:var(--text-primary);">העלאה &larr; פרסום &larr; סנכרון &larr; צריכה &larr; הורדה &larr; לא מקוון &larr; זיהוי עדכון.</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 10 — נסו בעצמכם
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="10"
+      data-notes="השאירו שקופית זו על המסך במהלך המפגש המעשי. הדריכו כל גורם הערכה דרך לפחות גלילה אחת בריאלס, חיפוש אחד בספרייה ובדיקת לא-מקוון אחת. הטאבלט מריץ את המערכת האמיתית — לא סימולטור.">
+
+      <div class="slide-inner centered" style="gap:var(--gap-lg);">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm);">
+          <div class="label-block" style="align-items:center;">
+            <p class="label">הערכה מעשית</p>
+            <div class="accent-bar" style="margin:0.35rem auto 0;"></div>
+          </div>
+          <h1 class="title-hero">נסו <span class="highlight-g">בעצמכם</span></h1>
+          <p style="font-size:var(--sz-body);color:var(--text-secondary);max-width:580px;line-height:1.6;text-align:center;">
+            הטאבלט זמין עכשיו. אתם מסתכלים על המערכת האמיתית — לא על אב-טיפוס או מוקאפ.
+          </p>
+        </div>
+
+        <div class="three-col" style="width:100%;max-width:860px;">
+          <div class="cta-card card-g">
+            <span class="cta-icon">▶</span>
+            <h3 class="title-h3" style="margin-bottom:0.5rem;color:var(--accent-green);">גלול את הפיד</h3>
+            <p class="card-body">פתחו את האפליקציה &larr; החליקו בסרטונים &larr; נסו לסנן לפי תחום עניין שונה &larr; הקישו לייק או שמירה על קטע שרציתם לשמור.</p>
+          </div>
+          <div class="cta-card card-b">
+            <span class="cta-icon">☰</span>
+            <h3 class="title-h3" style="margin-bottom:0.5rem;color:var(--accent-blue);">עיין בספרייה</h3>
+            <p class="card-body">עברו לספרייה &larr; עיינו בקטגוריות &larr; חפשו מילת מפתח &larr; פתחו PDF והורידו אותו לשימוש ללא רשת.</p>
+          </div>
+          <div class="cta-card card-o">
+            <span class="cta-icon">📴</span>
+            <h3 class="title-h3" style="margin-bottom:0.5rem;color:var(--accent-orange);">עברו ללא רשת</h3>
+            <p class="card-body">בקשו מהמנחה לנתק את הרשת &larr; פתחו הורדות &larr; נגנו את הסרטון שהורדתם &larr; ודאו שהכל עובד ללא קישוריות.</p>
+          </div>
+        </div>
+
+        <p style="font-size:var(--sz-label);color:var(--text-muted);max-width:600px;text-align:center;">
+          פורטל הניהול: פנו למנחה לקבלת כתובת ה-URL ונתוני הכניסה לדגמה.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 11 — מדדי הצלחה
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="11"
+      data-notes="קריטריונים אלו לקוחים ישירות ממסמך הגדרת המוצר. S1 הוא החשוב ביותר — אם הזרימה מקצה לקצה עובדת, כל השאר הוא שיפורים. S3 ו-S6 הם הקשים טכנולוגית: התחלת וידאו מהירה תחת רוחב פס מוגבל, וניגון מלא ללא רשת.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">מדדי הצלחה</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">שבעה קריטריונים ל<span class="highlight-g">הצלחת הדגמה</span></h1>
+
+        <table class="data-table" style="margin-top:var(--gap-sm);">
+          <thead>
+            <tr>
+              <th style="width:3.5rem;">מזהה</th>
+              <th style="width:28%;">קריטריון</th>
+              <th>יעד</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-g">S1</span></td>
+              <td style="font-weight:600;">זרימה מקצה לקצה</td>
+              <td class="td-target">העלאה &larr; פרסום &larr; קטלוג &larr; צריכה (וידאו + PDF) &larr; הורדה &larr; צפייה לא מקוונת</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S2</span></td>
+              <td style="font-weight:600;">זמן איתור בספרייה</td>
+              <td class="td-target">&le;&nbsp;60 שניות לאיתור פריט ספציפי בתרחיש דגמה</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S3</span></td>
+              <td style="font-weight:600;">התחלת ניגון ריאלס</td>
+              <td class="td-target">&le;&nbsp;2 שניות ברשת סבירה; התחלה מהירה דרך prefetch ברשת חלשה</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S4</span></td>
+              <td style="font-weight:600;">הכלה בדפדפן</td>
+              <td class="td-target">100% מהצפייה בתוך Chrome — ללא אפליקציות חיצוניות, ללא חלונות קופצים</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S5</span></td>
+              <td style="font-weight:600;">סינון לפי תחומי עניין</td>
+              <td class="td-target">&ge;&nbsp;3 תחומי עניין הניתנים לבחירה ומסננים בעקביות פיד וספרייה</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S6</span></td>
+              <td style="font-weight:600;">ניגון לא מקוון</td>
+              <td class="td-target">וידאו ו-PDF שהורדו ניתנים לצפייה ללא רשת לחלוטין</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S7</span></td>
+              <td style="font-weight:600;">תג עדכון</td>
+              <td class="td-target">פריטים שהורדו מציגים תג ״עודכן״ כאשר גרסת הקטלוג גבוהה מגרסת ההורדה לאחר סנכרון</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+          <div class="card" style="background:rgba(34,197,94,0.04);border-color:var(--border-green);padding:0.9rem 1.1rem;">
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);">אם כל 7 הקריטריונים עוברים &larr; <strong style="color:var(--accent-green);">MVP מאושר לפיתוח המשך.</strong></p>
+          </div>
+          <div class="card" style="padding:0.9rem 1.1rem;">
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);">הצלחה מבנית (S8–S10: איכות קוד, הכנסת מפתח) נבדקת בנפרד על ידי המפקחים.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 12 — מה הלאה
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="12"
+      data-notes="ה-MVP הוא לא אב-טיפוס שיוזרק. כל בחירה ארכיטקטונית נעשתה למזעור שכתובים כשהמוצר יגדל. מודל הנתונים תומך בזהות משתמש. ה-API תומך בסנכרון delta. הפשטת האחסון תומכת ב-object storage. הערות ההמשכיות במסמך הארכיטקטורה מפרטות את כל זה. 5 הפריטים הרשומים הם היקף השלב השני המיועד.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">מפת דרכים פוסט-MVP</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">מתוכנן ל<span class="highlight-g">המשכיות</span></h1>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);line-height:1.6;">כל בחירה ארכיטקטונית ב-MVP נעשתה כדי לאפשר הרחבה נקייה ללא שכתובים מרכזיים:</p>
+            <ul class="bullets">
+              <li><strong>זהות משתמש ו-RBAC</strong> — ה-MVP הוא ללא כניסה (קיוסק). תבנית device-id מאפשרת הוספת אימות ללא שינויי סכמה.</li>
+              <li><strong>מנוע המלצות</strong> — סינון לפי תחומי עניין הוא ה-MVP. מספרי צפיות ולייקים נשמרים מקומית, מוכנים לאלגוריתם עתידי.</li>
+              <li><strong>אנליטיקס בצד השרת</strong> — לייק/שמירה מקומיים ב-MVP. יומן פעולות מקומי מתוכנן לסנכרון אצווה כשאנליטיקס יתווספו.</li>
+              <li><strong>תמיכה רב-לשונית</strong> — אנגלית בלבד ב-MVP. כל מחרוזות ה-UI משתמשות במערכת מפתחות; הוספת שפה היא שינוי הגדרות.</li>
+              <li><strong>סנכרון מבוסס דחיפה</strong> — ה-MVP משתמש במשיכה בפתיחת אפליקציה. ה-API מתוכנן להוספת ערוץ WebSocket לצד נקודות הקצה הקיימות.</li>
+            </ul>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="pull-quote" style="margin-bottom:var(--gap-sm);">
+              <p style="font-size:var(--sz-body);">״ארכיטקטורה שכבתית נקייה — צוות המשך יכול להרחיב כל שכבה מבלי לגעת בשאר.״</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.4rem;">
+              <div class="layer-pill top">
+                <span>&#9679; ניהול תוכן</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">פורטל מנהל, העלאה, קטגוריות</span>
+              </div>
+              <div class="layer-pill">
+                <span>&#9679; Catalog / API</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">Node.js, PostgreSQL, REST</span>
+              </div>
+              <div class="layer-pill">
+                <span>&#9679; העברה / לא מקוון</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">nginx proxy, cache, sync</span>
+              </div>
+              <div class="layer-pill">
+                <span>&#9679; ממשק משתמש</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">React SPA, ריאלס, ספרייה</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         שקופית 13 — שאלות
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="13"
+      data-notes="שקופית סיכום. מסמכי הפרויקט נמצאים במאגר. מסמך הארכיטקטורה כולל הערות המשכיות מפורטות לצוות המשך. כל 7 מסמכי המוצר ו-17 תרשימי המערכת מחויבים למאגר הפרויקט. שאלות הנוגעות להגדרת הדגמה יש להפנות למנחה.">
+
+      <div class="slide-inner centered" style="gap:var(--gap-lg);justify-content:center;min-height:70vh;">
+
+        <h1 class="title-hero" style="letter-spacing:-0.01em;">שאלות</h1>
+
+        <hr class="divider" style="width:100%;max-width:500px;">
+
+        <div class="two-col" style="width:100%;max-width:760px;margin-top:var(--gap-sm);">
+          <div class="card card-g" style="text-align:center;padding:1.5rem;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">⚙️</div>
+            <h3 class="title-h3" style="margin-bottom:0.4rem;">שאלות טכניות</h3>
+            <p class="card-body">ארכיטקטורה, מודל נתונים, עיצוב API, מימוש לא-מקוון, פריסה ומבנה ה-monorepo.</p>
+          </div>
+          <div class="card card-b" style="text-align:center;padding:1.5rem;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">📋</div>
+            <h3 class="title-h3" style="margin-bottom:0.4rem;">שאלות מבצעיות</h3>
+            <p class="card-body">הגדרת הדגמה, קריטריוני קבלה, ציר זמן, מפת דרכים להמשכיות והחלטות היקף.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%;max-width:640px;margin-top:var(--gap-sm);">
+          <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:0.25rem;">מסמכי עזר</p>
+          <div class="doc-ref">
+            <span class="doc-ref-icon">&#9632;</span>
+            <span class="doc-ref-path">product/north-star.md</span>
+            <span style="font-size:var(--sz-label);color:var(--text-muted);margin-inline-end:auto;">חזון המוצר ואילוצים מחייבים</span>
+          </div>
+          <div class="doc-ref">
+            <span class="doc-ref-icon">&#9632;</span>
+            <span class="doc-ref-path">product/04_system-architecture.md</span>
+            <span style="font-size:var(--sz-label);color:var(--text-muted);margin-inline-end:auto;">החלטות ארכיטקטורה והערות המשכיות</span>
+          </div>
+          <div class="doc-ref">
+            <span class="doc-ref-icon">&#9632;</span>
+            <span class="doc-ref-path">product/03_mvp-spec.md</span>
+            <span style="font-size:var(--sz-label);color:var(--text-muted);margin-inline-end:auto;">קריטריוני קבלה מלאים ותסריט הדגמה</span>
+          </div>
+        </div>
+
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">
+          DK-01 &middot; גרסה 1.0 &middot; 11.03.2026
+        </p>
+
+        <p class="print-only" style="font-size:0.7rem;color:#6b7280;text-align:center;margin-top:2rem;">
+          TactiTok &middot; DK-01 סקירה לגורמי הערכה &middot; נוצר 2026-03-11
+        </p>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ─── STATE ──────────────────────────────────────────────────────
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL = slides.length;
+    const state = { current: 0, notesVisible: false, transitioning: false };
+
+    // ─── DOM REFS ────────────────────────────────────────────────────
+    const progressBar  = document.getElementById('progress-bar');
+    const curEl        = document.getElementById('cur');
+    const totEl        = document.getElementById('tot');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const notesOverlay = document.getElementById('notes-overlay');
+    const notesContent = document.getElementById('notes-content');
+
+    totEl.textContent = TOTAL;
+
+    // ─── GO TO SLIDE ────────────────────────────────────────────────
+    function goTo(index) {
+      if (state.transitioning) return;
+      if (index < 0 || index >= TOTAL) return;
+      if (index === state.current) return;
+
+      state.transitioning = true;
+
+      const prev = slides[state.current];
+      const next = slides[index];
+      const forward = index > state.current;
+
+      next.style.transition = 'none';
+      next.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      next.style.opacity = '0';
+      next.classList.remove('active');
+
+      next.getBoundingClientRect();
+
+      prev.style.transition = '';
+      prev.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      prev.style.opacity = '0';
+      prev.classList.remove('active');
+
+      next.style.transition = '';
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+      next.classList.add('active');
+
+      state.current = index;
+      updateUI();
+
+      setTimeout(() => {
+        state.transitioning = false;
+        prev.style.transform = 'translateX(60px)';
+      }, 480);
+    }
+
+    // ─── UPDATE UI ──────────────────────────────────────────────────
+    function updateUI() {
+      progressBar.style.width = ((state.current + 1) / TOTAL * 100) + '%';
+      curEl.textContent = state.current + 1;
+      btnPrev.disabled = state.current === 0;
+      btnNext.disabled = state.current === TOTAL - 1;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+      }
+    }
+
+    // ─── NOTES ──────────────────────────────────────────────────────
+    function toggleNotes() {
+      state.notesVisible = !state.notesVisible;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+        notesOverlay.removeAttribute('hidden');
+      } else {
+        notesOverlay.setAttribute('hidden', '');
+      }
+    }
+
+    // ─── FULLSCREEN ──────────────────────────────────────────────────
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // ─── KEYBOARD ───────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case ' ':
+          e.preventDefault(); goTo(state.current + 1); break;
+        case 'ArrowLeft': case 'ArrowUp':
+          e.preventDefault(); goTo(state.current - 1); break;
+        case 'Home':  e.preventDefault(); goTo(0); break;
+        case 'End':   e.preventDefault(); goTo(TOTAL - 1); break;
+        case 'n': case 'N': e.preventDefault(); toggleNotes(); break;
+        case 'f': case 'F': e.preventDefault(); toggleFullscreen(); break;
+        case 'Escape': if (state.notesVisible) toggleNotes(); break;
+      }
+    });
+
+    // ─── TOUCH / SWIPE ──────────────────────────────────────────────
+    let txStart = 0, tyStart = 0;
+    document.addEventListener('touchstart', e => {
+      txStart = e.touches[0].clientX;
+      tyStart = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - txStart;
+      const dy = e.changedTouches[0].clientY - tyStart;
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (Math.abs(dx) < 50 || angle > 60) return;
+      // In RTL: swipe left (dx<0) = forward, swipe right (dx>0) = back
+      if (dx < 0) goTo(state.current + 1);
+      else        goTo(state.current - 1);
+    });
+
+    // ─── BUTTONS ─────────────────────────────────────────────────────
+    btnPrev.addEventListener('click', () => goTo(state.current - 1));
+    btnNext.addEventListener('click', () => goTo(state.current + 1));
+    document.getElementById('notes-close').addEventListener('click', toggleNotes);
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    slides.forEach((s, i) => {
+      s.style.opacity    = i === 0 ? '1' : '0';
+      s.style.transform  = i === 0 ? 'translateX(0)' : 'translateX(60px)';
+      if (i === 0) s.classList.add('active');
+    });
+    updateUI();
+  </script>
+
+</body>
+</html>

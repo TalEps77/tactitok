@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TactiTok: Developer Onboarding — DK-04</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:        #0a0f1e;
+      --bg-secondary:      #111827;
+      --bg-tertiary:       #1a2438;
+      --bg-card:           #0f1a2e;
+      --accent-green:      #22c55e;
+      --accent-green-dim:  #166534;
+      --accent-green-glow: rgba(34,197,94,0.15);
+      --accent-blue:       #60a5fa;
+      --accent-blue-dim:   #1e3a5f;
+      --accent-blue-glow:  rgba(96,165,250,0.15);
+      --accent-orange:     #fb923c;
+      --accent-orange-dim: #9a3412;
+      --text-primary:      #f1f5f9;
+      --text-secondary:    #94a3b8;
+      --text-muted:        #475569;
+      --border-subtle:     rgba(255,255,255,0.06);
+      --border-green:      rgba(34,197,94,0.35);
+      --border-blue:       rgba(96,165,250,0.35);
+      --border-orange:     rgba(251,146,60,0.35);
+      --font:              'Inter', system-ui, -apple-system, sans-serif;
+      --sz-hero:   clamp(2.4rem, 4.5vw, 4.2rem);
+      --sz-h1:     clamp(1.7rem, 3vw, 2.8rem);
+      --sz-h2:     clamp(1.3rem, 2.2vw, 1.9rem);
+      --sz-h3:     clamp(1.05rem, 1.8vw, 1.45rem);
+      --sz-body:   clamp(0.88rem, 1.5vw, 1.1rem);
+      --sz-small:  clamp(0.78rem, 1.2vw, 0.95rem);
+      --sz-label:  clamp(0.64rem, 1vw, 0.78rem);
+      --pad:       clamp(2.5rem, 5vw, 5.5rem);
+      --gap-sm:    0.75rem;
+      --gap-md:    1.5rem;
+      --gap-lg:    2.5rem;
+      --gap-xl:    3.5rem;
+      --radius:    6px;
+      --radius-lg: 10px;
+      --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-slide:  420ms;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-primary); font-family: var(--font); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-green), #4ade80); width: 5.00%; z-index: 200; transition: width 300ms var(--ease-slide); box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+    #slide-counter { position: fixed; top: 1rem; right: 1.5rem; font-size: var(--sz-label); font-weight: 600; letter-spacing: 0.1em; color: var(--text-muted); z-index: 200; user-select: none; }
+    #slide-counter .cur { color: var(--accent-green); font-weight: 700; }
+    #nav-controls { position: fixed; bottom: 1.5rem; right: 1.5rem; display: flex; gap: 0.4rem; z-index: 200; }
+    #nav-controls button { width: 2.4rem; height: 2.4rem; border: 1px solid var(--border-green); border-radius: var(--radius); background: rgba(34,197,94,0.07); color: var(--accent-green); font-size: 1rem; cursor: pointer; transition: background 180ms ease, transform 120ms ease; display: flex; align-items: center; justify-content: center; }
+    #nav-controls button:hover { background: rgba(34,197,94,0.18); transform: scale(1.05); }
+    #nav-controls button:disabled { opacity: 0.25; pointer-events: none; }
+    #kb-hint { position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%); font-size: var(--sz-label); color: var(--text-muted); letter-spacing: 0.06em; z-index: 200; user-select: none; white-space: nowrap; }
+    #notes-overlay { position: fixed; bottom: 0; left: 0; right: 0; max-height: 32vh; background: rgba(5,8,18,0.97); border-top: 2px solid var(--accent-green); padding: 1.1rem 2rem 1.1rem 1.5rem; z-index: 300; overflow-y: auto; backdrop-filter: blur(8px); }
+    #notes-overlay[hidden] { display: none; }
+    #notes-label { font-size: var(--sz-label); font-weight: 700; color: var(--accent-green); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    #notes-content { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.65; }
+    #notes-close { position: absolute; top: 0.8rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; transition: color 150ms; }
+    #notes-close:hover { color: var(--text-primary); }
+    #slides-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+    .slide { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: var(--pad); opacity: 0; transform: translateX(60px); pointer-events: none; transition: opacity var(--dur-slide) var(--ease-slide), transform var(--dur-slide) var(--ease-slide); will-change: transform, opacity; }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 1; }
+    .slide.exit-left { opacity: 0; transform: translateX(-60px); pointer-events: none; }
+    .slide-inner { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: var(--gap-md); }
+    .slide-inner.centered { align-items: center; text-align: center; justify-content: center; }
+    .label { font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-green); }
+    .accent-bar { width: 2.5rem; height: 3px; background: var(--accent-green); border-radius: 2px; margin-top: 0.35rem; }
+    .label-block { display: flex; flex-direction: column; gap: 0; }
+    .title-hero { font-size: var(--sz-hero); font-weight: 900; line-height: 1.1; }
+    .title-h1   { font-size: var(--sz-h1);   font-weight: 800; line-height: 1.15; }
+    .title-h2   { font-size: var(--sz-h2);   font-weight: 700; line-height: 1.2; }
+    .title-h3   { font-size: var(--sz-h3);   font-weight: 700; line-height: 1.25; }
+    .highlight-g { color: var(--accent-green); }
+    .highlight-b { color: var(--accent-blue); }
+    .card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 1.25rem 1.4rem; }
+    .card-g { border-top: 3px solid var(--accent-green); }
+    .card-b { border-top: 3px solid var(--accent-blue); }
+    .card-o { border-top: 3px solid var(--accent-orange); }
+    .card-gl { border-left: 3px solid var(--accent-green); }
+    .card-title { font-size: var(--sz-small); font-weight: 700; letter-spacing: 0.06em; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .card-body { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+    .five-col  { display: grid; grid-template-columns: repeat(5,1fr); gap: var(--gap-sm); }
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bullets li { display: flex; align-items: flex-start; gap: 0.7rem; font-size: var(--sz-body); color: var(--text-primary); line-height: 1.55; }
+    .bullets li::before { content: '▸'; color: var(--accent-green); font-size: 0.8em; flex-shrink: 0; margin-top: 0.22em; }
+    .bullets li strong { color: var(--text-primary); font-weight: 600; }
+    .badge { display: inline-block; padding: 0.18em 0.55em; border-radius: 3px; font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-g { background: rgba(34,197,94,0.12); color: var(--accent-green); border: 1px solid var(--border-green); }
+    .badge-b { background: rgba(96,165,250,0.12); color: var(--accent-blue);  border: 1px solid var(--border-blue); }
+    .badge-o { background: rgba(251,146,60,0.12); color: var(--accent-orange); border: 1px solid var(--border-orange); }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { background: var(--bg-tertiary); color: var(--accent-green); font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border-green); }
+    .data-table td { padding: 0.5rem 0.9rem; font-size: var(--sz-small); border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); vertical-align: top; line-height: 1.5; }
+    .data-table tr:nth-child(even) td { background: rgba(26,36,56,0.5); }
+    .data-table .muted { color: var(--text-secondary); }
+    .data-table .mono { font-family: 'Courier New', monospace; font-size: 0.88em; }
+    .divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--accent-green), transparent); border: none; margin: 0; }
+    .doc-ref { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 0.65rem 1rem; font-size: var(--sz-small); display: flex; align-items: center; gap: 0.5rem; }
+    .doc-ref-icon { color: var(--accent-green); flex-shrink: 0; }
+    .doc-ref-path { font-family: 'Courier New', monospace; color: var(--text-secondary); font-size: 0.85em; }
+    .code-block { background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 1rem 1.2rem; font-family: 'Courier New', monospace; font-size: var(--sz-small); color: var(--accent-green); overflow-x: auto; line-height: 1.8; white-space: pre; }
+    .diagram-link { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--accent-blue); font-size: var(--sz-small); font-weight: 600; text-decoration: none; border: 1px solid var(--border-blue); border-radius: var(--radius); padding: 0.4rem 0.9rem; background: rgba(96,165,250,0.07); transition: background 160ms ease; }
+    .diagram-link:hover { background: rgba(96,165,250,0.16); }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--accent-green); color: #0a0f1e; font-size: 0.7em; font-weight: 800; flex-shrink: 0; }
+    @media print {
+      html, body { overflow: auto; height: auto; background: white; color: #111; }
+      #progress-bar, #slide-counter, #nav-controls, #kb-hint, #notes-overlay { display: none !important; }
+      #slides-container { overflow: visible; height: auto; position: static; }
+      .slide { position: relative !important; transform: none !important; opacity: 1 !important; pointer-events: auto !important; display: flex !important; width: 100%; min-height: 100vh; page-break-after: always; break-after: page; background: white; padding: 2cm 2.5cm; align-items: flex-start; }
+      .title-hero, .title-h1, .title-h2, .title-h3 { color: #111; }
+      .highlight-g { color: #166534; } .label { color: #166534; } .accent-bar { background: #166534; }
+      .card { background: #f9fafb; border-color: #d1d5db; }
+      .data-table th { background: #f3f4f6; color: #166534; } .data-table td { color: #111; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+  <div id="slide-counter"><span class="cur" id="cur">1</span> / <span id="tot">20</span></div>
+  <nav id="nav-controls" aria-label="Slide navigation">
+    <button id="btn-prev" aria-label="Previous slide" title="Previous (←)">&#8592;</button>
+    <button id="btn-next" aria-label="Next slide" title="Next (→)">&#8594;</button>
+  </nav>
+  <div id="kb-hint">&#9654; Arrow keys or swipe &nbsp;·&nbsp; F fullscreen &nbsp;·&nbsp; N notes</div>
+  <div id="notes-overlay" hidden>
+    <p id="notes-label">Speaker Notes</p>
+    <button id="notes-close" aria-label="Close notes">&#10005;</button>
+    <p id="notes-content"></p>
+  </div>
+
+  <main id="slides-container">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 1 — COVER
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-slide="1"
+      data-notes="Welcome to TactiTok developer onboarding. This session covers everything you need to start contributing: what the product is, how the architecture fits together, what you are building, in what order, and where every file lives. Estimated time: 30–40 minutes including Q&A. Audience: 3 student developers. Sources: all 7 spec documents + the 17 Excalidraw diagrams.">
+      <div class="slide-inner centered" style="gap:var(--gap-lg);min-height:70vh;justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+          <polygon points="36,4 68,21 68,51 36,68 4,51 4,21" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+          <polygon points="36,10 62,24 62,48 36,62 10,48 10,24" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="36" y="41" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#22c55e" font-family="Inter,system-ui,sans-serif" letter-spacing="-0.5">TT</text>
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+          <p class="label">DK-04 &mdash; Developer Onboarding</p>
+          <h1 class="title-hero" style="letter-spacing:-0.02em;">TactiTok <span class="highlight-g">Dev Onboarding</span></h1>
+          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:640px;line-height:1.5;">What it is &middot; how it's built &middot; what you build first</p>
+        </div>
+        <hr class="divider" style="width:100%;max-width:500px;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+          <span class="badge badge-g">Dev A — Backend &amp; Cloud</span>
+          <span class="badge badge-b">Dev B — Edge SPA &amp; Proxy</span>
+          <span class="badge badge-o">Dev C — Admin SPA &amp; Library</span>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">March 2026 &middot; Sources: product/north-star.md &middot; docs 01–07 &middot; diagram-index.md</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 2 — THE PRODUCT IN 2 MINUTES
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="2"
+      data-notes="The one-liner: turn doom-scrolling during wartime into operational learning — even under poor connectivity. The key insight is the delivery mechanic: a TikTok-style feed running entirely in a Chrome browser on a 10-inch tablet in the field. Content is cached locally via an nginx proxy so it works offline. Three user flows cover everything in scope: consume reels (Flow A), find in library (Flow B), and upload via admin portal (Flow C). Source: product/north-star.md.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">The Product</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">TactiTok in <span class="highlight-g">2 Minutes</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">The Problem</p>
+              <ul class="bullets" style="margin-top:0.4rem;">
+                <li>No centralized, convenient way to deliver up-to-date training to fighters at the edge during operations</li>
+                <li>Face-to-face / ad-hoc delivery — PDFs in unsuitable channels — updates don't arrive in time</li>
+                <li>Limited bandwidth + kiosk environment makes video consumption cumbersome and inconsistent</li>
+              </ul>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">The Solution</p>
+              <ul class="bullets" style="margin-top:0.4rem;">
+                <li><strong>TikTok-style reels feed</strong> — short training videos, scroll to consume during rest breaks</li>
+                <li><strong>Organized library</strong> — category tree + search for on-demand reference</li>
+                <li><strong>Edge proxy cache</strong> — works offline; content cached locally via nginx in Docker</li>
+                <li><strong>Admin portal</strong> — training staff upload content; edge syncs on reconnect</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g" style="border-top-color:var(--accent-green);">
+              <p class="card-title">Flow A — Browse Reels</p>
+              <p class="card-body">Open app → interest selection → scroll short-video feed → auto-play + prefetch → Like / Save / Download for offline</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Flow B — Library Search</p>
+              <p class="card-body">Enter library → navigate category tree or search → open content item (PDF or video) → view in browser → optional local download</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Flow C — Admin Upload</p>
+              <p class="card-body">Admin login → upload MP4 or PDF + metadata (title, categories, interests) → publish → edge syncs within 30 s → content visible on device</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 3 — ARCHITECTURE IN 2 MINUTES
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="3"
+      data-notes="The 3-tier topology: Cloud VM (Node.js + PostgreSQL + nginx TLS), Edge Device (Docker container with nginx caching proxy + Edge SPA bundle), HQ Desktop (Admin SPA connecting directly to cloud). The unusual part: Chrome on the edge device connects to localhost:8080 only — never to the cloud. The Docker container handles SPA serving, API proxying, and content caching. This makes offline trivial and keeps the SPA code simple. Open the diagram to see the full picture.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Architecture Overview</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Three Tiers, <span class="highlight-g">One Container</span> that Does the Work</h1>
+        <div class="three-col">
+          <div class="card card-b">
+            <p class="card-title">Cloud VM (Linux)</p>
+            <p class="card-body">
+              nginx TLS :443<br>
+              Node.js + Express :3000<br>
+              PostgreSQL :5432<br>
+              File Store: <code style="color:var(--accent-green);">./data/content/</code><br>
+              <em>pm2 / systemd; Let's Encrypt</em>
+            </p>
+          </div>
+          <div class="card card-g">
+            <p class="card-title">Edge Device (Windows + Linux VM)</p>
+            <p class="card-body">
+              Chrome kiosk → <code style="color:var(--accent-green);">localhost:8080</code><br>
+              Docker container: nginx :8080<br>
+              &nbsp;&nbsp;• Serves Edge SPA bundle<br>
+              &nbsp;&nbsp;• Proxies /api/* to cloud<br>
+              &nbsp;&nbsp;• Proxy cache: 10 GB, 30 d TTL<br>
+              IndexedDB: profile, downloads, actions
+            </p>
+          </div>
+          <div class="card card-o">
+            <p class="card-title">HQ Desktop (Admin)</p>
+            <p class="card-body">
+              Admin SPA in browser<br>
+              HTTPS → Cloud VM directly<br>
+              JWT auth (8-hour token)<br>
+              Upload MP4 / PDF + metadata<br>
+              Manage categories &amp; interests
+            </p>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--gap-sm);align-items:center;flex-wrap:wrap;">
+          <a class="diagram-link" href="https://excalidraw.com/#json=m2H5BVnwXn-CcTY6ykag8,ol_aWg9H5j_ATn2_NSz16g" target="_blank" rel="noopener">DG-01 — System Overview &#8599;</a>
+          <span style="font-size:var(--sz-small);color:var(--text-muted);">Full architecture diagram — 3 zones, all components, data flows</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 4 — 5 PACKAGES
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="4"
+      data-notes="The monorepo has 5 packages. packages/shared is the anchor — it contains the TypeScript DTOs that every other package imports. All API response types are defined here once; if client and server disagree, TypeScript catches it at compile time. The edge-proxy package is not a TS package but lives in the repo for co-located config. Dev A owns server + shared, Dev B owns client + edge-proxy, Dev C owns admin.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Monorepo Structure &middot; DG-13</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Five Packages, <span class="highlight-g">One Shared Type Layer</span></h1>
+        <div class="five-col">
+          <div class="card card-g">
+            <p class="card-title" style="font-size:0.75rem;">packages/server</p>
+            <p class="card-body" style="font-size:0.78rem;">Node.js + Express API<br>Content + Admin routes<br>Service layer<br>DB migrations<br><em>Owner: Dev A</em></p>
+          </div>
+          <div class="card card-g">
+            <p class="card-title" style="font-size:0.75rem;">packages/shared</p>
+            <p class="card-body" style="font-size:0.78rem;">TypeScript DTOs<br>ContentItemDTO<br>CatalogResponse<br>CategoryDTO / InterestDTO<br><em>Owner: Dev A</em></p>
+          </div>
+          <div class="card card-b">
+            <p class="card-title" style="font-size:0.75rem;">packages/client</p>
+            <p class="card-body" style="font-size:0.78rem;">Edge SPA (React/TS)<br>Reels · Library · Downloads<br>IndexedDB layer<br>PDF.js + video player<br><em>Owner: Dev B</em></p>
+          </div>
+          <div class="card card-o">
+            <p class="card-title" style="font-size:0.75rem;">packages/admin</p>
+            <p class="card-body" style="font-size:0.78rem;">Admin SPA (React/TS)<br>Upload form + list<br>Category / interest CRUD<br>Login screen<br><em>Owner: Dev C</em></p>
+          </div>
+          <div class="card" style="border-top:3px solid var(--text-muted);">
+            <p class="card-title" style="font-size:0.75rem;">packages/edge-proxy</p>
+            <p class="card-body" style="font-size:0.78rem;">Dockerfile<br>nginx.conf<br>Proxy cache config<br>SPA bundle baked in<br><em>Owner: Dev B</em></p>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--gap-sm);align-items:center;flex-wrap:wrap;">
+          <a class="diagram-link" href="https://excalidraw.com/#json=dF-Zzea7unFkk0Myx3sI6,X_cPLhE4uqGsulFEseLxUg" target="_blank" rel="noopener">DG-13 — Package Map &#8599;</a>
+          <span style="font-size:var(--sz-small);color:var(--text-muted);">Monorepo layout, ownership, shared-type dependency graph</span>
+        </div>
+        <div class="code-block" style="font-size:0.8rem;line-height:1.5;">tactitok/
+├── packages/
+│   ├── client/        ← Edge SPA (React/TS, Vite)
+│   ├── admin/         ← Admin SPA (React/TS, Vite)
+│   ├── server/        ← API Server (Node/Express/TS)
+│   ├── shared/        ← Shared types, validation
+│   └── edge-proxy/    ← Dockerfile + nginx.conf
+├── package.json       ← pnpm workspaces root
+└── tsconfig.base.json ← Shared TS config</div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 5 — DEV ENVIRONMENT SETUP
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="5"
+      data-notes="Prerequisites: Node.js 20+, pnpm 8+, Docker Desktop, PostgreSQL 15+ (local or Docker). The edge proxy connects to the cloud VM so for local development you can point CLOUD_URL to localhost:3000 directly, bypassing the proxy. The seed script loads 3 categories, 3 subcategories, and 3 interests into the database — enough to develop against without manual data entry. The first run command starts all three apps concurrently. Source: product/07_delivery-plan.md §4 Sprint 1.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Dev Environment Setup</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">From Zero to <span class="highlight-g">Running in 10 Minutes</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Prerequisites</p>
+              <ul class="bullets" style="margin-top:0.3rem;">
+                <li>Node.js 20 LTS</li>
+                <li>pnpm 8+ (<code style="color:var(--accent-green);">npm i -g pnpm</code>)</li>
+                <li>Docker Desktop (for edge proxy)</li>
+                <li>PostgreSQL 15+ running locally or via Docker</li>
+              </ul>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Environment Variables (copy .env.example)</p>
+              <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.82em;line-height:1.8;">
+                DATABASE_URL=postgres://localhost:5432/tactitok<br>
+                ADMIN_PASSWORD=changeme<br>
+                JWT_SECRET=dev-secret-change-in-prod<br>
+                CONTENT_DIR=./data/content<br>
+                PORT=3000
+              </p>
+            </div>
+          </div>
+          <div class="code-block" style="font-size:0.82rem;"># 1. Install all workspace dependencies
+pnpm install
+
+# 2. Create the database
+createdb tactitok
+
+# 3. Run migrations (creates all 5 tables)
+pnpm --filter server db:migrate
+
+# 4. Seed development data
+pnpm --filter server db:seed
+
+# 5. Start all three apps in parallel
+pnpm dev
+#   → server:  http://localhost:3000
+#   → client:  http://localhost:5173
+#   → admin:   http://localhost:5174
+
+# 6. (Optional) Build + run edge proxy
+cd packages/edge-proxy
+docker build -t tactitok-edge-proxy .
+docker run -p 8080:8080 \
+  -e CLOUD_URL=https://your-vm.example.com \
+  tactitok-edge-proxy</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 6 — EDGE DEVICE TOPOLOGY
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="6"
+      data-notes="This is the most unusual part of the architecture. It is NOT a standard web app. Chrome on Windows never connects to the cloud — it only connects to localhost:8080. The Docker container on the Linux VM is a caching reverse proxy. When the cloud is reachable, it forwards requests and caches responses. When the cloud is unreachable, it serves stale cached responses. The SPA doesn't need to know — it always requests localhost. WSL2 automatically maps Docker container ports to Windows localhost; VirtualBox needs explicit port forwarding. Source: product/04_system-architecture.md §5.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Edge Device Topology &middot; DG-03</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Why This Is <span class="highlight-g">Not a Normal Web App</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-o">
+              <p class="card-title">Normal Web App</p>
+              <p class="card-body">Browser → Cloud server (direct HTTPS)<br>Offline = Service Worker + Cache API<br>Complex offline code in the SPA<br>Browser caches content files (unreliable)</p>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">TactiTok Edge Device</p>
+              <p class="card-body">Chrome → <code style="color:var(--accent-green);">localhost:8080</code> (always)<br>Docker container intercepts all requests<br>nginx proxy_cache handles offline transparently<br>SPA has zero offline code — one code path</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Offline Detection</p>
+              <p class="card-body">SPA polls <code style="color:var(--accent-green);">GET /api/health</code> (never cached)<br>If it fails → cloud is unreachable<br>Response header <code style="color:var(--accent-green);">X-Cache-Status: STALE</code> = serving from cache<br>Show "Last synced" instead of "Synced now"</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card" style="border:1px solid var(--border-subtle);background:var(--bg-tertiary);padding:1rem 1.2rem;">
+              <p class="card-title" style="color:var(--accent-green);">Edge Device Stack</p>
+              <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.82em;line-height:2;">
+                [Windows PC]<br>
+                &nbsp;&nbsp;Chrome (kiosk mode) :localhost:8080<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;↕ localhost port mapping<br>
+                [Linux VM (WSL2 or VirtualBox)]<br>
+                &nbsp;&nbsp;Docker container: tactitok-edge-proxy<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;nginx :8080<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;├── /var/www/spa/ → Edge SPA bundle<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;├── /api/* → proxy_pass cloud<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;└── proxy_cache: /var/cache/nginx (10 GB)
+              </p>
+            </div>
+            <a class="diagram-link" href="https://excalidraw.com/#json=7Mtj45WBcOmvqABp2aEvc,m0clX0ptpLq0C8VgAVCXTQ" target="_blank" rel="noopener">DG-03 — Edge Device Deployment &#8599;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 7 — DATA MODEL: SERVER
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="7"
+      data-notes="Five server entities in PostgreSQL. ContentItem is the central entity — everything else links to it. Category has a self-referential FK for 2-level hierarchy (parentId is null for roots). ContentCategory and ContentInterest are junction tables — cascade-deleted when a content item is deleted. All PKs are UUIDs. Version is a counter that increments on file replacement — this drives cache-busting on the edge proxy via the ?v= query param. Source: product/05_data-model.md.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Data Model — Server &middot; DG-04</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Five PostgreSQL Entities, <span class="highlight-g">Content-Item Central</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <table class="data-table">
+            <thead><tr><th>Entity</th><th>Key Fields</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>ContentItem</strong></td>
+                <td class="muted">id (UUID PK), title, description, type (video|pdf), filename, fileSize, mimeType, duration (null for PDF), thumbnailPath, <strong>version</strong>, createdAt, updatedAt</td>
+              </tr>
+              <tr>
+                <td><strong>Category</strong></td>
+                <td class="muted">id, name, <strong>parentId</strong> (self-ref FK, null = root), sortOrder — max 2 levels enforced in service layer</td>
+              </tr>
+              <tr>
+                <td><strong>Interest</strong></td>
+                <td class="muted">id, name (UNIQUE), createdAt — flat list, no hierarchy</td>
+              </tr>
+              <tr>
+                <td><strong>ContentCategory</strong></td>
+                <td class="muted">contentId (FK), categoryId (FK) — M:N junction; cascade delete on content delete</td>
+              </tr>
+              <tr>
+                <td><strong>ContentInterest</strong></td>
+                <td class="muted">contentId (FK), interestId (FK) — M:N junction; cascade delete on content delete</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Modeling Principles</p>
+              <ul class="bullets" style="margin-top:0.3rem;">
+                <li>One binary file per content item (no multi-file)</li>
+                <li>Hard delete — removes DB record + file + thumbnail</li>
+                <li><strong>version counter</strong>, not version history</li>
+                <li>UUIDs for all PKs — future multi-source sync ready</li>
+                <li>Migration-based schema from Sprint 1 (Prisma or Knex)</li>
+              </ul>
+            </div>
+            <a class="diagram-link" href="https://excalidraw.com/#json=kS9zEDFbS1ZPMiobq3E8a,uGCiwysIVh8mFmOAR-wSCA" target="_blank" rel="noopener">DG-04 — Full Data Model &#8599;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 8 — DATA MODEL: EDGE (IndexedDB)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="8"
+      data-notes="Four IndexedDB entities. The key insight: DownloadRecord is metadata only — the actual file bytes live in nginx proxy_cache on the Linux VM filesystem, not in the browser. Deleting a DownloadRecord does not delete the cached file; the proxy manages eviction. Chrome's Cache API and Service Workers are NOT used. DeviceProfile.deviceId becomes userId when user authentication is added in a future sprint. CachedCatalog is replaced entirely on each sync — no partial updates in MVP. Source: product/05_data-model.md.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Data Model — Edge Browser &middot; DG-04</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Four Local Entities in <span class="highlight-g">IndexedDB</span></h1>
+        <div class="two-col">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-b">
+              <p class="card-title">DeviceProfile — singleton</p>
+              <p class="card-body">
+                deviceId: UUID (auto, stable across sessions)<br>
+                selectedInterestIds: string[]<br>
+                createdAt · updatedAt<br>
+                <em style="font-size:0.85em;">Future: replace deviceId with userId when auth is added</em>
+              </p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">CachedCatalog — singleton</p>
+              <p class="card-body">
+                items: ContentItemDTO[] — full server snapshot<br>
+                categories: CategoryDTO[]<br>
+                interests: InterestDTO[]<br>
+                lastSyncedAt: ISO timestamp<br>
+                <em style="font-size:0.85em;">Replaced entirely on each catalog pull</em>
+              </p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">DownloadRecord — keyed by contentId</p>
+              <p class="card-body">
+                contentId · title · type · fileSize<br>
+                downloadedAt · version (for "Updated" badge)<br>
+                <strong>Metadata only — actual file is in nginx proxy_cache</strong><br>
+                <em style="font-size:0.85em;">Delete record ≠ delete file; proxy manages eviction</em>
+              </p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">LocalAction — keyed by (contentId, action)</p>
+              <p class="card-body">
+                contentId · action: 'like' | 'save'<br>
+                active: boolean · timestamp<br>
+                <strong>No server sync in MVP</strong><br>
+                <em style="font-size:0.85em;">Designed for batch upload when user identity exists</em>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card card-gl" style="padding:0.7rem 1rem;">
+          <p class="card-body"><strong>Chrome Cache API / Service Workers: NOT used.</strong> All content caching is handled by nginx proxy_cache on the Linux VM filesystem. The SPA never stores binary file data.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 9 — API SURFACE
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="9"
+      data-notes="21 endpoints total: 4 public (no auth, edge-facing) and 17 admin (JWT Bearer, 8-hour token). Public endpoints are read-only and cached by the edge proxy. The ?v={version} query param on the file endpoint is how cache-busting works — when admin updates a file, version increments, the SPA constructs a new URL, and the proxy sees a cache miss. The admin password is a single shared env var on the server — no user table. Source: product/06_api-contract.md.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">API Contract &middot; 21 Endpoints &middot; DG-02</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">4 Public + <span class="highlight-g">17 Admin</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <table class="data-table">
+            <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td colspan="3" style="background:rgba(34,197,94,0.08);color:var(--accent-green);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;">PUBLIC — NO AUTH</td></tr>
+              <tr><td class="mono" style="color:var(--accent-green);">GET</td><td class="mono">/api/health</td><td class="muted">Connectivity check; never cached</td></tr>
+              <tr><td class="mono" style="color:var(--accent-green);">GET</td><td class="mono">/api/catalog</td><td class="muted">Full catalog JSON; 5-min proxy cache</td></tr>
+              <tr><td class="mono" style="color:var(--accent-green);">GET</td><td class="mono">/api/content/:id/file?v=</td><td class="muted">Binary file; 206 range; 30-d cache</td></tr>
+              <tr><td class="mono" style="color:var(--accent-green);">GET</td><td class="mono">/api/content/:id/thumbnail</td><td class="muted">Thumbnail image; 30-d cache</td></tr>
+              <tr><td colspan="3" style="background:rgba(251,146,60,0.08);color:var(--accent-orange);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;">ADMIN — JWT BEARER (8 h)</td></tr>
+              <tr><td class="mono" style="color:var(--accent-orange);">POST</td><td class="mono">/api/admin/login</td><td class="muted">Password → JWT token</td></tr>
+              <tr><td class="mono" style="color:var(--accent-orange);">POST</td><td class="mono">/api/admin/logout</td><td class="muted">No-op server; clears client token</td></tr>
+              <tr><td class="mono" style="color:var(--accent-green);">GET</td><td class="mono">/api/admin/content</td><td class="muted">List all items</td></tr>
+              <tr><td class="mono" style="color:var(--accent-orange);">POST</td><td class="mono">/api/admin/content</td><td class="muted">Upload new item (multipart)</td></tr>
+              <tr><td class="mono" style="color:var(--accent-green);">GET</td><td class="mono">/api/admin/content/:id</td><td class="muted">Single item metadata</td></tr>
+              <tr><td class="mono" style="color:#fb923c;">PUT</td><td class="mono">/api/admin/content/:id</td><td class="muted">Update metadata only</td></tr>
+              <tr><td class="mono" style="color:#fb923c;">PUT</td><td class="mono">/api/admin/content/:id/file</td><td class="muted">Replace binary file; version++</td></tr>
+              <tr><td class="mono" style="color:#fb923c;">PUT</td><td class="mono">/api/admin/content/:id/thumbnail</td><td class="muted">Upload / replace thumbnail</td></tr>
+              <tr><td class="mono" style="color:#f87171;">DEL</td><td class="mono">/api/admin/content/:id</td><td class="muted">Hard delete; cascades junctions</td></tr>
+              <tr><td class="mono" style="color:var(--accent-blue);">CRUD</td><td class="mono">/api/admin/categories</td><td class="muted">GET list / POST / PUT :id / DEL :id</td></tr>
+              <tr><td class="mono" style="color:var(--accent-blue);">CRUD</td><td class="mono">/api/admin/interests</td><td class="muted">GET list / POST / PUT :id / DEL :id</td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Key API Principles</p>
+              <ul class="bullets" style="margin-top:0.3rem;">
+                <li><strong>REST over JSON</strong> — consistent; no GraphQL overhead</li>
+                <li><strong>?v={version}</strong> on file URL = proxy cache-busting mechanism</li>
+                <li>Error envelope: <code style="color:var(--accent-green);">{"error":"...","code":"..."}</code></li>
+                <li><strong>?since=</strong> accepted on catalog but ignored — ready for future delta sync</li>
+                <li>All types in <code style="color:var(--accent-green);">packages/shared/src/types.ts</code></li>
+              </ul>
+            </div>
+            <a class="diagram-link" href="https://excalidraw.com/#json=eGwui9XaJkvQ5b8gF7ZPS,NXds79drLkQ2PDdKnTlo3A" target="_blank" rel="noopener">DG-02 — API Surface Diagram &#8599;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 10 — KEY ARCHITECTURAL DECISIONS
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="10"
+      data-notes="AD1–AD12 are all documented in product/04_system-architecture.md. The most important decisions for new developers: AD1 (monorepo with shared types — never diverge from this), AD5 (filesystem abstraction — always go through the interface, never write to disk directly), AD7 (nginx proxy cache — never add Service Worker or Cache API code), AD8 (IndexedDB for state only — never store binary file data in the browser), AD11 (full catalog sync — no delta logic in MVP), AD12 (SPA in Docker image — update = rebuild + redeploy the container).">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Architectural Decisions AD1–AD12</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Twelve Decisions, <span class="highlight-g">All Deliberate</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <div class="card card-g"><p class="card-title">AD1 — TypeScript Monorepo</p><p class="card-body">Shared types prevent API drift at compile time. Single CI pipeline.</p></div>
+            <div class="card card-g"><p class="card-title">AD2 — React for Both SPAs</p><p class="card-body">Largest ecosystem; best scroll-snap + TikTok pattern support.</p></div>
+            <div class="card card-g"><p class="card-title">AD3 — Node.js + Express</p><p class="card-body">Same language as frontend; simple range-request file streaming.</p></div>
+            <div class="card card-b"><p class="card-title">AD4 — PostgreSQL</p><p class="card-body">Production-grade; ILIKE text search; migration-based from day one.</p></div>
+            <div class="card card-b"><p class="card-title">AD5 — Filesystem Storage Abstraction</p><p class="card-body"><code style="color:var(--accent-green);">store/retrieve/delete</code> interface — swap to S3/MinIO without changing service layer.</p></div>
+            <div class="card card-b"><p class="card-title">AD6 — MP4 + HTTP 206 Range</p><p class="card-body">No transcoding pipeline. Chrome handles range-based streaming natively. ≤3 min clips.</p></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <div class="card card-g"><p class="card-title">AD7 — nginx Proxy Cache (not Service Worker)</p><p class="card-body">Zero offline code in SPA. Transparent offline for all previously accessed content.</p></div>
+            <div class="card card-g"><p class="card-title">AD8 — IndexedDB for State Only</p><p class="card-body">Profile, download records, local actions. No binary file data. One SPA code path.</p></div>
+            <div class="card card-g"><p class="card-title">AD9 — Single Node.js Process</p><p class="card-body">3 developers, ~20 users. Monolith with clean service modules. pm2 cluster if needed.</p></div>
+            <div class="card card-b"><p class="card-title">AD10 — nginx TLS on Cloud</p><p class="card-body">Standard pattern. Let's Encrypt or self-signed for demo. proxy_pass :3000.</p></div>
+            <div class="card card-b"><p class="card-title">AD11 — Full Catalog Sync</p><p class="card-body">~15 items = &lt;10 KB JSON. API accepts <code style="color:var(--accent-green);">?since=</code> for future delta sync.</p></div>
+            <div class="card card-b"><p class="card-title">AD12 — SPA Baked into Docker Image</p><p class="card-body">SPA always available locally. Update = rebuild + redeploy Docker image to edge device.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 11 — OUT OF SCOPE
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="11"
+      data-notes="These items were explicitly considered and deferred — not overlooked. The most counter-intuitive deferral is Service Workers — they're the standard PWA offline mechanism but the nginx proxy approach is strictly better in this topology. The de-scope levers are ordered: pull lever 1 first if Sprint 3 is running late, never skip ahead. PDF can only be dropped as a last resort since it's a core demo requirement. Source: product/03_mvp-spec.md + product/07_delivery-plan.md §13.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Out of Scope</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Explicit Deferrals + <span class="highlight-g">De-Scope Levers</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div class="card card-o">
+            <p class="card-title" style="color:var(--accent-orange);">Permanently Out of Scope (MVP)</p>
+            <ul class="bullets" style="margin-top:0.4rem;">
+              <li>User authentication / RBAC on edge (kiosk = anonymous)</li>
+              <li>Video transcoding pipeline (upload-ready MP4 only)</li>
+              <li>Advanced personalization / recommendation engine</li>
+              <li>Analytics dashboards / telemetry beyond local Like/Save</li>
+              <li>Chat, comments, social sharing features</li>
+              <li>Push sync / WebSocket (pull on open is sufficient)</li>
+              <li>CDN, S3, load balancer, Redis (single server, ~20 devices)</li>
+              <li>DRM, complex rights management</li>
+              <li>Service Workers / Cache API (nginx proxy replaces them)</li>
+            </ul>
+          </div>
+          <div class="card card-b">
+            <p class="card-title" style="color:var(--accent-blue);">De-Scope Levers — Pull in Order</p>
+            <table class="data-table" style="margin-top:0.4rem;">
+              <thead><tr><th>#</th><th>Drop</th><th>Saves</th><th>Trigger</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>"Updated" badge</td><td class="muted">2–3 d</td><td class="muted">Sprint 3–4 late</td></tr>
+                <tr><td>2</td><td>Like / Save buttons</td><td class="muted">2–3 d</td><td class="muted">Sprint 3 late</td></tr>
+                <tr><td>3</td><td>Interest filtering + selection</td><td class="muted">4–5 d</td><td class="muted">M3 at risk</td></tr>
+                <tr><td>4</td><td>Admin category CRUD</td><td class="muted">3–4 d</td><td class="muted">Sprint 5 late</td></tr>
+                <tr><td>5</td><td>Admin interest CRUD</td><td class="muted">1–2 d</td><td class="muted">Sprint 5 late</td></tr>
+                <tr><td>6</td><td>PDF support (last resort)</td><td class="muted">5–7 d</td><td class="muted">Sprint 5–6 severe</td></tr>
+              </tbody>
+            </table>
+            <p class="card-body" style="margin-top:0.5rem;font-size:0.8em;">Never pull without confirming with the full team and stakeholder.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 12 — SPRINT PLAN OVERVIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="12"
+      data-notes="Six sprints, six milestones, 12 weeks. M3 at end of week 6 (reels on actual device) is the highest-risk milestone — if it's not solid, trigger de-scope levers immediately. The critical path runs: monorepo setup → shared types → schema → catalog endpoint → catalog sync → interest filtering → reels feed → M3 device test. Everything else is parallel to this chain. Source: product/07_delivery-plan.md §§3–5.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint Plan &middot; DG-17</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">6 Sprints &middot; 6 Milestones &middot; <span class="highlight-g">12 Weeks</span></h1>
+        <table class="data-table">
+          <thead><tr><th>Sprint</th><th>Weeks</th><th>Goal</th><th>Milestone</th></tr></thead>
+          <tbody>
+            <tr><td><strong>S1 — Foundation</strong></td><td>1–2</td><td class="muted">Monorepo, schema, skeletons, Docker, cloud VM</td><td><span class="badge badge-g">M1</span> Everything starts (wk 2)</td></tr>
+            <tr><td><strong>S2 — Content Pipeline</strong></td><td>3–4</td><td class="muted">Upload → API → catalog sync → basic view → PDF/video player</td><td><span class="badge badge-g">M2</span> Content pipeline works (wk 4)</td></tr>
+            <tr><td><strong>S3 — Reels Experience</strong></td><td>5–6</td><td class="muted">TikTok feed, auto-play, swipe, interests, prefetch, library tree</td><td><span class="badge badge-o">M3</span> Reels on device (wk 6) ⚠️ highest risk</td></tr>
+            <tr><td><strong>S4 — Library + Offline</strong></td><td>7–8</td><td class="muted">Downloads tab, offline mode, "Updated" badge, network indicator</td><td><span class="badge badge-b">M4</span> Full offline loop (wk 8)</td></tr>
+            <tr><td><strong>S5 — Admin + Integration</strong></td><td>9–10</td><td class="muted">Admin portal complete, all 21 endpoints tested, full demo script</td><td><span class="badge badge-b">M5</span> Demo script passes (wk 10)</td></tr>
+            <tr><td><strong>S6 — Stabilisation</strong></td><td>11–12</td><td class="muted">15 demo items, Chrome kiosk config, 2× rehearsal, final fixes</td><td><span class="badge badge-g">M6</span> Demo ready (wk 12)</td></tr>
+          </tbody>
+        </table>
+        <a class="diagram-link" href="https://excalidraw.com/#json=3NAh-giD82UiMB9HWh6tn,hAG9lW_oMS9QKt5OYU2dyA" target="_blank" rel="noopener">DG-17 — Sprint Timeline &amp; Critical Path &#8599;</a>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 13 — WHAT TO BUILD FIRST AND WHY
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="13"
+      data-notes="Sprint 1 is the most important sprint. Everything depends on shared types and the schema existing by the end of week 1. The edge proxy must be verifiable in week 1 so all later edge features have a target to test against. Sprint 1 exit is the gate for M1 — if pnpm build fails or the health check doesn't return 200, the team is blocked. The critical path to M3: shared types → schema → GET /api/catalog → catalog sync → interest filtering → reels feed → test on device by wk 6.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint 1 &amp; Critical Path to M3</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">What to Build <span class="highlight-g">First and Why</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Sprint 1 Deliverables (Weeks 1–2)</p>
+              <ul class="bullets" style="margin-top:0.3rem;">
+                <li><strong>Dev A:</strong> monorepo + shared types + schema (migration 001) + Express skeleton + health check + admin auth</li>
+                <li><strong>Dev B:</strong> Edge SPA (React/TS/Vite) + 3 tabs + IndexedDB init + DeviceProfile + wire to edge proxy</li>
+                <li><strong>Dev C:</strong> Admin SPA skeleton + login screen + Docker nginx.conf + edge proxy container running</li>
+              </ul>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Sprint 1 Exit Criteria</p>
+              <ul class="bullets" style="margin-top:0.3rem;">
+                <li><code style="color:var(--accent-green);">pnpm install &amp;&amp; pnpm build</code> succeeds in all packages</li>
+                <li>PostgreSQL running; migration 001 applied</li>
+                <li><code style="color:var(--accent-green);">GET /api/health → 200</code></li>
+                <li>Admin login returns a JWT token</li>
+                <li>Edge proxy Docker container proxies <code style="color:var(--accent-green);">/api/health</code></li>
+                <li>Edge SPA loads at <code style="color:var(--accent-green);">localhost:8080</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="card" style="border:1px solid var(--border-subtle);background:var(--bg-tertiary);">
+            <p class="card-title" style="color:var(--accent-green);">Critical Path → M3 (Wk 6)</p>
+            <div class="code-block" style="font-size:0.8rem;line-height:1.7;background:transparent;border:none;padding:0.5rem 0;">shared/types.ts (Dev A, wk 1)
+  └── schema (Dev A, wk 1)
+       └── GET /api/catalog (Dev A, wk 3)
+            └── catalog sync to IndexedDB (Dev B, wk 3)
+                 └── interest filtering (Dev B, wk 6)
+                      └── reels feed (Dev B, wk 5–6)
+                           └── M3: reels on device ✓ (wk 6)
+
+Edge proxy Docker running (Dev C, wk 1)
+  └── all edge features depend on proxy</div>
+            <p class="card-body" style="font-size:0.8em;margin-top:0.5rem;color:var(--accent-orange);">⚠️ If M3 is not solid by end of wk 6 — trigger de-scope levers immediately</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 14 — RUNNING LOCALLY
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="14"
+      data-notes="For daily development the team does not need the Docker container running — they can hit localhost:3000 directly from the Edge SPA dev server. The edge proxy is needed to test offline behavior, proxy caching, and the actual device setup. The pnpm dev command starts all three apps concurrently using the turbo or concurrently tool configured in the root package.json. The seed script inserts 3 categories, 3 sub-categories, and 3 interests so the UI is not empty. Test that the health check returns 200 before anything else.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Running Locally</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Local Development <span class="highlight-g">Commands</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div class="code-block" style="font-size:0.82rem;"># Daily workflow
+pnpm install         # install / update deps
+pnpm --filter server db:migrate   # run pending migrations
+pnpm --filter server db:seed      # load dev seed data
+pnpm dev             # start all 3 apps in parallel
+
+# Individual apps
+pnpm --filter server dev    # API server  :3000
+pnpm --filter client dev    # Edge SPA    :5173
+pnpm --filter admin  dev    # Admin SPA   :5174
+
+# Database
+pnpm --filter server db:migrate:rollback  # undo last migration
+pnpm --filter server db:studio            # Prisma Studio (if using Prisma)
+
+# Lint + type-check
+pnpm build           # build all packages (type-checks too)
+pnpm lint            # ESLint across workspace</div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="code-block" style="font-size:0.82rem;"># Edge proxy (local testing)
+cd packages/edge-proxy
+
+# Build Docker image
+docker build -t tactitok-edge-proxy .
+
+# Run with local server as upstream
+docker run -p 8080:8080 \
+  -e CLOUD_URL=http://host.docker.internal:3000 \
+  tactitok-edge-proxy
+
+# Test proxy is working
+curl http://localhost:8080/api/health
+# expected: {"status":"ok","timestamp":"..."}
+
+# Check cache headers
+curl -I http://localhost:8080/api/catalog
+# look for: X-Cache-Status: MISS (first hit)
+# then:     X-Cache-Status: HIT  (cached)</div>
+            <div class="card card-g">
+              <p class="card-title">Useful Dev URLs</p>
+              <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.85em;line-height:1.9;">
+                localhost:3000/api/health → server health<br>
+                localhost:5173 → Edge SPA (direct, no proxy)<br>
+                localhost:5174 → Admin SPA<br>
+                localhost:8080 → Edge SPA via proxy
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 15 — DEPLOYING TO CLOUD VM
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="15"
+      data-notes="The cloud VM needs: Linux (Ubuntu 22.04 recommended), Node.js 20, PostgreSQL 15, nginx, pm2, and a domain name or IP with port 443 accessible. The recommended cert approach for demo is either Let's Encrypt (if a domain is available) or a self-signed cert (Chrome will show a warning but it can be bypassed for demo use). pm2 restarts the Node.js process on crash and on VM reboot. The Admin SPA is served as static files by the API server — no separate web server needed for it. Source: product/07_delivery-plan.md §4 Sprint 5.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Cloud VM Deployment</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Deploying to the <span class="highlight-g">Cloud VM</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div class="code-block" style="font-size:0.8rem;"># 1. Install Node.js 20 on Ubuntu 22.04
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# 2. Install pnpm + pm2
+npm install -g pnpm pm2
+
+# 3. Clone repo + install deps
+git clone https://github.com/your-org/tactitok
+cd tactitok && pnpm install
+
+# 4. Set up environment
+cp .env.example .env.production
+# edit: DATABASE_URL, ADMIN_PASSWORD, JWT_SECRET, CONTENT_DIR
+
+# 5. Build server + Admin SPA
+pnpm build
+
+# 6. Run migrations on the production DB
+NODE_ENV=production pnpm --filter server db:migrate
+
+# 7. Start with pm2 (auto-restarts on crash + reboot)
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+
+# 8. Verify
+curl https://your-vm.example.com/api/health</div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-b">
+              <p class="card-title">nginx TLS Config (cloud)</p>
+              <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.8em;line-height:1.8;">
+                server {'{'}  listen 443 ssl;{' '}<br>
+                &nbsp;&nbsp;ssl_certificate /etc/ssl/cert.pem;<br>
+                &nbsp;&nbsp;ssl_certificate_key /etc/ssl/key.pem;<br>
+                &nbsp;&nbsp;location / {'{'}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;proxy_pass http://127.0.0.1:3000;<br>
+                &nbsp;&nbsp;{'}'}<br>
+                {'}'}
+              </p>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">VM Requirements</p>
+              <ul class="bullets" style="margin-top:0.3rem;">
+                <li>Linux (Ubuntu 22.04 LTS recommended)</li>
+                <li>4+ GB RAM · 50+ GB disk for content files</li>
+                <li>Port 443 open; domain or static IP</li>
+                <li>PostgreSQL 15+ running on the same VM</li>
+                <li>Let's Encrypt cert or self-signed for demo</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 16 — DEPLOYING THE EDGE PROXY
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="16"
+      data-notes="The edge proxy Docker image bakes in the built Edge SPA bundle. This means when you update the SPA, you rebuild the Docker image and redeploy it to all edge devices. The --restart=always flag ensures the container comes back up automatically after device reboot. The proxy cache directory should be on a volume mount if you want cache to persist across container restarts — otherwise the cache is rebuilt as users access content. WSL2 automatically exposes port 8080 from the Linux VM to Windows localhost. VirtualBox needs explicit port forwarding rules.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Edge Proxy Deployment</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Docker Build + Run, <span class="highlight-g">Auto-Restart on Boot</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div class="code-block" style="font-size:0.8rem;"># On any machine with the repo:
+
+# 1. Build the Edge SPA bundle
+pnpm --filter client build
+
+# 2. Build Docker image (SPA bundle baked in)
+cd packages/edge-proxy
+docker build \
+  --build-arg SPA_DIST=../../packages/client/dist \
+  -t tactitok-edge-proxy:latest .
+
+# 3. Export image for transfer to edge device
+docker save tactitok-edge-proxy:latest \
+  | gzip > tactitok-edge-proxy.tar.gz
+
+# --- On the edge Linux VM ---
+
+# 4. Load the image
+docker load < tactitok-edge-proxy.tar.gz
+
+# 5. Run with auto-restart + persistent cache
+docker run -d \
+  --name tactitok-edge \
+  --restart=always \
+  -p 8080:8080 \
+  -v /var/tactitok-cache:/var/cache/nginx \
+  -e CLOUD_URL=https://your-vm.example.com \
+  tactitok-edge-proxy:latest
+
+# Verify
+curl http://localhost:8080/api/health</div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-b">
+              <p class="card-title">nginx.conf Key Settings</p>
+              <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.78em;line-height:1.8;">
+                proxy_cache_path /var/cache/nginx<br>
+                &nbsp;&nbsp;max_size=10g inactive=30d;<br>
+                <br>
+                # Catalog: 5-min TTL<br>
+                /api/catalog → proxy_cache_valid 200 5m;<br>
+                <br>
+                # Content files: 30-day TTL<br>
+                /api/content/ → proxy_cache_valid 200 206 30d;<br>
+                <br>
+                # Health: NEVER cache<br>
+                /api/health → proxy_cache off;<br>
+                <br>
+                # Serve SPA for all non-/api/ paths<br>
+                / → try_files $uri /index.html;
+              </p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Update Procedure</p>
+              <p class="card-body">1. Build new SPA bundle<br>2. Rebuild Docker image (bakes new bundle)<br>3. Transfer tar.gz to edge Linux VM<br>4. <code style="color:var(--accent-green);">docker stop tactitok-edge</code><br>5. <code style="color:var(--accent-green);">docker load &lt; new.tar.gz</code><br>6. <code style="color:var(--accent-green);">docker start tactitok-edge</code></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 17 — THE DEMO SCRIPT
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="17"
+      data-notes="The 15-step demo script is the acceptance test for the entire product. All 12 acceptance criteria map to steps in this script. The demo must be rehearsed at least twice (Sprint 6): once by the dev team, once with simulated evaluators. Demo setup: edge device configured, Chrome kiosk mode on Windows, Docker container running, 15 content items loaded. The disconnection test (steps 10–12) is the hardest to get right — test this on the actual device, not just localhost. Source: product/03_mvp-spec.md §4 + product/07_delivery-plan.md §9.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">The Demo Script — 15 Steps</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Demo Flow: <span class="highlight-g">Upload to Offline</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Action</th><th>AC</th></tr></thead>
+            <tbody>
+              <tr><td><span class="step-num">1</span></td><td>Open Chrome → <code style="font-size:0.8em;">localhost:8080</code> → app loads</td><td class="muted">AC-11</td></tr>
+              <tr><td><span class="step-num">2</span></td><td>First open: interest selection screen → select 2 interests</td><td class="muted">AC-9</td></tr>
+              <tr><td><span class="step-num">3</span></td><td>Reels feed loads — shows only matching videos</td><td class="muted">AC-9</td></tr>
+              <tr><td><span class="step-num">4</span></td><td>First video auto-plays within ≤ 2s</td><td class="muted">AC-3</td></tr>
+              <tr><td><span class="step-num">5</span></td><td>Swipe up → next video plays; swipe down → back</td><td class="muted">AC-2</td></tr>
+              <tr><td><span class="step-num">6</span></td><td>Tap "Download" on a video — progress bar → "Downloaded"</td><td class="muted">—</td></tr>
+              <tr><td><span class="step-num">7</span></td><td>Switch to Library → navigate category tree</td><td class="muted">—</td></tr>
+              <tr><td><span class="step-num">8</span></td><td>Search for a known term → results within 1s</td><td class="muted">AC-4</td></tr>
+              <tr><td><span class="step-num">9</span></td><td>Open a PDF → renders in-browser</td><td class="muted">AC-5</td></tr>
+              <tr><td><span class="step-num" style="background:var(--accent-orange);">10</span></td><td>Disconnect network → "Offline" indicator appears</td><td class="muted">AC-12</td></tr>
+              <tr><td><span class="step-num" style="background:var(--accent-orange);">11</span></td><td>Play downloaded video offline → plays fully</td><td class="muted">AC-6</td></tr>
+              <tr><td><span class="step-num" style="background:var(--accent-orange);">12</span></td><td>Open downloaded PDF offline → renders fully</td><td class="muted">AC-7</td></tr>
+              <tr><td><span class="step-num">13</span></td><td>Reconnect → sync → Admin: upload new video</td><td class="muted">AC-8</td></tr>
+              <tr><td><span class="step-num">14</span></td><td>Edge syncs within ≤ 30s → new video in reels feed</td><td class="muted">AC-8</td></tr>
+              <tr><td><span class="step-num">15</span></td><td>All 15 demo items navigable (10 PDF + 5 video)</td><td class="muted">AC-10</td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">12 Acceptance Criteria</p>
+              <p class="card-body">AC-1 through AC-12 must all pass on the <em>actual demo device</em> before demo day. Document status in a checklist. Any failing "Must" criterion goes on a P1 bug list immediately.</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Demo Setup Checklist</p>
+              <ul class="bullets" style="margin-top:0.3rem;">
+                <li>Edge proxy Docker container running with <code style="color:var(--accent-green);">--restart=always</code></li>
+                <li>15 content items loaded (10 PDF + 5 video)</li>
+                <li>Chrome kiosk mode: no OS pop-ups, navigation hidden</li>
+                <li>Network disconnect mechanism ready (Wi-Fi toggle or iptables)</li>
+                <li>Admin credentials known by presenter</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 18 — KEY RISKS TO WATCH
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="18"
+      data-notes="AR1 (Node.js bottleneck) surfaces in Sprint 5 — load test with 5 concurrent video streams; if needed switch to nginx X-Accel-Redirect which bypasses Node.js for file serving entirely. AR2 (Docker friction) surfaces in Sprint 1 — WSL2 port mapping is automatic on Windows 10/11; VirtualBox needs explicit rules. AR3 (monorepo) is front-loaded risk — if pnpm workspaces are not working in week 1 the entire build chain is blocked. AR5 (scroll-snap) must be validated hands-on on the 10-inch tablet by end of week 5 — not on a laptop. AR9 (proxy range caching) needs explicit nginx testing in Sprint 3 — if broken, pre-warm cache with a full GET before video plays.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Key Risks</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Top 5 Risks, <span class="highlight-g">Mitigations Ready</span></h1>
+        <table class="data-table">
+          <thead><tr><th>Risk</th><th>Sprint</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>AR1 — Node.js bottleneck serving concurrent video streams</strong></td>
+              <td class="muted">S5</td>
+              <td class="muted">Low</td>
+              <td class="muted">Med</td>
+              <td class="muted">Load test wk 9; switch to nginx X-Accel-Redirect for file serving if needed (bypasses Node)</td>
+            </tr>
+            <tr>
+              <td><strong>AR2 — Docker / WSL2 port mapping friction on edge device</strong></td>
+              <td class="muted">S1</td>
+              <td class="muted">Med</td>
+              <td class="muted">Med</td>
+              <td class="muted">Test in week 1; WSL2 maps ports automatically on Win 10/11; VirtualBox needs explicit forwarding rules</td>
+            </tr>
+            <tr>
+              <td><strong>AR3 — Monorepo pnpm workspaces setup complexity</strong></td>
+              <td class="muted">S1</td>
+              <td class="muted">Low</td>
+              <td class="muted">High</td>
+              <td class="muted">Establish in week 1; shared types MUST be importable from client, server, and admin before Sprint 2 begins</td>
+            </tr>
+            <tr>
+              <td><strong>AR5 — CSS scroll-snap reels jank on 10″ tablet</strong></td>
+              <td class="muted">S3</td>
+              <td class="muted">Med</td>
+              <td class="muted">High</td>
+              <td class="muted">Prototype week 5; test hands-on on actual device; fallback to Swiper.js if CSS scroll-snap is insufficient</td>
+            </tr>
+            <tr>
+              <td><strong>AR9 — nginx proxy_cache broken for range requests (206)</strong></td>
+              <td class="muted">S3–4</td>
+              <td class="muted">Med</td>
+              <td class="muted">High</td>
+              <td class="muted">Test in Sprint 3 (week 5); if broken: pre-warm cache with full GET before video plays; document in decisions.md</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="display:flex;gap:var(--gap-sm);flex-wrap:wrap;">
+          <span class="badge badge-o">Full risk register: product/07_delivery-plan.md §11</span>
+          <span class="badge badge-b">Decisions log: notes/decisions.md</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 19 — CONTINUATION NOTES
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="19"
+      data-notes="These are engineering commitments, not wishlist items. Every item describes an extension the MVP architecture explicitly supports. The storage abstraction allows S3/MinIO swap without touching the service layer. The ?since= query param on catalog is already accepted by the server — delta sync is a server-side change only. HLS can be swapped in by changing the upload handler and replacing the <video> src with an HLS manifest URL. DeviceProfile.deviceId becomes userId when auth is added — no schema migration needed. Source: product/07_delivery-plan.md §14.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">What Comes After</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Continuation Notes for <span class="highlight-g">the Next Team</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div class="card card-g">
+              <p class="card-title">Delta Sync (highest priority)</p>
+              <p class="card-body">Replace full catalog pull with <code style="color:var(--accent-green);">GET /api/catalog?since=</code> returning only changed items + a <code style="color:var(--accent-green);">deleted[]</code> array. Server-side change only — SPA already sends the param.</p>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">User Authentication</p>
+              <p class="card-body"><code style="color:var(--accent-green);">DeviceProfile.deviceId</code> becomes <code style="color:var(--accent-green);">userId</code>. API adds auth middleware to content endpoints. LocalAction records gain a <code style="color:var(--accent-green);">synced</code> flag for batch upload.</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">HLS Adaptive Streaming</p>
+              <p class="card-body">For longer content or variable bandwidth: ffmpeg on upload generates HLS segments. Client swaps <code style="color:var(--accent-green);">&lt;video src&gt;</code> for hls.js manifest. Architecture unchanged otherwise.</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div class="card card-b">
+              <p class="card-title">Automated Test Coverage</p>
+              <p class="card-body">MVP has no automated tests. Next team: unit tests for service layer (CatalogService, ContentFileService, AuthService) + integration tests for critical API endpoints before adding new features.</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Monitoring + Observability</p>
+              <p class="card-body">Add structured server-side request logging (pino) and error alerting (Sentry) before going to production with real users. Structured logs enable later analytics without schema changes.</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Edge Proxy Proactive Prefetch</p>
+              <p class="card-body">Add a cron job inside the Docker container that pulls all content from the cloud on a schedule. Ensures all content is offline-available before first user access — no waiting for the first request to cache.</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Docker Compose</p>
+              <p class="card-body">When edge device setup grows (multiple containers), replace <code style="color:var(--accent-green);">docker run</code> with a <code style="color:var(--accent-green);">docker-compose.yml</code>. Template should live in <code style="color:var(--accent-green);">packages/edge-proxy/</code>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 20 — Q&A / WHERE TO FIND EVERYTHING
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="20"
+      data-notes="Read the documents in order: north-star first, then 01 through 07, then the diagram index. The diagram index links all 17 Excalidraw diagrams with a one-line description of each. The presentation index tracks which presentations exist in EN and HE, HTML and PPTX. notes/decisions.md has all locked technical decisions with rationale — read it before making any architectural change. notes/open-questions.md has unresolved items that need answers before implementation begins.">
+      <div class="slide-inner centered" style="gap:var(--gap-lg);justify-content:center;min-height:70vh;">
+        <h1 class="title-hero" style="letter-spacing:-0.02em;">Questions</h1>
+        <hr class="divider" style="width:100%;max-width:500px;">
+        <div style="width:100%;max-width:900px;">
+          <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;">Where to Find Everything</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/north-star.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Vision, flows, constraints — read first</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/01_product-brief.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Product context, users, goals</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/02_system-boundaries.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">What is in and out of system</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/03_mvp-spec.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Feature list, demo script, acceptance criteria</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/04_system-architecture.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">AD1–AD12, component map, continuation notes</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">9 entities, field types, constraints</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/06_api-contract.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">21 endpoints, DTOs, auth model</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/07_delivery-plan.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Sprint plan, risks, de-scope levers</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/visuals/diagram-index.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">All 17 diagrams with Excalidraw links</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">notes/decisions.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Locked technical decisions + rationale</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">notes/open-questions.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Unresolved items needing answers</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/presentations/presentation-index.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">All decks (DK-01 through DK-04)</span></div>
+          </div>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">DK-04 &middot; Version 1.0 &middot; March 2026</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL = slides.length;
+    const state = { current: 0, notesVisible: false, transitioning: false };
+    const progressBar  = document.getElementById('progress-bar');
+    const curEl        = document.getElementById('cur');
+    const totEl        = document.getElementById('tot');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const notesOverlay = document.getElementById('notes-overlay');
+    const notesContent = document.getElementById('notes-content');
+    totEl.textContent = TOTAL;
+
+    function goTo(index) {
+      if (state.transitioning) return;
+      if (index < 0 || index >= TOTAL) return;
+      if (index === state.current) return;
+      state.transitioning = true;
+      const prev = slides[state.current];
+      const next = slides[index];
+      const forward = index > state.current;
+      next.style.transition = 'none';
+      next.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      next.style.opacity = '0';
+      next.classList.remove('active', 'exit-left');
+      next.getBoundingClientRect();
+      prev.style.transition = '';
+      prev.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      prev.style.opacity = '0';
+      prev.classList.remove('active');
+      next.style.transition = '';
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+      next.classList.add('active');
+      state.current = index;
+      updateUI();
+      setTimeout(() => { state.transitioning = false; prev.style.transform = 'translateX(60px)'; }, 480);
+    }
+
+    function updateUI() {
+      progressBar.style.width = ((state.current + 1) / TOTAL * 100) + '%';
+      curEl.textContent = state.current + 1;
+      btnPrev.disabled = state.current === 0;
+      btnNext.disabled = state.current === TOTAL - 1;
+      if (state.notesVisible) notesContent.textContent = slides[state.current].dataset.notes || 'No notes for this slide.';
+    }
+
+    function toggleNotes() {
+      state.notesVisible = !state.notesVisible;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'No notes for this slide.';
+        notesOverlay.removeAttribute('hidden');
+      } else { notesOverlay.setAttribute('hidden', ''); }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    }
+
+    document.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case ' ': e.preventDefault(); goTo(state.current + 1); break;
+        case 'ArrowLeft':  case 'ArrowUp':             e.preventDefault(); goTo(state.current - 1); break;
+        case 'Home': e.preventDefault(); goTo(0); break;
+        case 'End':  e.preventDefault(); goTo(TOTAL - 1); break;
+        case 'n': case 'N': e.preventDefault(); toggleNotes(); break;
+        case 'f': case 'F': e.preventDefault(); toggleFullscreen(); break;
+        case 'Escape': if (state.notesVisible) toggleNotes(); break;
+      }
+    });
+
+    let txStart = 0, tyStart = 0;
+    document.addEventListener('touchstart', e => { txStart = e.touches[0].clientX; tyStart = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - txStart;
+      const dy = e.changedTouches[0].clientY - tyStart;
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (Math.abs(dx) < 50 || angle > 60) return;
+      if (dx < 0) goTo(state.current + 1); else goTo(state.current - 1);
+    });
+
+    btnPrev.addEventListener('click', () => goTo(state.current - 1));
+    btnNext.addEventListener('click', () => goTo(state.current + 1));
+    document.getElementById('notes-close').addEventListener('click', toggleNotes);
+
+    slides.forEach((s, i) => {
+      if (i === 0) { s.style.opacity = '1'; s.style.transform = 'translateX(0)'; s.classList.add('active'); }
+      else { s.style.opacity = '0'; s.style.transform = 'translateX(60px)'; s.classList.remove('active'); }
+    });
+    updateUI();
+  </script>
+</body>
+</html>

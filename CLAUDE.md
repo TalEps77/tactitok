@@ -7,7 +7,7 @@ Your job is to review the repository state, use the North Star as a binding sour
 
 ## Mandatory Source of Truth
 The binding project source of truth is:
-- `product/north-star.md`
+- `product/docs-en/north-star.md`
 
 Treat it as authoritative.
 
@@ -26,13 +26,15 @@ Before creating or updating any document:
 
 ## Target Document Set
 Only these core documents should be created unless explicitly requested otherwise:
-1. `product/01_product-brief.md`
-2. `product/02_system-boundaries.md`
-3. `product/03_mvp-spec.md`
-4. `product/04_system-architecture.md`
-5. `product/05_data-model.md`
-6. `product/06_api-contract.md`
-7. `product/07_delivery-plan.md`
+1. `product/docs-en/01_product-brief.md`
+2. `product/docs-en/02_system-boundaries.md`
+3. `product/docs-en/03_mvp-spec.md`
+4. `product/docs-en/04_system-architecture.md`
+5. `product/docs-en/05_data-model.md`
+6. `product/docs-en/06_api-contract.md`
+7. `product/docs-en/07_delivery-plan.md`
+
+Hebrew translations live in `product/docs-he/` with matching filenames.
 
 ## Default Document Order
 Follow this order unless the repo state clearly suggests a different next step:

@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TactiTok: Training at the Edge — DK-01 Stakeholder Overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS ───────────────────────────────────────────── */
+    :root {
+      --bg-primary:        #0a0f1e;
+      --bg-secondary:      #111827;
+      --bg-tertiary:       #1a2438;
+      --bg-card:           #0f1a2e;
+      --accent-green:      #22c55e;
+      --accent-green-dim:  #166534;
+      --accent-green-glow: rgba(34,197,94,0.15);
+      --accent-blue:       #60a5fa;
+      --accent-blue-dim:   #1e3a5f;
+      --accent-blue-glow:  rgba(96,165,250,0.15);
+      --accent-orange:     #fb923c;
+      --accent-orange-dim: #9a3412;
+      --text-primary:      #f1f5f9;
+      --text-secondary:    #94a3b8;
+      --text-muted:        #475569;
+      --border-subtle:     rgba(255,255,255,0.06);
+      --border-green:      rgba(34,197,94,0.35);
+      --border-blue:       rgba(96,165,250,0.35);
+      --border-orange:     rgba(251,146,60,0.35);
+
+      /* diagram color convention */
+      --d-spa:    #a5d8ff;
+      --d-admin:  #ffd8a8;
+      --d-api:    #d0bfff;
+      --d-db:     #c3fae8;
+      --d-proxy:  #b2f2bb;
+      --d-note:   #fff3bf;
+
+      --font:              'Inter', system-ui, -apple-system, sans-serif;
+
+      --sz-hero:   clamp(2.4rem, 4.5vw, 4.2rem);
+      --sz-h1:     clamp(1.7rem, 3vw, 2.8rem);
+      --sz-h2:     clamp(1.3rem, 2.2vw, 1.9rem);
+      --sz-h3:     clamp(1.05rem, 1.8vw, 1.45rem);
+      --sz-body:   clamp(0.88rem, 1.5vw, 1.1rem);
+      --sz-small:  clamp(0.78rem, 1.2vw, 0.95rem);
+      --sz-label:  clamp(0.64rem, 1vw, 0.78rem);
+
+      --pad:       clamp(2.5rem, 5vw, 5.5rem);
+      --gap-sm:    0.75rem;
+      --gap-md:    1.5rem;
+      --gap-lg:    2.5rem;
+      --gap-xl:    3.5rem;
+
+      --radius:    6px;
+      --radius-lg: 10px;
+
+      --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-slide:  420ms;
+    }
+
+    /* ─── RESET ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg-primary);
+      font-family: var(--font);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ─── PROGRESS BAR ────────────────────────────────────────────── */
+    #progress-bar {
+      position: fixed; top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-green), #4ade80);
+      width: 7.69%; /* 1/13 */
+      z-index: 200;
+      transition: width 300ms var(--ease-slide);
+      box-shadow: 0 0 8px rgba(34,197,94,0.6);
+    }
+
+    /* ─── SLIDE COUNTER ───────────────────────────────────────────── */
+    #slide-counter {
+      position: fixed; top: 1rem; right: 1.5rem;
+      font-size: var(--sz-label);
+      font-weight: 600; letter-spacing: 0.1em;
+      color: var(--text-muted);
+      z-index: 200;
+      user-select: none;
+    }
+    #slide-counter .cur { color: var(--accent-green); font-weight: 700; }
+
+    /* ─── NAV BUTTONS ─────────────────────────────────────────────── */
+    #nav-controls {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      display: flex; gap: 0.4rem;
+      z-index: 200;
+    }
+    #nav-controls button {
+      width: 2.4rem; height: 2.4rem;
+      border: 1px solid var(--border-green);
+      border-radius: var(--radius);
+      background: rgba(34,197,94,0.07);
+      color: var(--accent-green);
+      font-size: 1rem; cursor: pointer;
+      transition: background 180ms ease, transform 120ms ease;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #nav-controls button:hover { background: rgba(34,197,94,0.18); transform: scale(1.05); }
+    #nav-controls button:disabled { opacity: 0.25; pointer-events: none; }
+
+    /* ─── KEYBOARD HINT ───────────────────────────────────────────── */
+    #kb-hint {
+      position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%);
+      font-size: var(--sz-label); color: var(--text-muted);
+      letter-spacing: 0.06em; z-index: 200; user-select: none;
+      white-space: nowrap;
+    }
+
+    /* ─── SPEAKER NOTES ───────────────────────────────────────────── */
+    #notes-overlay {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-height: 32vh;
+      background: rgba(5,8,18,0.97);
+      border-top: 2px solid var(--accent-green);
+      padding: 1.1rem 2rem 1.1rem 1.5rem;
+      z-index: 300; overflow-y: auto;
+      backdrop-filter: blur(8px);
+    }
+    #notes-overlay[hidden] { display: none; }
+    #notes-label {
+      font-size: var(--sz-label); font-weight: 700;
+      color: var(--accent-green); letter-spacing: 0.12em;
+      text-transform: uppercase; margin-bottom: 0.5rem;
+    }
+    #notes-content { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.65; }
+    #notes-close {
+      position: absolute; top: 0.8rem; right: 1rem;
+      background: none; border: none;
+      color: var(--text-muted); font-size: 1.1rem; cursor: pointer;
+      transition: color 150ms;
+    }
+    #notes-close:hover { color: var(--text-primary); }
+
+    /* ─── SLIDES CONTAINER ────────────────────────────────────────── */
+    #slides-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+    /* ─── SLIDE BASE ──────────────────────────────────────────────── */
+    .slide {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--pad);
+      opacity: 0;
+      transform: translateX(60px);
+      pointer-events: none;
+      transition: opacity var(--dur-slide) var(--ease-slide),
+                  transform var(--dur-slide) var(--ease-slide);
+      will-change: transform, opacity;
+    }
+    .slide.active {
+      opacity: 1; transform: translateX(0);
+      pointer-events: auto; z-index: 1;
+    }
+    .slide.exit-left {
+      opacity: 0; transform: translateX(-60px);
+      pointer-events: none;
+    }
+
+    /* ─── SLIDE INNER ─────────────────────────────────────────────── */
+    .slide-inner {
+      width: 100%; max-width: 1200px;
+      display: flex; flex-direction: column;
+      gap: var(--gap-md);
+    }
+    .slide-inner.centered {
+      align-items: center; text-align: center; justify-content: center;
+    }
+
+    /* ─── SECTION LABEL ───────────────────────────────────────────── */
+    .label {
+      font-size: var(--sz-label); font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent-green);
+    }
+    .accent-bar {
+      width: 2.5rem; height: 3px;
+      background: var(--accent-green); border-radius: 2px;
+      margin-top: 0.35rem;
+    }
+    .label-block { display: flex; flex-direction: column; gap: 0; }
+
+    /* ─── TITLES ──────────────────────────────────────────────────── */
+    .title-hero { font-size: var(--sz-hero); font-weight: 900; line-height: 1.1; }
+    .title-h1   { font-size: var(--sz-h1);   font-weight: 800; line-height: 1.15; }
+    .title-h2   { font-size: var(--sz-h2);   font-weight: 700; line-height: 1.2; }
+    .title-h3   { font-size: var(--sz-h3);   font-weight: 700; line-height: 1.25; }
+    .highlight-g { color: var(--accent-green); }
+    .highlight-b { color: var(--accent-blue); }
+
+    /* ─── CARDS ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.4rem;
+    }
+    .card-g { border-top: 3px solid var(--accent-green); }
+    .card-b { border-top: 3px solid var(--accent-blue); }
+    .card-o { border-top: 3px solid var(--accent-orange); }
+    .card-gl { border-left: 3px solid var(--accent-green); }
+    .card-title {
+      font-size: var(--sz-small); font-weight: 700;
+      letter-spacing: 0.06em; color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .card-body { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+
+    /* ─── GRIDS ───────────────────────────────────────────────────── */
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+
+    /* ─── BULLET LIST ─────────────────────────────────────────────── */
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bullets li {
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      font-size: var(--sz-body); color: var(--text-primary); line-height: 1.55;
+    }
+    .bullets li::before {
+      content: '▸'; color: var(--accent-green);
+      font-size: 0.8em; flex-shrink: 0; margin-top: 0.22em;
+    }
+    .bullets li strong { color: var(--text-primary); font-weight: 600; }
+
+    /* ─── BADGE ───────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block; padding: 0.18em 0.55em;
+      border-radius: 3px; font-size: var(--sz-label);
+      font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .badge-g { background: rgba(34,197,94,0.12); color: var(--accent-green); border: 1px solid var(--border-green); }
+    .badge-b { background: rgba(96,165,250,0.12); color: var(--accent-blue);  border: 1px solid var(--border-blue); }
+    .badge-o { background: rgba(251,146,60,0.12); color: var(--accent-orange);border: 1px solid var(--border-orange); }
+
+    /* ─── STEP ITEMS ──────────────────────────────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: var(--sz-small); color: var(--text-primary); line-height: 1.5;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0; width: 1.45rem; height: 1.45rem; border-radius: 50%;
+      background: rgba(34,197,94,0.12); border: 1px solid var(--border-green);
+      color: var(--accent-green); font-size: 0.68rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 0.1rem;
+    }
+
+    /* ─── DATA TABLE ──────────────────────────────────────────────── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      background: var(--bg-tertiary); color: var(--accent-green);
+      font-size: var(--sz-label); font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.6rem 0.9rem; text-align: left;
+      border-bottom: 1px solid var(--border-green);
+    }
+    .data-table td {
+      padding: 0.55rem 0.9rem; font-size: var(--sz-small);
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary); vertical-align: top;
+      line-height: 1.5;
+    }
+    .data-table tr:nth-child(even) td { background: rgba(26,36,56,0.5); }
+    .data-table .td-target { color: var(--text-secondary); }
+
+    /* ─── DIVIDER ─────────────────────────────────────────────────── */
+    .divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg, var(--accent-green), transparent);
+      border: none; margin: 0;
+    }
+
+    /* ─── PROFILE DETAIL ROWS ─────────────────────────────────────── */
+    .profile-detail {
+      display: flex; gap: 0.5rem; align-items: flex-start;
+      font-size: var(--sz-small); line-height: 1.5;
+      padding: 0.3rem 0; border-bottom: 1px solid var(--border-subtle);
+    }
+    .profile-detail:last-child { border-bottom: none; }
+    .pd-key {
+      flex-shrink: 0; width: 6rem; font-weight: 600;
+      color: var(--text-secondary); font-size: var(--sz-label);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding-top: 0.12em;
+    }
+    .pd-val { color: var(--text-primary); }
+
+    /* ─── LAYER PILLS ─────────────────────────────────────────────── */
+    .layer-pill {
+      padding: 0.5rem 1rem; border-radius: var(--radius);
+      background: var(--bg-tertiary); border: 1px solid var(--border-subtle);
+      font-size: var(--sz-small); font-weight: 600; color: var(--text-secondary);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: border-color 200ms;
+    }
+    .layer-pill.top { border-left: 3px solid var(--accent-green); color: var(--text-primary); }
+
+    /* ─── BLOCKQUOTE ──────────────────────────────────────────────── */
+    .pull-quote {
+      border-left: 3px solid var(--accent-green);
+      padding: 1rem 1.5rem;
+      background: rgba(34,197,94,0.05);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .pull-quote p {
+      font-size: var(--sz-h3); font-style: italic;
+      line-height: 1.55; color: var(--text-primary); font-weight: 500;
+    }
+
+    /* ─── FLOW ICON ───────────────────────────────────────────────── */
+    .flow-icon {
+      width: 2.8rem; height: 2.8rem; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 0.75rem;
+    }
+    .flow-icon-g { background: rgba(34,197,94,0.12); }
+    .flow-icon-b { background: rgba(96,165,250,0.12); }
+    .flow-icon-o { background: rgba(251,146,60,0.12); }
+
+    /* ─── CTA CARD ────────────────────────────────────────────────── */
+    .cta-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .cta-icon {
+      font-size: 2rem; margin-bottom: 0.7rem;
+      display: block;
+    }
+
+    /* ─── DOC REF ─────────────────────────────────────────────────── */
+    .doc-ref {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 0.65rem 1rem;
+      font-size: var(--sz-small);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .doc-ref-icon { color: var(--accent-green); flex-shrink: 0; }
+    .doc-ref-path { font-family: 'Courier New', monospace; color: var(--text-secondary); font-size: 0.85em; }
+
+    /* ─── PRINT ───────────────────────────────────────────────────── */
+    .print-only { display: none !important; }
+
+    @media print {
+      html, body { overflow: auto; height: auto; background: white; color: #111; }
+      #progress-bar, #slide-counter, #nav-controls, #kb-hint, #notes-overlay { display: none !important; }
+      #slides-container { overflow: visible; height: auto; position: static; }
+      .slide {
+        position: relative !important; transform: none !important;
+        opacity: 1 !important; pointer-events: auto !important;
+        display: flex !important; width: 100%; min-height: 100vh;
+        page-break-after: always; break-after: page;
+        background: white; padding: 2cm 2.5cm;
+        align-items: flex-start;
+      }
+      .title-hero, .title-h1, .title-h2, .title-h3 { color: #111; }
+      .highlight-g { color: #166534; }
+      .highlight-b { color: #1d4ed8; }
+      .label { color: #166534; }
+      .accent-bar { background: #166534; }
+      .text-secondary, .card-body, .pd-val, .td-target { color: #4b5563; }
+      .card { background: #f9fafb; border-color: #d1d5db; }
+      .card-g { border-top-color: #166534; }
+      .card-b { border-top-color: #1d4ed8; }
+      .card-o { border-top-color: #b45309; }
+      .card-gl { border-left-color: #166534; }
+      .badge-g { background: #dcfce7; color: #166534; border-color: #86efac; }
+      .badge-b { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+      .pull-quote { background: #f0fdf4; border-left-color: #166534; }
+      .pull-quote p { color: #111; }
+      .data-table th { background: #f3f4f6; color: #166534; border-bottom-color: #86efac; }
+      .data-table td { color: #111; border-bottom-color: #e5e7eb; }
+      .data-table tr:nth-child(even) td { background: #f9fafb; }
+      .layer-pill { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
+      .layer-pill.top { border-left-color: #166534; color: #111; }
+      .step-num { background: #dcfce7; border-color: #86efac; color: #166534; }
+      .divider { background: #d1fae5; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <div id="slide-counter">
+    <span class="cur" id="cur">1</span> / <span id="tot">13</span>
+  </div>
+
+  <nav id="nav-controls" aria-label="Slide navigation">
+    <button id="btn-prev" aria-label="Previous slide" title="Previous (←)">&#8592;</button>
+    <button id="btn-next" aria-label="Next slide" title="Next (→)">&#8594;</button>
+  </nav>
+
+  <div id="kb-hint">&#9654; Arrow keys or swipe &nbsp;·&nbsp; F fullscreen &nbsp;·&nbsp; N notes</div>
+
+  <div id="notes-overlay" hidden>
+    <p id="notes-label">Speaker Notes</p>
+    <button id="notes-close" aria-label="Close notes">&#10005;</button>
+    <p id="notes-content"></p>
+  </div>
+
+  <main id="slides-container">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 1 — COVER
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-slide="1"
+      data-notes="Welcome. This deck introduces TactiTok to evaluators and sponsors. It covers the problem, the product vision, the three core flows, the system at a high level, the MVP demo walkthrough, and what success looks like. Estimated time: 12–15 minutes plus hands-on. The system behind this presentation is the actual MVP — not a mockup.">
+
+      <div class="slide-inner centered" style="gap: var(--gap-lg); min-height: 70vh; justify-content: center;">
+
+        <!-- Logo mark -->
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+          <polygon points="36,4 68,21 68,51 36,68 4,51 4,21"
+            fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+          <polygon points="36,10 62,24 62,48 36,62 10,48 10,24"
+            fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="36" y="41" text-anchor="middle" dominant-baseline="middle"
+            font-size="18" font-weight="800" fill="#22c55e"
+            font-family="Inter,system-ui,sans-serif" letter-spacing="-0.5">TT</text>
+        </svg>
+
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+          <p class="label">DK-01 &mdash; Stakeholder Overview</p>
+          <h1 class="title-hero" style="max-width:800px;">
+            TactiTok:<br>
+            <span class="highlight-g">Training at the Edge</span>
+          </h1>
+        </div>
+
+        <p style="font-size:var(--sz-h3);color:var(--text-secondary);max-width:560px;line-height:1.55;">
+          Browser-based training delivery for field personnel<br>under constrained connectivity
+        </p>
+
+        <!-- Decorative rule -->
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+          <div style="width:3rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+          <span style="font-size:var(--sz-label);color:var(--text-muted);letter-spacing:0.14em;text-transform:uppercase;">
+            Evaluator Briefing &middot; 2026
+          </span>
+          <div style="width:3rem;height:2px;background:var(--accent-green);border-radius:2px;"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 2 — THE PROBLEM
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="2"
+      data-notes="These four problems compound each other. Content doesn't reach the field in time. When it does, there's no good way to consume it. And because there's no habitual mechanism, even available content doesn't get used. TactiTok was designed to address all four simultaneously.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Operational Problem</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">The <span class="highlight-g">Training Gap</span> at the Edge</h1>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">🚫</span>
+              <span class="card-title">No Centralized Delivery</span>
+            </div>
+            <p class="card-body">There is no convenient, reliable way to deliver up-to-date training content to personnel at the edge during operations. The content exists — it just doesn't reach the field.</p>
+          </div>
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">❌</span>
+              <span class="card-title">Face-to-Face Training Fails</span>
+            </div>
+            <p class="card-body">Today's model relies on in-person sessions and ad-hoc file sharing in unsuitable channels. Updates arrive late — or not at all. Trainers must be physically present.</p>
+          </div>
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">📶</span>
+              <span class="card-title">Bandwidth-Constrained Consumption</span>
+            </div>
+            <p class="card-body">Under limited bandwidth and a kiosk-like setup, consuming video and documents is cumbersome and inconsistent. Buffering, failures, and poor UX break the learning experience.</p>
+          </div>
+
+          <div class="card card-gl" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <span style="font-size:1.4rem;">🔄</span>
+              <span class="card-title">No Habitual Pull Mechanism</span>
+            </div>
+            <p class="card-body">There is no experience that mirrors natural short-form content consumption — nothing that makes learning feel routine during rest breaks. Learning requires deliberate effort every time.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 3 — THE VISION
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="3"
+      data-notes="The one-liner captures the entire product: exploit the downtime that already exists and make training feel like a normal phone habit. The TikTok framing is intentional — it validates a consumption pattern that already works at scale. The key word is 'even under non-ideal connectivity' — that's the hard part, and it's solved.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">The Vision</p>
+          <div class="accent-bar"></div>
+        </div>
+
+        <div class="pull-quote" style="margin:var(--gap-sm) 0;">
+          <p>"Turn wartime downtime into short, accessible, up-to-date operational learning — even under non-ideal connectivity."</p>
+        </div>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <h3 class="title-h3" style="color:var(--accent-green);">TikTok for Training</h3>
+            <ul class="bullets">
+              <li>Fighters scroll a curated feed of short video clips (&le;3 min), filtered by their selected interests</li>
+              <li>Videos auto-play as they appear — no deliberate search required</li>
+              <li>Learning becomes a natural habit during rest breaks, not a task to schedule</li>
+            </ul>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <h3 class="title-h3" style="color:var(--accent-blue);">Library &amp; Hybrid Offline</h3>
+            <ul class="bullets">
+              <li>For specific questions, a searchable category library provides targeted lookup</li>
+              <li>Metadata syncs when network is available; content is fetched on demand</li>
+              <li>Manual download guarantees offline access for any item — video or PDF</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 4 — WHO USES IT
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="4"
+      data-notes="The two user types never interact directly. The fighter never sees the admin portal. The HQ staff never uses the tablet. The system is the bridge between them. Critically: there is no user login for the fighter — the device acts as the identity. This simplifies the MVP significantly.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Target Users</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">Who Uses <span class="highlight-g">TactiTok</span></h1>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-g" style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
+              <div style="width:2.4rem;height:2.4rem;border-radius:6px;background:rgba(34,197,94,0.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🪖</div>
+              <div>
+                <p class="badge badge-g" style="margin-bottom:0.25rem;">Primary User</p>
+                <h3 class="title-h3">Fighter — Edge Consumer</h3>
+              </div>
+            </div>
+            <hr class="divider">
+            <div class="profile-detail"><span class="pd-key">Device</span><span class="pd-val">~10&Prime; tablet, Chrome kiosk mode</span></div>
+            <div class="profile-detail"><span class="pd-key">Location</span><span class="pd-val">Field / operational environment</span></div>
+            <div class="profile-detail"><span class="pd-key">When</span><span class="pd-val">Short rest breaks between activities</span></div>
+            <div class="profile-detail"><span class="pd-key">Identity</span><span class="pd-val">No login — device profile stores interests</span></div>
+            <div class="profile-detail"><span class="pd-key">Behavior</span><span class="pd-val">Passive scroll (reels) or active search (library)</span></div>
+          </div>
+
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
+              <div style="width:2.4rem;height:2.4rem;border-radius:6px;background:rgba(96,165,250,0.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖥️</div>
+              <div>
+                <p class="badge badge-b" style="margin-bottom:0.25rem;">Secondary User</p>
+                <h3 class="title-h3">HQ Training Staff — Content Manager</h3>
+              </div>
+            </div>
+            <hr class="divider" style="background:linear-gradient(90deg,var(--accent-blue),transparent);">
+            <div class="profile-detail"><span class="pd-key">Device</span><span class="pd-val">Standard desktop / laptop, modern browser</span></div>
+            <div class="profile-detail"><span class="pd-key">Location</span><span class="pd-val">HQ / rear command</span></div>
+            <div class="profile-detail"><span class="pd-key">When</span><span class="pd-val">Working hours, when new material is ready</span></div>
+            <div class="profile-detail"><span class="pd-key">Identity</span><span class="pd-val">Simple admin password (MVP)</span></div>
+            <div class="profile-detail"><span class="pd-key">Behavior</span><span class="pd-val">Upload, categorize, and publish training content</span></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 5 — WHERE IT RUNS
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="5"
+      data-notes="The topology is unusual but important. Chrome on Windows connects to localhost. Inside a Linux VM running on the same machine, a Docker container runs nginx. That nginx proxies all requests to the cloud and caches responses locally. This is how offline works — no Service Worker complexity needed. Chrome is just a browser talking to localhost.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Operational Context</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">Designed for <span class="highlight-g">the Edge</span></h1>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-g" style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div style="font-size:1.6rem;margin-bottom:0.2rem;">💻</div>
+            <h3 class="title-h3" style="color:var(--accent-green);">Hardware</h3>
+            <ul class="bullets" style="margin-top:0.35rem;">
+              <li>~10&Prime; Windows tablet</li>
+              <li>Chrome in kiosk mode</li>
+              <li>Ruggedized computing environment</li>
+              <li>Sometimes projected for a small team</li>
+            </ul>
+          </div>
+
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div style="font-size:1.6rem;margin-bottom:0.2rem;">⚙️</div>
+            <h3 class="title-h3" style="color:var(--accent-blue);">Runtime Stack</h3>
+            <ul class="bullets" style="margin-top:0.35rem;">
+              <li>Windows host &rarr; Linux VM (WSL2)</li>
+              <li>Docker container running nginx</li>
+              <li>Edge proxy serves app at localhost:8080</li>
+              <li>Chrome connects only to localhost</li>
+            </ul>
+          </div>
+
+          <div class="card card-o" style="display:flex;flex-direction:column;gap:0.55rem;">
+            <div style="font-size:1.6rem;margin-bottom:0.2rem;">📡</div>
+            <h3 class="title-h3" style="color:var(--accent-orange);">Connectivity</h3>
+            <ul class="bullets" style="margin-top:0.35rem;">
+              <li>Unstable / limited bandwidth</li>
+              <li>Hybrid: metadata syncs when online</li>
+              <li>Content fetched on demand via proxy</li>
+              <li>Manual download for guaranteed offline</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="card" style="background:rgba(34,197,94,0.04);border-color:var(--border-green);margin-top:var(--gap-sm);">
+          <p style="font-size:var(--sz-small);color:var(--text-secondary);text-align:center;font-style:italic;">
+            &#9432;&nbsp; Chrome never connects directly to the cloud — all traffic routes through the local edge proxy, which caches everything it fetches.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 6 — THREE CORE FLOWS
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="6"
+      data-notes="Flow A is the core retention mechanic — the TikTok habit. Flow B serves specific operational questions. Flow C is the supply chain — how content gets from HQ to the field. All three flows are demonstrated in the 15-step demo on slide 9. Evaluators will walk through all three.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Core Flows</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">Three Ways to Use <span class="highlight-g">TactiTok</span></h1>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);">
+
+          <div class="card card-g" style="display:flex;flex-direction:column;gap:0.7rem;">
+            <div class="flow-icon flow-icon-g">▶</div>
+            <p class="badge badge-g">A &mdash; Reels</p>
+            <h3 class="title-h3">Browse the Feed</h3>
+            <p class="card-body">Scroll a vertical feed of short training videos (&le;3 min). Videos auto-play as they scroll into view. Swipe to advance. Content filtered by selected interests.</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li>Interest-based filtering</li>
+              <li>Tap to download for offline</li>
+              <li>Like / Save stored locally</li>
+            </ul>
+          </div>
+
+          <div class="card card-b" style="display:flex;flex-direction:column;gap:0.7rem;">
+            <div class="flow-icon flow-icon-b">☰</div>
+            <p class="badge badge-b">B &mdash; Library</p>
+            <h3 class="title-h3">Find in the Library</h3>
+            <p class="card-body">Navigate a 2-level category tree or search by text. Open any video or PDF directly in the browser. No external apps, no downloads required to view.</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li>Category tree + text search</li>
+              <li>In-browser PDF viewer</li>
+              <li>In-browser video player</li>
+            </ul>
+          </div>
+
+          <div class="card card-o" style="display:flex;flex-direction:column;gap:0.7rem;">
+            <div class="flow-icon flow-icon-o">&#8593;</div>
+            <p class="badge badge-o">C &mdash; Admin</p>
+            <h3 class="title-h3">Upload &amp; Publish</h3>
+            <p class="card-body">HQ staff upload videos and PDFs via an admin portal. Assign categories and interests. Publish. Edge devices receive the updated catalog on next sync.</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li>Upload video or PDF</li>
+              <li>Assign categories &amp; interests</li>
+              <li>Publish &rarr; instant catalog update</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 7 — HOW IT WORKS (INLINE SVG)
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="7"
+      data-notes="The key insight is the edge proxy. Everything Chrome requests goes to localhost — to a Docker container running nginx on the same machine. That nginx is what talks to the cloud, and it caches everything it fetches. When the network drops, nginx just serves from its cache. The SPA doesn't even know the difference. Admin SPA is a completely separate surface — desktop browser at HQ, not on the tablet.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">System Overview</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">How It <span class="highlight-g">Works</span></h1>
+
+        <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
+          <svg viewBox="0 0 900 320" width="100%" style="max-height:280px;display:block;margin:0 auto;"
+            role="img" aria-label="System architecture overview: HQ Admin, Cloud Server, and Edge Device zones">
+            <defs>
+              <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#60a5fa"/>
+              </marker>
+              <marker id="arr-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#22c55e"/>
+              </marker>
+              <marker id="arr-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#ffd8a8"/>
+              </marker>
+            </defs>
+
+            <!-- Background -->
+            <rect width="900" height="320" rx="8" fill="#0d1424"/>
+
+            <!-- Zone: HQ/Admin -->
+            <rect x="12" y="12" width="170" height="296" rx="6"
+              fill="rgba(255,216,168,0.06)" stroke="#ffd8a8" stroke-width="1" opacity="0.8"/>
+            <text x="97" y="32" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#ffd8a8" font-family="Inter,system-ui,sans-serif" letter-spacing="1.5">HQ / ADMIN</text>
+
+            <!-- Zone: Cloud Server -->
+            <rect x="200" y="12" width="230" height="296" rx="6"
+              fill="rgba(208,191,255,0.06)" stroke="#d0bfff" stroke-width="1" opacity="0.8"/>
+            <text x="315" y="32" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#d0bfff" font-family="Inter,system-ui,sans-serif" letter-spacing="1.5">CLOUD SERVER</text>
+
+            <!-- Zone: Edge Device -->
+            <rect x="448" y="12" width="440" height="296" rx="6"
+              fill="rgba(165,216,255,0.06)" stroke="#a5d8ff" stroke-width="1" opacity="0.8"/>
+            <text x="668" y="32" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#a5d8ff" font-family="Inter,system-ui,sans-serif" letter-spacing="1.5">EDGE DEVICE</text>
+
+            <!-- Admin SPA box -->
+            <rect x="28" y="55" width="138" height="58" rx="5"
+              fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
+            <text x="97" y="78" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#3d2800" font-family="Inter,system-ui,sans-serif">Admin SPA</text>
+            <text x="97" y="96" text-anchor="middle" font-size="9.5"
+              fill="#5d4800" font-family="Inter,system-ui,sans-serif">React · desktop browser</text>
+
+            <!-- Arrow: Admin SPA → API Server -->
+            <line x1="166" y1="84" x2="198" y2="84"
+              stroke="#ffd8a8" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+            <text x="183" y="78" text-anchor="middle" font-size="8"
+              fill="#94a3b8" font-family="Inter,system-ui,sans-serif">HTTPS</text>
+
+            <!-- API Server box -->
+            <rect x="213" y="45" width="200" height="64" rx="5"
+              fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <text x="313" y="70" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">API Server</text>
+            <text x="313" y="87" text-anchor="middle" font-size="9.5"
+              fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">Node.js + Express</text>
+
+            <!-- PostgreSQL box -->
+            <rect x="213" y="130" width="88" height="50" rx="5"
+              fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="257" y="152" text-anchor="middle" font-size="10.5" font-weight="700"
+              fill="#0d3d30" font-family="Inter,system-ui,sans-serif">PostgreSQL</text>
+            <text x="257" y="168" text-anchor="middle" font-size="9"
+              fill="#0d3d30" font-family="Inter,system-ui,sans-serif">metadata</text>
+
+            <!-- File Store box -->
+            <rect x="313" y="130" width="100" height="50" rx="5"
+              fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="363" y="152" text-anchor="middle" font-size="10.5" font-weight="700"
+              fill="#0d3d30" font-family="Inter,system-ui,sans-serif">File Store</text>
+            <text x="363" y="168" text-anchor="middle" font-size="9"
+              fill="#0d3d30" font-family="Inter,system-ui,sans-serif">video + PDF</text>
+
+            <!-- Arrow: API → Edge Proxy -->
+            <line x1="413" y1="77" x2="447" y2="120"
+              stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-blue)"/>
+            <text x="443" y="94" text-anchor="middle" font-size="8"
+              fill="#60a5fa" font-family="Inter,system-ui,sans-serif">HTTPS</text>
+
+            <!-- Edge Proxy box -->
+            <rect x="462" y="45" width="175" height="195" rx="5"
+              fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="549" y="72" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Edge Proxy</text>
+            <text x="549" y="89" text-anchor="middle" font-size="9.5"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">nginx in Docker</text>
+            <line x1="480" y1="100" x2="618" y2="100" stroke="#2d7a3a" stroke-width="0.8" opacity="0.5"/>
+            <text x="549" y="122" text-anchor="middle" font-size="10" font-weight="600"
+              fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Proxy cache</text>
+            <text x="549" y="139" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">content + metadata</text>
+            <text x="549" y="155" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">30-day TTL</text>
+            <text x="549" y="175" text-anchor="middle" font-size="10" font-weight="600"
+              fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Serves SPA bundle</text>
+            <text x="549" y="191" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">localhost:8080</text>
+            <text x="549" y="207" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">:8080/api/*  proxy</text>
+            <text x="549" y="222" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">:8080/*  static</text>
+
+            <!-- Arrow: Edge Proxy → Chrome SPA -->
+            <line x1="637" y1="142" x2="668" y2="142"
+              stroke="#22c55e" stroke-width="2" marker-end="url(#arr-green)"/>
+            <text x="653" y="134" text-anchor="middle" font-size="8"
+              fill="#22c55e" font-family="Inter,system-ui,sans-serif">HTTP</text>
+
+            <!-- Chrome / Edge SPA box -->
+            <rect x="668" y="45" width="205" height="195" rx="5"
+              fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="770" y="72" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Chrome (kiosk)</text>
+            <text x="770" y="89" text-anchor="middle" font-size="9.5"
+              fill="#1a4060" font-family="Inter,system-ui,sans-serif">Edge SPA · React</text>
+            <line x1="685" y1="100" x2="855" y2="100" stroke="#1a5e8a" stroke-width="0.8" opacity="0.5"/>
+            <text x="770" y="122" text-anchor="middle" font-size="10" font-weight="600"
+              fill="#0d2d44" font-family="Inter,system-ui,sans-serif">IndexedDB</text>
+            <text x="770" y="139" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Inter,system-ui,sans-serif">device profile</text>
+            <text x="770" y="155" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Inter,system-ui,sans-serif">download records</text>
+            <text x="770" y="171" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Inter,system-ui,sans-serif">local actions</text>
+            <text x="770" y="195" text-anchor="middle" font-size="9.5" font-weight="600"
+              fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Reels · Library · Downloads</text>
+            <text x="770" y="213" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Inter,system-ui,sans-serif">3 core flows in-browser</text>
+            <text x="770" y="229" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Inter,system-ui,sans-serif">PDF.js · video player</text>
+
+            <!-- Legend -->
+            <rect x="12" y="270" width="12" height="12" rx="2" fill="#ffd8a8"/>
+            <text x="29" y="280" font-size="9" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Admin SPA</text>
+            <rect x="105" y="270" width="12" height="12" rx="2" fill="#d0bfff"/>
+            <text x="122" y="280" font-size="9" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">API Server</text>
+            <rect x="195" y="270" width="12" height="12" rx="2" fill="#c3fae8"/>
+            <text x="212" y="280" font-size="9" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">PostgreSQL / Files</text>
+            <rect x="320" y="270" width="12" height="12" rx="2" fill="#b2f2bb"/>
+            <text x="337" y="280" font-size="9" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Edge Proxy (nginx)</text>
+            <rect x="460" y="270" width="12" height="12" rx="2" fill="#a5d8ff"/>
+            <text x="477" y="280" font-size="9" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Edge SPA / Chrome</text>
+          </svg>
+        </div>
+
+        <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;">
+          Chrome never connects directly to the cloud &mdash; the edge proxy handles all routing and caching.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 8 — THE OFFLINE CHALLENGE
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="8"
+      data-notes="The offline architecture is the technically interesting part. Instead of Service Workers and Cache API — which are browser-side and complex — we put a caching nginx proxy at the network layer. Everything Chrome ever requested is cached. When the network drops, nginx just serves from its cache. The SPA doesn't even know the difference. The 'transparent offline' point is the key: there is zero offline-specific code in the SPA.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Offline Architecture</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">The <span class="highlight-g">Offline</span> Challenge — Solved</h1>
+
+        <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
+          <svg viewBox="0 0 820 210" width="100%" style="max-height:180px;display:block;margin:0 auto;"
+            role="img" aria-label="Two offline paths: download while online, and playback while offline">
+            <defs>
+              <marker id="arr2-green" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+                <polygon points="0 0, 7 2.5, 0 5" fill="#22c55e"/>
+              </marker>
+              <marker id="arr2-blue" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+                <polygon points="0 0, 7 2.5, 0 5" fill="#60a5fa"/>
+              </marker>
+              <marker id="arr2-muted" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+                <polygon points="0 0, 7 2.5, 0 5" fill="#475569"/>
+              </marker>
+            </defs>
+
+            <rect width="820" height="210" rx="8" fill="#0d1424"/>
+
+            <!-- Lane A label -->
+            <text x="16" y="42" font-size="9" font-weight="700" fill="#22c55e"
+              font-family="Inter,system-ui,sans-serif" letter-spacing="1">PATH A — DOWNLOAD (ONLINE)</text>
+            <!-- Lane B label -->
+            <text x="16" y="132" font-size="9" font-weight="700" fill="#60a5fa"
+              font-family="Inter,system-ui,sans-serif" letter-spacing="1">PATH B — OFFLINE PLAYBACK</text>
+
+            <!-- Vertical dashed divider between device-local and cloud -->
+            <line x1="540" y1="20" x2="540" y2="192" stroke="#334155" stroke-width="1" stroke-dasharray="4,3"/>
+            <text x="545" y="30" font-size="8" fill="#475569" font-family="Inter,system-ui,sans-serif">cloud</text>
+            <text x="475" y="30" font-size="8" fill="#475569" font-family="Inter,system-ui,sans-serif" text-anchor="end">device-local</text>
+
+            <!-- PATH A nodes -->
+            <!-- Node A1: User taps Download -->
+            <rect x="14" y="52" width="130" height="44" rx="5"
+              fill="#0f1a2e" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="79" y="71" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#22c55e" font-family="Inter,system-ui,sans-serif">User taps</text>
+            <text x="79" y="86" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#22c55e" font-family="Inter,system-ui,sans-serif">Download</text>
+
+            <!-- Arrow A1 → Proxy -->
+            <line x1="144" y1="74" x2="188" y2="74"
+              stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr2-green)"/>
+
+            <!-- Node A2: Edge Proxy (shared, spans both lanes) -->
+            <rect x="188" y="52" width="145" height="134" rx="5"
+              fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="260" y="78" text-anchor="middle" font-size="11" font-weight="700"
+              fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Edge Proxy</text>
+            <text x="260" y="95" text-anchor="middle" font-size="9"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">nginx (Docker)</text>
+            <line x1="200" y1="108" x2="320" y2="108" stroke="#2d7a3a" stroke-width="0.8" opacity="0.6"/>
+            <text x="260" y="126" text-anchor="middle" font-size="9.5" font-weight="600"
+              fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Online: fetch &amp; cache</text>
+            <text x="260" y="143" text-anchor="middle" font-size="9.5" font-weight="600"
+              fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Offline: serve STALE</text>
+            <text x="260" y="160" text-anchor="middle" font-size="8.5"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">X-Cache-Status header</text>
+            <text x="260" y="175" text-anchor="middle" font-size="8.5"
+              fill="#2d6032" font-family="Inter,system-ui,sans-serif">signals SPA</text>
+
+            <!-- Arrow Proxy → Cloud (Path A) -->
+            <line x1="333" y1="74" x2="546" y2="74"
+              stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr2-blue)"/>
+            <text x="440" y="66" text-anchor="middle" font-size="8.5"
+              fill="#60a5fa" font-family="Inter,system-ui,sans-serif">fetches &amp; caches full file</text>
+
+            <!-- Node: Cloud Server -->
+            <rect x="548" y="52" width="130" height="44" rx="5"
+              fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <text x="613" y="71" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">Cloud Server</text>
+            <text x="613" y="86" text-anchor="middle" font-size="9"
+              fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">API + File Store</text>
+
+            <!-- Arrow Cloud → Node: IndexedDB record -->
+            <line x1="678" y1="74" x2="680" y2="74"/>
+            <line x1="690" y1="74" x2="800" y2="74"
+              stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr2-green)"/>
+            <text x="746" y="66" text-anchor="middle" font-size="8.5"
+              fill="#22c55e" font-family="Inter,system-ui,sans-serif">file cached</text>
+
+            <!-- Node: IndexedDB record written -->
+            <rect x="690" y="52" width="118" height="44" rx="5"
+              fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="749" y="71" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#0d2d44" font-family="Inter,system-ui,sans-serif">IndexedDB</text>
+            <text x="749" y="86" text-anchor="middle" font-size="9"
+              fill="#1a4060" font-family="Inter,system-ui,sans-serif">record written</text>
+
+            <!-- PATH B nodes -->
+            <!-- Node B1: User opens item -->
+            <rect x="14" y="145" width="130" height="44" rx="5"
+              fill="#0f1a2e" stroke="#60a5fa" stroke-width="1.5"/>
+            <text x="79" y="164" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#60a5fa" font-family="Inter,system-ui,sans-serif">User opens</text>
+            <text x="79" y="179" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#60a5fa" font-family="Inter,system-ui,sans-serif">item (offline)</text>
+
+            <!-- Arrow B1 → Proxy -->
+            <line x1="144" y1="167" x2="188" y2="167"
+              stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arr2-blue)"/>
+
+            <!-- Arrow Proxy → Chrome (Path B) -->
+            <line x1="333" y1="167" x2="485" y2="167"
+              stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr2-green)"/>
+            <text x="409" y="158" text-anchor="middle" font-size="8.5"
+              fill="#94a3b8" font-family="Inter,system-ui,sans-serif">no cloud needed</text>
+
+            <!-- Node: Chrome plays -->
+            <rect x="486" y="145" width="130" height="44" rx="5"
+              fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="551" y="164" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Chrome</text>
+            <text x="551" y="179" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#0d2d44" font-family="Inter,system-ui,sans-serif">plays content</text>
+
+          </svg>
+        </div>
+
+        <div class="three-col" style="margin-top:var(--gap-sm);">
+          <div class="card card-g" style="padding:1rem 1.2rem;">
+            <h4 class="title-h3" style="margin-bottom:0.4rem;font-size:var(--sz-small);font-weight:700;">&#128204; Smart Proxy Cache</h4>
+            <p class="card-body">nginx caches every file it fetches. Up to 10&nbsp;GB stored on the device, 30-day TTL. Downloads trigger a full cache load automatically.</p>
+          </div>
+          <div class="card card-b" style="padding:1rem 1.2rem;">
+            <h4 class="title-h3" style="margin-bottom:0.4rem;font-size:var(--sz-small);font-weight:700;">&#9889; Transparent Offline</h4>
+            <p class="card-body">The SPA code is identical online and offline. No Service Worker, no offline-specific code. Proxy serves stale cache; SPA reads an HTTP header to show the offline indicator.</p>
+          </div>
+          <div class="card" style="padding:1rem 1.2rem;border-color:var(--border-subtle);">
+            <h4 class="title-h3" style="margin-bottom:0.4rem;font-size:var(--sz-small);font-weight:700;">&#8681; Manual Download</h4>
+            <p class="card-body">One tap in reels or library. Record stored in IndexedDB; file pre-loaded in proxy cache. Accessible in Downloads tab — video and PDF fully offline.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 9 — THE MVP IN ACTION
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="9"
+      data-notes="This 15-step sequence is the complete demo script. It proves all three core flows and the offline capability end to end. After this slide, evaluators will have the opportunity to try it themselves. Estimated time for the demo: 8–10 minutes. The setup steps (1–3) should be done before the session begins.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Demo Walkthrough</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">15 Steps, <span class="highlight-g">5 Phases</span></h1>
+        <p style="font-size:var(--sz-small);color:var(--text-secondary);margin-top:-0.25rem;">
+          Evaluators interact hands-on with a 10&Prime; tablet in a lab with simulated network conditions.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-md);margin-top:var(--gap-sm);">
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-g" style="margin-bottom:0.5rem;">Phase 1 — Setup</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">1</span><span>HQ staff uploads a new training video via admin portal</span></div>
+                <div class="step"><span class="step-num">2</span><span>HQ staff uploads a PDF and assigns categories &amp; interests</span></div>
+                <div class="step"><span class="step-num">3</span><span>Edge device opens app &rarr; interest selection screen appears</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-g" style="margin-bottom:0.5rem;">Phase 2 — Reels Experience</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">4</span><span>User selects 2&ndash;3 interests &rarr; Reels feed loads, filtered</span></div>
+                <div class="step"><span class="step-num">5</span><span>User scrolls &amp; swipes through reels &rarr; videos auto-play</span></div>
+                <div class="step"><span class="step-num">6</span><span>User taps Download on a video &rarr; saved locally</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-b" style="margin-bottom:0.5rem;">Phase 3 — Library</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">7</span><span>Navigate to Library tab &rarr; category tree shown</span></div>
+                <div class="step"><span class="step-num">8</span><span>Search for a topic &rarr; results appear within seconds</span></div>
+                <div class="step"><span class="step-num">9</span><span>Open a PDF &rarr; renders in-browser, page by page</span></div>
+                <div class="step"><span class="step-num">10</span><span>Download the PDF &rarr; appears in Downloads tab</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-o" style="margin-bottom:0.5rem;">Phase 4 — Offline</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">11</span><span>Network disconnected (simulated) &rarr; offline indicator appears</span></div>
+                <div class="step"><span class="step-num">12</span><span>Open Downloads tab &rarr; video and PDF visible</span></div>
+                <div class="step"><span class="step-num">13</span><span>Play downloaded video offline &rarr; plays fully, no buffering</span></div>
+                <div class="step"><span class="step-num">14</span><span>Open downloaded PDF offline &rarr; renders fully</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1rem 1.2rem;">
+              <p class="badge badge-g" style="margin-bottom:0.5rem;">Phase 5 — Content Update</p>
+              <div class="steps">
+                <div class="step"><span class="step-num">15</span><span>Network restored &rarr; HQ uploads updated video &rarr; edge device shows <strong>&ldquo;updated&rdquo; badge</strong> after next sync</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="background:rgba(34,197,94,0.04);border-color:var(--border-green);padding:1rem 1.2rem;">
+              <p style="font-size:var(--sz-small);color:var(--text-secondary);line-height:1.6;">
+                ✅&nbsp; All 15 steps prove the complete end-to-end system: <strong style="color:var(--text-primary);">upload &rarr; publish &rarr; sync &rarr; consume &rarr; download &rarr; offline &rarr; update detection.</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 10 — TRY IT YOURSELF
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="10"
+      data-notes="Keep this slide on screen during the hands-on session. Guide each evaluator through at least one reels scroll, one library search, and one offline test. The tablet is running the actual system — not a mockup or simulator. The admin portal is accessible from any browser at the URL shown. Estimated hands-on time: 10–15 minutes.">
+
+      <div class="slide-inner centered" style="gap:var(--gap-lg);">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm);">
+          <div class="label-block" style="align-items:center;">
+            <p class="label">Hands-On Evaluation</p>
+            <div class="accent-bar" style="margin:0.35rem auto 0;"></div>
+          </div>
+          <h1 class="title-hero">Try It <span class="highlight-g">Yourself</span></h1>
+          <p style="font-size:var(--sz-body);color:var(--text-secondary);max-width:580px;line-height:1.55;text-align:center;">
+            The tablet is available now. You are looking at the actual system &mdash; not a prototype or mockup.
+          </p>
+        </div>
+
+        <div class="three-col" style="width:100%;max-width:860px;">
+          <div class="cta-card card-g">
+            <span class="cta-icon">▶</span>
+            <h3 class="title-h3" style="margin-bottom:0.5rem;color:var(--accent-green);">Scroll the Feed</h3>
+            <p class="card-body">Open the app &rarr; swipe through videos &rarr; try filtering by a different interest &rarr; tap Like or Save on a clip you want to revisit.</p>
+          </div>
+          <div class="cta-card card-b">
+            <span class="cta-icon">☰</span>
+            <h3 class="title-h3" style="margin-bottom:0.5rem;color:var(--accent-blue);">Browse the Library</h3>
+            <p class="card-body">Navigate to Library &rarr; browse categories &rarr; search for a keyword &rarr; open a PDF and download it for offline.</p>
+          </div>
+          <div class="cta-card card-o">
+            <span class="cta-icon">📴</span>
+            <h3 class="title-h3" style="margin-bottom:0.5rem;color:var(--accent-orange);">Go Offline</h3>
+            <p class="card-body">Ask the facilitator to disconnect the network &rarr; open Downloads &rarr; play your downloaded video and PDF &rarr; verify they work without connectivity.</p>
+          </div>
+        </div>
+
+        <p style="font-size:var(--sz-label);color:var(--text-muted);max-width:600px;text-align:center;">
+          Admin portal: ask the facilitator for the URL and demo credentials.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 11 — WHAT SUCCESS LOOKS LIKE
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="11"
+      data-notes="These criteria come directly from the product brief. S1 is the most important — if the end-to-end flow works, everything else is refinement. S3 and S6 are the technically hard ones: fast video start under limited bandwidth, and fully offline playback. If all 7 criteria pass, the MVP is accepted for continuation development.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Success Metrics</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">Seven Criteria for <span class="highlight-g">Demo Success</span></h1>
+
+        <table class="data-table" style="margin-top:var(--gap-sm);">
+          <thead>
+            <tr>
+              <th style="width:3.5rem;">ID</th>
+              <th style="width:30%;">Criterion</th>
+              <th>Target</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-g">S1</span></td>
+              <td style="font-weight:600;">End-to-end flow</td>
+              <td class="td-target">Upload &rarr; publish &rarr; catalog &rarr; consume (video + PDF) &rarr; download &rarr; view offline</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S2</span></td>
+              <td style="font-weight:600;">Library lookup time</td>
+              <td class="td-target">&le;&nbsp;60 seconds to find a specific item in a demo scenario</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S3</span></td>
+              <td style="font-weight:600;">Reels playback start</td>
+              <td class="td-target">&le;&nbsp;2 seconds on reasonable network; fast-start via prefetch on weak network</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S4</span></td>
+              <td style="font-weight:600;">Browser containment</td>
+              <td class="td-target">100% of viewing inside Chrome &mdash; no external apps, no pop-ups</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S5</span></td>
+              <td style="font-weight:600;">Interest filtering</td>
+              <td class="td-target">&ge;&nbsp;3 selectable interests that consistently filter feed and library</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S6</span></td>
+              <td style="font-weight:600;">Offline playback</td>
+              <td class="td-target">Previously downloaded video and PDF viewable with zero network</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-g">S7</span></td>
+              <td style="font-weight:600;">Updated badge</td>
+              <td class="td-target">Downloaded items show &ldquo;updated&rdquo; badge when catalog version exceeds download version after sync</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+          <div class="card" style="background:rgba(34,197,94,0.04);border-color:var(--border-green);padding:0.9rem 1.1rem;">
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);">If all 7 criteria pass &rarr; <strong style="color:var(--accent-green);">MVP accepted for continuation development.</strong></p>
+          </div>
+          <div class="card" style="padding:0.9rem 1.1rem;">
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);">Structural success (S8&ndash;S10: code quality, developer onboarding) validated separately by supervisors.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 12 — WHAT'S NEXT
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="12"
+      data-notes="The MVP is not a throwaway prototype. Every architectural choice was made to minimize rewrites when the product grows. The data model supports user identity. The API supports delta sync. The storage abstraction supports object storage. The continuation notes in the architecture document detail all of this. The 5 items listed are the intended Phase 2 scope.">
+
+      <div class="slide-inner">
+        <div class="label-block">
+          <p class="label">Post-MVP Roadmap</p>
+          <div class="accent-bar"></div>
+        </div>
+        <h1 class="title-h1">Designed to <span class="highlight-g">Continue</span></h1>
+
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);line-height:1.5;">Each MVP architectural decision was made to enable clean extension without major rewrites:</p>
+            <ul class="bullets">
+              <li><strong>User identity &amp; RBAC</strong> &mdash; The MVP is userless (kiosk). A device-id pattern allows adding authentication without schema changes.</li>
+              <li><strong>Recommendation engine</strong> &mdash; Interest filtering is the MVP. View counts and like counts are tracked locally, ready to feed a future algorithm.</li>
+              <li><strong>Server-side analytics</strong> &mdash; Like/Save are local-only in MVP. The local action log is designed for batch-sync when analytics are added.</li>
+              <li><strong>Multi-language support</strong> &mdash; English only in MVP. All UI strings use a key-based system; adding a language is a configuration change.</li>
+              <li><strong>Push-based sync</strong> &mdash; MVP uses pull on app open. The API is designed so a WebSocket channel can be added alongside the existing REST endpoints.</li>
+            </ul>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="pull-quote" style="margin-bottom:var(--gap-sm);">
+              <p style="font-size:var(--sz-body);">"Clean layered architecture &mdash; a follow-on team can extend any layer without touching the others."</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.4rem;">
+              <div class="layer-pill top">
+                <span>&#9679; Content Management</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">Admin portal, upload, categories</span>
+              </div>
+              <div class="layer-pill">
+                <span>&#9679; Catalog / API</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">Node.js, PostgreSQL, REST</span>
+              </div>
+              <div class="layer-pill">
+                <span>&#9679; Delivery / Offline</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">nginx proxy, cache, sync</span>
+              </div>
+              <div class="layer-pill">
+                <span>&#9679; UI</span>
+                <span style="font-size:var(--sz-label);color:var(--text-muted);">React SPA, reels, library</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SLIDE 13 — QUESTIONS
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="13"
+      data-notes="Final slide. Reference documents are all in the repository. The architecture document includes detailed continuation notes for the follow-on team. All 7 product documents and 17 system diagrams are committed to the project repository. Questions about the demo setup should be directed to the facilitator.">
+
+      <div class="slide-inner centered" style="gap:var(--gap-lg);justify-content:center;min-height:70vh;">
+
+        <h1 class="title-hero" style="letter-spacing:-0.02em;">Questions</h1>
+
+        <hr class="divider" style="width:100%;max-width:500px;">
+
+        <div class="two-col" style="width:100%;max-width:760px;margin-top:var(--gap-sm);">
+          <div class="card card-g" style="text-align:center;padding:1.5rem;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">⚙️</div>
+            <h3 class="title-h3" style="margin-bottom:0.4rem;">Technical Questions</h3>
+            <p class="card-body">Architecture, data model, API design, offline implementation, deployment, and the monorepo structure.</p>
+          </div>
+          <div class="card card-b" style="text-align:center;padding:1.5rem;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">📋</div>
+            <h3 class="title-h3" style="margin-bottom:0.4rem;">Operational Questions</h3>
+            <p class="card-body">Demo setup, acceptance criteria, timeline, continuation roadmap, and scope decisions.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%;max-width:640px;margin-top:var(--gap-sm);">
+          <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.25rem;">Reference Documents</p>
+          <div class="doc-ref">
+            <span class="doc-ref-icon">&#9632;</span>
+            <span class="doc-ref-path">product/north-star.md</span>
+            <span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Product vision &amp; binding constraints</span>
+          </div>
+          <div class="doc-ref">
+            <span class="doc-ref-icon">&#9632;</span>
+            <span class="doc-ref-path">product/04_system-architecture.md</span>
+            <span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Architecture decisions &amp; continuation notes</span>
+          </div>
+          <div class="doc-ref">
+            <span class="doc-ref-icon">&#9632;</span>
+            <span class="doc-ref-path">product/03_mvp-spec.md</span>
+            <span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Full MVP acceptance criteria &amp; demo script</span>
+          </div>
+        </div>
+
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">
+          DK-01 &middot; Version 1.0 &middot; 2026-03-11
+        </p>
+
+        <!-- Print footer -->
+        <p class="print-only" style="font-size:0.7rem;color:#6b7280;text-align:center;margin-top:2rem;">
+          TactiTok &middot; DK-01 Stakeholder Overview &middot; Generated 2026-03-11
+        </p>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ─── STATE ──────────────────────────────────────────────────────
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL = slides.length;
+    const state = {
+      current: 0,
+      notesVisible: false,
+      transitioning: false
+    };
+
+    // ─── DOM REFS ────────────────────────────────────────────────────
+    const progressBar  = document.getElementById('progress-bar');
+    const curEl        = document.getElementById('cur');
+    const totEl        = document.getElementById('tot');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const notesOverlay = document.getElementById('notes-overlay');
+    const notesContent = document.getElementById('notes-content');
+
+    totEl.textContent = TOTAL;
+
+    // ─── GO TO SLIDE ────────────────────────────────────────────────
+    function goTo(index) {
+      if (state.transitioning) return;
+      if (index < 0 || index >= TOTAL) return;
+      if (index === state.current) return;
+
+      state.transitioning = true;
+
+      const prev = slides[state.current];
+      const next = slides[index];
+      const forward = index > state.current;
+
+      // Position next off-screen
+      next.style.transition = 'none';
+      next.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      next.style.opacity = '0';
+      next.classList.remove('active', 'exit-left');
+
+      // Force reflow
+      next.getBoundingClientRect();
+
+      // Animate prev out
+      prev.style.transition = '';
+      prev.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      prev.style.opacity = '0';
+      prev.classList.remove('active');
+
+      // Animate next in
+      next.style.transition = '';
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+      next.classList.add('active');
+
+      state.current = index;
+      updateUI();
+
+      setTimeout(() => {
+        state.transitioning = false;
+        prev.style.transform = 'translateX(60px)';
+      }, 480);
+    }
+
+    // ─── UPDATE UI ──────────────────────────────────────────────────
+    function updateUI() {
+      // Progress bar
+      const pct = ((state.current + 1) / TOTAL) * 100;
+      progressBar.style.width = pct + '%';
+
+      // Counter
+      curEl.textContent = state.current + 1;
+
+      // Buttons
+      btnPrev.disabled = state.current === 0;
+      btnNext.disabled = state.current === TOTAL - 1;
+
+      // Notes
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'No notes for this slide.';
+      }
+    }
+
+    // ─── NOTES ──────────────────────────────────────────────────────
+    function toggleNotes() {
+      state.notesVisible = !state.notesVisible;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'No notes for this slide.';
+        notesOverlay.removeAttribute('hidden');
+      } else {
+        notesOverlay.setAttribute('hidden', '');
+      }
+    }
+
+    // ─── FULLSCREEN ──────────────────────────────────────────────────
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // ─── KEYBOARD ───────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case ' ':
+          e.preventDefault(); goTo(state.current + 1); break;
+        case 'ArrowLeft': case 'ArrowUp':
+          e.preventDefault(); goTo(state.current - 1); break;
+        case 'Home':
+          e.preventDefault(); goTo(0); break;
+        case 'End':
+          e.preventDefault(); goTo(TOTAL - 1); break;
+        case 'n': case 'N':
+          e.preventDefault(); toggleNotes(); break;
+        case 'f': case 'F':
+          e.preventDefault(); toggleFullscreen(); break;
+        case 'Escape':
+          if (state.notesVisible) toggleNotes(); break;
+      }
+    });
+
+    // ─── TOUCH / SWIPE ──────────────────────────────────────────────
+    let txStart = 0, tyStart = 0;
+    document.addEventListener('touchstart', e => {
+      txStart = e.touches[0].clientX;
+      tyStart = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - txStart;
+      const dy = e.changedTouches[0].clientY - tyStart;
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (Math.abs(dx) < 50 || angle > 60) return;
+      if (dx < 0) goTo(state.current + 1);
+      else        goTo(state.current - 1);
+    });
+
+    // ─── BUTTON EVENTS ───────────────────────────────────────────────
+    btnPrev.addEventListener('click', () => goTo(state.current - 1));
+    btnNext.addEventListener('click', () => goTo(state.current + 1));
+    document.getElementById('notes-close').addEventListener('click', toggleNotes);
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    // Ensure initial state is correct
+    slides.forEach((s, i) => {
+      if (i === 0) {
+        s.style.opacity = '1';
+        s.style.transform = 'translateX(0)';
+        s.classList.add('active');
+      } else {
+        s.style.opacity = '0';
+        s.style.transform = 'translateX(60px)';
+        s.classList.remove('active');
+      }
+    });
+
+    updateUI();
+  </script>
+
+</body>
+</html>
