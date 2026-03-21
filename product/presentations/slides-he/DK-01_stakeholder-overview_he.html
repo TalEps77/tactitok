@@ -157,7 +157,7 @@
       display: flex; align-items: center; justify-content: center;
       padding: var(--pad);
       opacity: 0;
-      transform: translateX(60px);
+      transform: translateX(-60px);
       pointer-events: none;
       transition: opacity var(--dur-slide) var(--ease-slide),
                   transform var(--dur-slide) var(--ease-slide);
@@ -1349,14 +1349,14 @@
       const forward = index > state.current;
 
       next.style.transition = 'none';
-      next.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      next.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
       next.style.opacity = '0';
       next.classList.remove('active');
 
       next.getBoundingClientRect();
 
       prev.style.transition = '';
-      prev.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      prev.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
       prev.style.opacity = '0';
       prev.classList.remove('active');
 
@@ -1370,7 +1370,7 @@
 
       setTimeout(() => {
         state.transitioning = false;
-        prev.style.transform = 'translateX(60px)';
+        prev.style.transform = 'translateX(-60px)';
       }, 480);
     }
 
@@ -1445,7 +1445,7 @@
     // ─── INIT ────────────────────────────────────────────────────────
     slides.forEach((s, i) => {
       s.style.opacity    = i === 0 ? '1' : '0';
-      s.style.transform  = i === 0 ? 'translateX(0)' : 'translateX(60px)';
+      s.style.transform  = i === 0 ? 'translateX(0)' : 'translateX(-60px)';
       if (i === 0) s.classList.add('active');
     });
     updateUI();

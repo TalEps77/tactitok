@@ -1,10 +1,10 @@
 # Presentation Index — TactiTok
 
-> **Version:** 1.2
+> **Version:** 1.3
 > **Status:** DK-01 (EN ✅ HE ✅ EN-PPTX ✅ HE-PPTX 🔴) · DK-02 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-03 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-04 (EN ✅ HE 🟢 EN-PPTX 🟠 HE-PPTX 🟠) · DK-05 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠) · DK-06 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠) · DK-07 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠)
-> **Date:** 2026-03-19
-> **Source:** File system review 2026-03-19
-> **Change from v1.1:** DK-07 EN HTML generated (10 slides, security reviewers / military evaluators audience). DK-07 HE HTML and PPTX variants blocked pending EN HTML review.
+> **Date:** 2026-03-20
+> **Source:** File system review 2026-03-19; RTL bug fix 2026-03-20
+> **Change from v1.2:** Fixed RTL slide transition direction bug in DK-01 HE HTML. Added RTL checklist to Phase 2 QA section below.
 
 This is the registry of all planned and generated presentation artifacts for the TactiTok project.
 For detail on each deck (sections, sources, blockers), see `product/presentations/meta/presentation-plan.md`.
@@ -204,3 +204,38 @@ product/presentations/
 ---
 
 *Update this index when presentations are generated. Set status to ✅ and fill in the file path. Set to 📌 when the deck is reviewed and approved.*
+
+---
+
+## Phase 2 (HE HTML) QA Checklist — RTL Requirements
+
+Apply this checklist to every Hebrew HTML before marking it ✅. These checks exist because DK-01 HE was shipped with the slide transition direction bug (2026-03-20).
+
+### Slide transitions (most common bug)
+`translateX` is in **physical pixel space** — it is NOT flipped by `dir="rtl"` automatically.
+All six values must be inverted from the EN version:
+
+| Location in code | EN value | Required HE value |
+|---|---|---|
+| CSS `.slide` initial `transform` | `translateX(+60px)` | `translateX(-60px)` |
+| `goTo()` — next initial, forward | `translateX(+60px)` | `translateX(-60px)` |
+| `goTo()` — next initial, backward | `translateX(-60px)` | `translateX(+60px)` |
+| `goTo()` — prev exit, forward | `translateX(-60px)` | `translateX(+60px)` |
+| `goTo()` — prev exit, backward | `translateX(+60px)` | `translateX(-60px)` |
+| `setTimeout` reset for prev | `translateX(+60px)` | `translateX(-60px)` |
+| Init loop default position | `translateX(+60px)` | `translateX(-60px)` |
+
+Effect: forward navigation slides old content **out to the right** and brings new content **in from the left**, matching RTL reading direction.
+
+### Other RTL checks
+- `<html lang="he" dir="rtl">` present
+- `#nav-controls` at `left: 1.5rem` (not right)
+- `#notes-close` at `left: 1rem` (not right)
+- `#notes-overlay` padding flipped: `1.1rem 1.5rem 1.1rem 2rem`
+- `.bullets li::before` uses `◂` (left-pointing) not `▸`
+- `.card-gl` uses `border-right` not `border-left`
+- `.pull-quote` uses `border-right`, no `border-left`
+- `.divider` gradient is `270deg` (right to left) not `90deg`
+- `.data-table th` has `text-align: right`
+- Font is `Heebo` (not Inter — Heebo is optimized for Hebrew)
+- All visible text and `data-notes` attributes translated to Hebrew
