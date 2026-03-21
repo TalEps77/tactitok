@@ -15,9 +15,9 @@
 
 ```
 Total steps : 16
-Done        : 15
+Done        : 16
 In progress : 0
-Remaining   : 1
+Remaining   : 0
 ```
 
 ---
@@ -305,7 +305,7 @@ Key facts:
 
 ### Step 02-A5 — Write screen A5: Category Management
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Instructions:**
 Append to `ux-specs/02-detailed-ux-spec.md` the full spec for A5.
@@ -326,7 +326,7 @@ Key facts:
 
 ### Step 02-A6 — Write screen A6: Interest Management
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Instructions:**
 Append to `ux-specs/02-detailed-ux-spec.md` the full spec for A6.
@@ -344,7 +344,7 @@ Key facts:
 
 ### Step 03 — Write `03-component-inventory.md`
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Instructions:**
 Write `ux-specs/03-component-inventory.md` from scratch.
@@ -381,7 +381,7 @@ Components to cover (at minimum):
 
 ### Step FINAL — Update PLAN.md status block to ALL DONE
 
-**Status:** `[ ]`
+**Status:** `[x]`
 
 **Instructions:**
 Update the status block at the top of this file to:
@@ -392,3 +392,5 @@ In progress : 0
 Remaining   : 0
 ```
 And add a line: `All steps complete. UX spec is ready.`
+
+> All steps complete. UX spec is ready.
