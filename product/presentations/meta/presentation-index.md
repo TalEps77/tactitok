@@ -1,10 +1,10 @@
 # Presentation Index — TactiTok
 
-> **Version:** 1.3
-> **Status:** DK-01 (EN ✅ HE ✅ EN-PPTX ✅ HE-PPTX 🔴) · DK-02 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-03 (EN ✅ HE 🔴 EN-PPTX 🔴 HE-PPTX 🔴) · DK-04 (EN ✅ HE 🟢 EN-PPTX 🟠 HE-PPTX 🟠) · DK-05 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠) · DK-06 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠) · DK-07 (EN ✅ HE 🟠 EN-PPTX 🟠 HE-PPTX 🟠)
-> **Date:** 2026-03-20
-> **Source:** File system review 2026-03-19; RTL bug fix 2026-03-20
-> **Change from v1.2:** Fixed RTL slide transition direction bug in DK-01 HE HTML. Added RTL checklist to Phase 2 QA section below.
+> **Version:** 1.8
+> **Status:** DK-01 (EN ✅ HE ✅ EN-PPTX ✅ HE-PPTX 🔴) · DK-02 (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴) · DK-03 (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴) · DK-04 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-05 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-06 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-07 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠)
+> **Date:** 2026-03-21
+> **Source:** File system review 2026-03-19; RTL bug fix 2026-03-20; DK-03 HE HTML generated 2026-03-21; DK-04 HE HTML generated 2026-03-21; DK-05 HE HTML generated 2026-03-21; DK-06 HE HTML generated 2026-03-21; DK-07 HE HTML generated 2026-03-21
+> **Change from v1.7:** Generated DK-07 HE HTML (10 slides). All RTL rules applied (Heebo font, inverted translateX, left-positioned controls, border-right on zone-box/note-box/info-box, 270deg gradient, text-align:right on table headers, ◂ bullets, RTL keyboard/swipe logic). Updated DK-07-HE status 🟠 → ✅.
 
 This is the registry of all planned and generated presentation artifacts for the TactiTok project.
 For detail on each deck (sections, sources, blockers), see `product/presentations/meta/presentation-plan.md`.
@@ -54,7 +54,7 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | ID | Format | Audience | Slides | Status | File |
 |----|--------|----------|--------|--------|------|
 | DK-02 | EN HTML | Demo facilitator, evaluators | 20 | ✅ Generated | `product/presentations/slides-en/DK-02_demo-walkthrough.html` |
-| DK-02-HE | HE HTML | Demo facilitator, evaluators — Hebrew | 20 | 🔴 Not started | — |
+| DK-02-HE | HE HTML | Demo facilitator, evaluators — Hebrew | 20 | ✅ Generated | `product/presentations/slides-he/DK-02_demo-walkthrough_he.html` |
 | DK-02-EN-PPTX | EN PPTX | Demo facilitator, evaluators — editable EN | 20 | 🔴 Not started | — |
 | DK-02-HE-PPTX | HE PPTX | Demo facilitator, evaluators — editable HE | 20 | 🔴 Not started | — |
 
@@ -65,7 +65,7 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | ID | Format | Audience | Slides | Status | Blockers |
 |----|--------|----------|--------|--------|----------|
 | DK-03 | EN HTML | Technical evaluators, supervisors | 20 | ✅ Generated | `product/presentations/slides-en/DK-03_architecture-deep-dive.html` |
-| DK-03-HE | HE HTML | — Hebrew | 20 | 🟢 Unblocked | Awaiting review of EN HTML |
+| DK-03-HE | HE HTML | — Hebrew | 20 | ✅ Generated | `product/presentations/slides-he/DK-03_architecture-deep-dive_he.html` |
 | DK-03-EN-PPTX | EN PPTX | — editable EN | 20 | 🟠 Blocked | Awaiting HE HTML |
 | DK-03-HE-PPTX | HE PPTX | — editable HE | 20 | 🟠 Blocked | Awaiting HE HTML |
 
@@ -78,7 +78,7 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | ID | Format | Audience | Slides | Status | Blockers |
 |----|--------|----------|--------|--------|----------|
 | DK-04 | EN HTML | Student developers, follow-on team | 20–30 | ✅ Generated | `product/presentations/slides-en/DK-04_developer-onboarding.html` |
-| DK-04-HE | HE HTML | — Hebrew | 20–30 | 🟢 Unblocked | Awaiting review of EN HTML |
+| DK-04-HE | HE HTML | — Hebrew | 20 | ✅ Generated | `product/presentations/slides-he/DK-04_developer-onboarding_he.html` |
 | DK-04-EN-PPTX | EN PPTX | — editable EN | 20–30 | 🟠 Blocked | Awaiting HE HTML |
 | DK-04-HE-PPTX | HE PPTX | — editable HE | 20–30 | 🟠 Blocked | Awaiting HE HTML |
 
@@ -89,7 +89,7 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | ID | Format | Audience | Slides | Status | Blockers |
 |----|--------|----------|--------|--------|----------|
 | DK-05 | EN HTML | Supervisors, sponsors, team leads | 17 | ✅ Generated | `product/presentations/slides-en/DK-05_mvp-execution-overview.html` |
-| DK-05-HE | HE HTML | — Hebrew | 17 | 🟠 Blocked | Awaiting review of EN HTML |
+| DK-05-HE | HE HTML | — Hebrew | 17 | ✅ Generated | `product/presentations/slides-he/DK-05_mvp-execution-overview_he.html` |
 | DK-05-EN-PPTX | EN PPTX | — editable EN | 17 | 🟠 Blocked | Awaiting HE HTML |
 | DK-05-HE-PPTX | HE PPTX | — editable HE | 17 | 🟠 Blocked | Awaiting HE HTML |
 
@@ -102,7 +102,7 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | ID | Format | Audience | Slides | Status | Blockers |
 |----|--------|----------|--------|--------|----------|
 | DK-06 | EN HTML | Developers | 16 | ✅ Generated | `product/presentations/slides-en/DK-06_data-model-reference.html` |
-| DK-06-HE | HE HTML | — Hebrew | 16 | 🟠 Blocked | Awaiting review of EN HTML |
+| DK-06-HE | HE HTML | — Hebrew | 16 | ✅ Generated | `product/presentations/slides-he/DK-06_data-model-reference_he.html` |
 | DK-06-EN-PPTX | EN PPTX | — editable EN | 16 | 🟠 Blocked | Awaiting HE HTML |
 | DK-06-HE-PPTX | HE PPTX | — editable HE | 16 | 🟠 Blocked | Awaiting HE HTML |
 
@@ -113,7 +113,7 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | ID | Format | Audience | Slides | Status | File |
 |----|--------|----------|--------|--------|------|
 | DK-07 | EN HTML | Security reviewers, military evaluators | 10 | ✅ Generated | `product/presentations/slides-en/DK-07_security-deployment-posture.html` |
-| DK-07-HE | HE HTML | — Hebrew | 10 | 🟠 Blocked | Awaiting review of EN HTML |
+| DK-07-HE | HE HTML | — Hebrew | 10 | ✅ Generated | `product/presentations/slides-he/DK-07_security-deployment-posture_he.html` |
 | DK-07-EN-PPTX | EN PPTX | — editable EN | 10 | 🟠 Blocked | Awaiting HE HTML |
 | DK-07-HE-PPTX | HE PPTX | — editable HE | 10 | 🟠 Blocked | Awaiting HE HTML |
 
@@ -188,17 +188,17 @@ product/presentations/
 └── slides-he/
     ├── DK-01_stakeholder-overview_he.html          ✅ HE HTML
     ├── DK-01_stakeholder-overview_he.pptx          🔴 HE PPTX
-    ├── DK-02_demo-walkthrough_he.html              🔴 HE HTML
+    ├── DK-02_demo-walkthrough_he.html              ✅ HE HTML
     ├── DK-02_demo-walkthrough_he.pptx              🔴 HE PPTX
-    ├── DK-03_architecture-deep-dive_he.html        🔴 HE HTML
+    ├── DK-03_architecture-deep-dive_he.html        ✅ HE HTML
     ├── DK-03_architecture-deep-dive_he.pptx        🔴 HE PPTX
-    ├── DK-04_developer-onboarding_he.html          🟢 Unblocked
+    ├── DK-04_developer-onboarding_he.html          ✅ HE HTML
     ├── DK-04_developer-onboarding_he.pptx          🟠 Blocked
-    ├── DK-05_mvp-execution-overview_he.html        🟠 Blocked
+    ├── DK-05_mvp-execution-overview_he.html        ✅ HE HTML
     ├── DK-05_mvp-execution-overview_he.pptx        🟠 Blocked
-    ├── DK-06_data-model-reference_he.html          🟠 Blocked
+    ├── DK-06_data-model-reference_he.html          ✅ HE HTML
     ├── DK-06_data-model-reference_he.pptx          🟠 Blocked
-    └── DK-07_security-deployment-posture_he.html   🟠 Blocked
+    └── DK-07_security-deployment-posture_he.html   ✅ HE HTML
 ```
 
 ---

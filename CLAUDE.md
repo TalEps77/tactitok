@@ -107,6 +107,23 @@ When asked to create or update a document:
 - surface contradictions clearly
 - keep outputs engineering-ready
 
+## Large Output Strategy
+
+When any task requires producing a file larger than ~300 lines (e.g. HTML presentations, long specs):
+
+1. **Plan agent-based execution before writing anything.**
+2. **Break the output into ≤4 logical segments**, each small enough to fit in a single response.
+3. **Assign one task per segment** — write each segment sequentially, verify it, then continue.
+4. **Never attempt to generate a large file in a single response.** If the output would exceed ~300 lines, it must be split.
+
+Typical segments for an HTML presentation file:
+- Segment A: `<head>` + full CSS block
+- Segment B: Slides 1–7 (or similar first half)
+- Segment C: Slides 8–14 (or similar second half)
+- Segment D: Remaining slides + `<script>` block + file close
+
+Apply this strategy automatically whenever you plan a large document task.
+
 ## Notes Files
 Use these files when useful:
 - `notes/assumptions.md`

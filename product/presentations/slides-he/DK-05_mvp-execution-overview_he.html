@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TactiTok: תוכנית ביצוע MVP — DK-05</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:        #0a0f1e;
+      --bg-secondary:      #111827;
+      --bg-tertiary:       #1a2438;
+      --bg-card:           #0f1a2e;
+      --accent-green:      #22c55e;
+      --accent-green-dim:  #166534;
+      --accent-green-glow: rgba(34,197,94,0.15);
+      --accent-blue:       #60a5fa;
+      --accent-blue-dim:   #1e3a5f;
+      --accent-blue-glow:  rgba(96,165,250,0.15);
+      --accent-orange:     #fb923c;
+      --accent-orange-dim: #9a3412;
+      --accent-red:        #f87171;
+      --accent-red-dim:    #7f1d1d;
+      --text-primary:      #f1f5f9;
+      --text-secondary:    #94a3b8;
+      --text-muted:        #475569;
+      --border-subtle:     rgba(255,255,255,0.06);
+      --border-green:      rgba(34,197,94,0.35);
+      --border-blue:       rgba(96,165,250,0.35);
+      --border-orange:     rgba(251,146,60,0.35);
+      --border-red:        rgba(248,113,113,0.35);
+      --font:              'Heebo', system-ui, -apple-system, sans-serif;
+      --sz-hero:   clamp(2.4rem, 4.5vw, 4.2rem);
+      --sz-h1:     clamp(1.7rem, 3vw, 2.8rem);
+      --sz-h2:     clamp(1.3rem, 2.2vw, 1.9rem);
+      --sz-h3:     clamp(1.05rem, 1.8vw, 1.45rem);
+      --sz-body:   clamp(0.88rem, 1.5vw, 1.1rem);
+      --sz-small:  clamp(0.78rem, 1.2vw, 0.95rem);
+      --sz-label:  clamp(0.64rem, 1vw, 0.78rem);
+      --pad:       clamp(2.5rem, 5vw, 5.5rem);
+      --gap-sm:    0.75rem;
+      --gap-md:    1.5rem;
+      --gap-lg:    2.5rem;
+      --gap-xl:    3.5rem;
+      --radius:    6px;
+      --radius-lg: 10px;
+      --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-slide:  420ms;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-primary); font-family: var(--font); color: var(--text-primary); direction: rtl; -webkit-font-smoothing: antialiased; }
+    /* ─── PROGRESS BAR (stays LTR — universally understood) ─── */
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-green), #4ade80); width: 5.88%; z-index: 200; transition: width 300ms var(--ease-slide); box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+    /* ─── SLIDE COUNTER (RTL: positioned on left) ─── */
+    #slide-counter { position: fixed; top: 1rem; left: 1.5rem; font-size: var(--sz-label); font-weight: 600; letter-spacing: 0.1em; color: var(--text-muted); z-index: 200; user-select: none; }
+    #slide-counter .cur { color: var(--accent-green); font-weight: 700; }
+    /* ─── NAV BUTTONS (RTL: positioned on left) ─── */
+    #nav-controls { position: fixed; bottom: 1.5rem; left: 1.5rem; display: flex; gap: 0.4rem; z-index: 200; }
+    #nav-controls button { width: 2.4rem; height: 2.4rem; border: 1px solid var(--border-green); border-radius: var(--radius); background: rgba(34,197,94,0.07); color: var(--accent-green); font-size: 1rem; cursor: pointer; transition: background 180ms ease, transform 120ms ease; display: flex; align-items: center; justify-content: center; }
+    #nav-controls button:hover { background: rgba(34,197,94,0.18); transform: scale(1.05); }
+    #nav-controls button:disabled { opacity: 0.25; pointer-events: none; }
+    /* ─── KEYBOARD HINT ─── */
+    #kb-hint { position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%); font-size: var(--sz-label); color: var(--text-muted); letter-spacing: 0.06em; z-index: 200; user-select: none; white-space: nowrap; }
+    /* ─── SPEAKER NOTES ─── */
+    #notes-overlay { position: fixed; bottom: 0; left: 0; right: 0; max-height: 32vh; background: rgba(5,8,18,0.97); border-top: 2px solid var(--accent-green); padding: 1.1rem 1.5rem 1.1rem 2rem; z-index: 300; overflow-y: auto; backdrop-filter: blur(8px); }
+    #notes-overlay[hidden] { display: none; }
+    #notes-label { font-size: var(--sz-label); font-weight: 700; color: var(--accent-green); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    #notes-content { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.65; }
+    /* ─── NOTES CLOSE: RTL — positioned on left ─── */
+    #notes-close { position: absolute; top: 0.8rem; left: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; transition: color 150ms; }
+    #notes-close:hover { color: var(--text-primary); }
+    /* ─── SLIDES CONTAINER ─── */
+    #slides-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+    /* ─── SLIDE BASE (RTL: enters from left → exits to right) ─── */
+    .slide { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: var(--pad); opacity: 0; transform: translateX(-60px); pointer-events: none; transition: opacity var(--dur-slide) var(--ease-slide), transform var(--dur-slide) var(--ease-slide); will-change: transform, opacity; }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 1; }
+    /* ─── exit-left in RTL means slide exits to the RIGHT ─── */
+    .slide.exit-left { opacity: 0; transform: translateX(60px); pointer-events: none; }
+    .slide-inner { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: var(--gap-md); }
+    .slide-inner.centered { align-items: center; text-align: center; justify-content: center; }
+    .label { font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-green); }
+    .accent-bar   { width: 2.5rem; height: 3px; background: var(--accent-green); border-radius: 2px; margin-top: 0.35rem; }
+    .accent-bar-o { width: 2.5rem; height: 3px; background: var(--accent-orange); border-radius: 2px; margin-top: 0.35rem; }
+    .accent-bar-r { width: 2.5rem; height: 3px; background: var(--accent-red); border-radius: 2px; margin-top: 0.35rem; }
+    .label-block { display: flex; flex-direction: column; gap: 0; }
+    .title-hero { font-size: var(--sz-hero); font-weight: 900; line-height: 1.1; }
+    .title-h1   { font-size: var(--sz-h1);   font-weight: 800; line-height: 1.15; }
+    .title-h2   { font-size: var(--sz-h2);   font-weight: 700; line-height: 1.2; }
+    .title-h3   { font-size: var(--sz-h3);   font-weight: 700; line-height: 1.25; }
+    .highlight-g { color: var(--accent-green); }
+    .highlight-b { color: var(--accent-blue); }
+    .highlight-o { color: var(--accent-orange); }
+    .highlight-r { color: var(--accent-red); }
+    .card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 1.25rem 1.4rem; }
+    .card-g { border-top: 3px solid var(--accent-green); }
+    .card-b { border-top: 3px solid var(--accent-blue); }
+    .card-o { border-top: 3px solid var(--accent-orange); }
+    .card-r { border-top: 3px solid var(--accent-red); }
+    /* RTL: "left" border becomes "right" border */
+    .card-gl { border-right: 3px solid var(--accent-green); }
+    .card-rl { border-right: 3px solid var(--accent-red); }
+    .card-title { font-size: var(--sz-small); font-weight: 700; letter-spacing: 0.06em; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .card-body { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bullets li { display: flex; align-items: flex-start; gap: 0.7rem; font-size: var(--sz-body); color: var(--text-primary); line-height: 1.55; }
+    /* RTL bullet points facing left */
+    .bullets li::before { content: '◂'; color: var(--accent-green); font-size: 0.8em; flex-shrink: 0; margin-top: 0.22em; }
+    .bullets li strong { color: var(--text-primary); font-weight: 600; }
+    .badge { display: inline-block; padding: 0.18em 0.55em; border-radius: 3px; font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-g { background: rgba(34,197,94,0.12); color: var(--accent-green); border: 1px solid var(--border-green); }
+    .badge-b { background: rgba(96,165,250,0.12); color: var(--accent-blue);  border: 1px solid var(--border-blue); }
+    .badge-o { background: rgba(251,146,60,0.12); color: var(--accent-orange); border: 1px solid var(--border-orange); }
+    .badge-r { background: rgba(248,113,113,0.12); color: var(--accent-red); border: 1px solid var(--border-red); }
+    .data-table { width: 100%; border-collapse: collapse; }
+    /* RTL tables: text-align right */
+    .data-table th { background: var(--bg-tertiary); color: var(--accent-green); font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 0.9rem; text-align: right; border-bottom: 1px solid var(--border-green); }
+    .data-table td { padding: 0.5rem 0.9rem; font-size: var(--sz-small); border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); vertical-align: top; line-height: 1.5; text-align: right; }
+    .data-table tr:nth-child(even) td { background: rgba(26,36,56,0.5); }
+    .data-table .muted { color: var(--text-secondary); }
+    .data-table .mono { font-family: 'Courier New', monospace; font-size: 0.88em; direction: ltr; text-align: left; }
+    .data-table .highlight-g { color: var(--accent-green); font-weight: 600; }
+    .data-table .highlight-o { color: var(--accent-orange); font-weight: 600; }
+    .data-table .highlight-r { color: var(--accent-red); font-weight: 600; }
+    /* RTL divider gradient from right to left */
+    .divider { width: 100%; height: 1px; background: linear-gradient(270deg, var(--accent-green), transparent); border: none; margin: 0; }
+    .table-container { overflow-x: auto; }
+    .doc-ref { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 0.65rem 1rem; font-size: var(--sz-small); display: flex; align-items: center; gap: 0.5rem; }
+    .doc-ref-icon { color: var(--accent-green); flex-shrink: 0; }
+    .doc-ref-path { font-family: 'Courier New', monospace; color: var(--text-secondary); font-size: 0.85em; direction: ltr; }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--accent-green); color: #0a0f1e; font-size: 0.7em; font-weight: 800; flex-shrink: 0; }
+    .critical-row td { background: rgba(248,113,113,0.07) !important; }
+    @media print {
+      html, body { overflow: auto; height: auto; background: white; color: #111; }
+      #progress-bar, #slide-counter, #nav-controls, #kb-hint, #notes-overlay { display: none !important; }
+      #slides-container { overflow: visible; height: auto; position: static; }
+      .slide { position: relative !important; transform: none !important; opacity: 1 !important; pointer-events: auto !important; display: flex !important; width: 100%; min-height: 100vh; page-break-after: always; break-after: page; background: white; padding: 2cm 2.5cm; align-items: flex-start; }
+      .title-hero, .title-h1, .title-h2, .title-h3 { color: #111; }
+      .highlight-g { color: #166534; } .label { color: #166534; } .accent-bar { background: #166534; }
+      .card { background: #f9fafb; border-color: #d1d5db; }
+      .data-table th { background: #f3f4f6; color: #166534; } .data-table td { color: #111; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+  <div id="slide-counter"><span class="cur" id="cur">1</span> / <span id="tot">17</span></div>
+  <!-- RTL nav: → = חזור (prev), ← = הבא (next) -->
+  <nav id="nav-controls" aria-label="ניווט שקופיות">
+    <button id="btn-prev" aria-label="שקופית קודמת" title="קודם (→)">&#8594;</button>
+    <button id="btn-next" aria-label="שקופית הבאה" title="הבא (←)">&#8592;</button>
+  </nav>
+  <div id="kb-hint">&#9654; מקשי חצים או החלקה &nbsp;·&nbsp; F מסך מלא &nbsp;·&nbsp; N הערות</div>
+  <div id="notes-overlay" hidden>
+    <p id="notes-label">הערות מציג</p>
+    <button id="notes-close" aria-label="סגור הערות">&#10005;</button>
+    <p id="notes-content"></p>
+  </div>
+
+  <main id="slides-container">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 1 — כריכה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-slide="1"
+      data-notes="ברוכים הבאים. חפיסה זו היא סקירת ביצוע ה-MVP של TactiTok. היא מיועדת למנחים, נותני חסות, ומנהלי צוות הזקוקים להבין כיצד 3 מפתחים יספקו את ה-MVP ב-12 שבועות, מהם אבני הדרך המרכזיות, היכן ממוקמים הסיכונים, ומהן אפשרויות הנסיגה אם משהו לא מסתדר. כל התוכן לקוח מ-product/07_delivery-plan.md, שהוא המסמך האחרון והמחייב בסט המפרטים בן 7 המסמכים.">
+      <div class="slide-inner centered" style="gap:var(--gap-lg);min-height:70vh;justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+          <polygon points="36,4 68,21 68,51 36,68 4,51 4,21" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+          <polygon points="36,10 62,24 62,48 36,62 10,48 10,24" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="36" y="41" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#22c55e" font-family="Heebo,system-ui,sans-serif" letter-spacing="-0.5">TT</text>
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+          <p class="label">DK-05 &mdash; סקירת ביצוע MVP</p>
+          <h1 class="title-hero" style="letter-spacing:-0.02em;">TactiTok <span class="highlight-g">תוכנית ביצוע</span></h1>
+          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:680px;line-height:1.5;">כיצד 3 מפתחים מספקים את ה-MVP ב-12 שבועות &middot; אבני דרך &middot; סיכונים &middot; אפשרויות נסיגה</p>
+        </div>
+        <hr class="divider" style="width:100%;max-width:500px;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+          <span class="badge badge-g">3 מפתחים</span>
+          <span class="badge badge-b">6 ספרינטים · 12 שבועות</span>
+          <span class="badge badge-o">12 קריטריוני קבלה</span>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">מרץ 2026 &middot; מקור: product/07_delivery-plan.md</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 2 — מה אנחנו מספקים
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="2"
+      data-notes="ה-MVP מספק שלוש זרימות משתמש ולא יותר. זרימה A היא פיד הריילס בסגנון TikTok — סרטוני אימון קצרים שמגוללים על טאבלט. זרימה B היא הספרייה — עץ קטגוריות וחיפוש לעיון לפי דרישה. זרימה C היא פורטל הניהול — צוות ההדרכה מעלה תוכן, מכשיר הקצה מסתנכרן אוטומטית. 'סיים' מוגדר על ידי 12 קריטריוני קבלה, כולם חייבים לעבור על המכשיר בפועל לפני יום ההדגמה. הקריטריונים נעים ממהירות הפעלת וידאו ועד חוסן אופליין ועד ספירת תוכן.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">היקף</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מה אנחנו <span class="highlight-g">מספקים</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">זרימה A — עיון בריילס</p>
+              <p class="card-body">פיד אנכי בסגנון TikTok &middot; הפעלה אוטומטית &middot; ניווט בהחלקה &middot; סינון לפי תחומי עניין &middot; לייק / שמירה / הורדה לאופליין</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">זרימה B — חיפוש בספרייה</p>
+              <p class="card-body">ניווט בעץ קטגוריות &middot; חיפוש טקסט מלא &middot; נגן וידאו ומציג PDF בדפדפן &middot; הורדה מקומית אופציונלית</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">זרימה C — העלאת מנהל</p>
+              <p class="card-body">כניסה מאובטחת למנהל &middot; העלאת MP4 או PDF עם מטא-דאטה &middot; תיוג קטגוריה ועניין &middot; הקצה מסתנכרן תוך 30 שניות</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">הגדרת סיום — 12 קריטריוני קבלה</p>
+            <ul class="bullets" style="gap:0.45rem;">
+              <li>זרימת ההדגמה מקצה לקצה מושלמת (כל 15 השלבים)</li>
+              <li>הפעלה אוטומטית וגלילה של ריילס עובדים בצורה חלקה על הטאבלט</li>
+              <li>הפעלת וידאו מתחילה ≤ 2 שניות ברשת סבירה</li>
+              <li>חיפוש ספרייה מחזיר תוצאות תוך 5 שניות</li>
+              <li>PDF מתרנדר נכון בדפדפן ל-3+ מסמכי בדיקה</li>
+              <li>וידאו שהורד מופעל אופליין ללא רשת</li>
+              <li>PDF שהורד מתרנדר אופליין ללא רשת</li>
+              <li>העלאת מנהל → נראות בקצה ≤ 30 שניות לאחר סנכרון</li>
+              <li>בחירת תחומי עניין מסננת את פיד הריילס נכון</li>
+              <li>15 פריטי הדגמה (10 קבצי PDF + 5 סרטונים) טעונים וניתנים לניווט</li>
+              <li>כל האינטראקציה בתוך Chrome — ללא חלונות קופצים, ללא אפליקציות חיצוניות</li>
+              <li>האפליקציה מטפלת בנפילת רשת בצורה חינה — ללא קריסות</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 3 — הצוות
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="3"
+      data-notes="שלושה מפתחים סטודנטים, כל אחד אחראי על פרוסה ברורה של המחסנית. Dev A אחראי על הצד השרת: שרת ה-API, מסד הנתונים PostgreSQL, טיפול בקבצים, ופריסת ענן. Dev B אחראי על ה-SPA של הקצה — אפליקציית הטאבלט שמול המשתמש, נגן הוידאו, לוגיקת אופליין, ו-IndexedDB. Dev C אחראי על פורטל הניהול ותצוגת הספרייה. ה-monorepo מחולק לחמישה חבילות, כל אחת עם בעלים ברור. סוגי TypeScript משותפים ב-packages/shared בבעלות Dev A ובסקירת כולם — הם החוזה בין החבילות.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">צוות</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">ה<span class="highlight-g">צוות</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Dev A — שרת ענן</p>
+              <p class="card-body"><strong>ראשי:</strong> שרת API (Node.js + Express), סכמת PostgreSQL ומיגרציות, טיפול בקבצים, אימות מנהל<br><strong>משני:</strong> פריסת ענן, תצורת nginx TLS, בדיקות עומס</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Dev B — Edge SPA ופרוקסי</p>
+              <p class="card-body"><strong>ראשי:</strong> Edge SPA (HTML + TypeScript + Vite), פיד ריילס, נגן וידאו, שכבת אופליין IndexedDB, זרימת הורדה<br><strong>משני:</strong> הגדרת Docker לפרוקסי הקצה</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Dev C — Admin SPA וספרייה</p>
+              <p class="card-body"><strong>ראשי:</strong> Admin SPA (HTML + TypeScript + Vite), טופס העלאה, רשימת תוכן, CRUD קטגוריה/עניין<br><strong>משני:</strong> תצוגת ספרייה, מציג PDF, טעינת תוכן הדגמה</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">בעלות חבילת Monorepo</p>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr><th>חבילה</th><th>בעלים</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td class="mono">packages/server</td><td><span class="badge badge-g">Dev A</span></td></tr>
+                  <tr><td class="mono">packages/shared</td><td><span class="badge badge-g">Dev A</span> <span class="muted" style="font-size:0.8em;">בסקירת כולם</span></td></tr>
+                  <tr><td class="mono">packages/client (Edge SPA)</td><td><span class="badge badge-b">Dev B</span></td></tr>
+                  <tr><td class="mono">packages/admin (Admin SPA)</td><td><span class="badge badge-o">Dev C</span></td></tr>
+                  <tr><td class="mono">packages/edge-proxy</td><td><span class="badge badge-b">Dev B</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card card-gl" style="margin-top:0.25rem;">
+              <p class="card-body"><strong>אחריות משותפת:</strong> בדיקות אינטגרציה (מובל על ידי מי שפחות חסום) &middot; טעינת תוכן הדגמה בשבוע 11 (Dev C) &middot; חזרה על הדגמה (כל השלושה, שבוע 12)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 4 — ציר זמן של 12 שבועות
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="4"
+      data-notes="שישה ספרינטים, שבועיים כל אחד. Sprint 1 מקים את התשתית כך שכל שלושת המפתחים יוכלו לבנות באופן עצמאי. Sprint 2 מחווט את פייפליין התוכן מקצה לקצה — זוהי עמוד השדרה שכל השאר מתחבר אליו. Sprint 3 הוא הספרינט בסיכון הגבוה ביותר: פיד הריילס בסגנון TikTok חייב להיות מאומת על חומרת הטאבלט בפועל עד סוף שבוע 6. Sprint 4 סוגר את לולאת האופליין. Sprint 5 משלים את פורטל הניהול ומריץ מעבר אינטגרציה ראשון מלא. Sprint 6 הוא ייצוב, טעינת תוכן וחזרה. האילוץ הקשה הוא שכל 12 קריטריוני הקבלה חייבים לעבור עד סוף שבוע 12.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">סקירת ציר זמן</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">12 שבועות, <span class="highlight-g">6 ספרינטים</span></h1>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>ספרינט</th><th>שבועות</th><th>מטרה</th><th>אבן דרך</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sprint 1</strong></td>
+                <td>1–2</td>
+                <td>תשתית: monorepo, סכמה, שלדים, Docker, VM ענן</td>
+                <td><span class="badge badge-g">M1 — הכל מתחיל</span></td>
+              </tr>
+              <tr>
+                <td><strong>Sprint 2</strong></td>
+                <td>3–4</td>
+                <td>פייפליין תוכן: העלאה → API → סנכרון קטלוג → תצוגה בסיסית</td>
+                <td><span class="badge badge-g">M2 — פייפליין תוכן עובד</span></td>
+              </tr>
+              <tr class="critical-row">
+                <td><strong>Sprint 3</strong></td>
+                <td>5–6</td>
+                <td>חוויית ריילס: פיד TikTok, הפעלה אוטומטית, גלילה, תחומי עניין</td>
+                <td><span class="badge badge-r">M3 — ריילס על המכשיר ⚠ סיכון גבוה ביותר</span></td>
+              </tr>
+              <tr>
+                <td><strong>Sprint 4</strong></td>
+                <td>7–8</td>
+                <td>ספרייה + הורדות + אופליין: מציג PDF, לשונית הורדות, מצב אופליין</td>
+                <td><span class="badge badge-b">M4 — לולאת אופליין מלאה</span></td>
+              </tr>
+              <tr>
+                <td><strong>Sprint 5</strong></td>
+                <td>9–10</td>
+                <td>השלמת פורטל הניהול + אינטגרציה מלאה</td>
+                <td><span class="badge badge-b">M5 — סקריפט הדגמה עובר</span></td>
+              </tr>
+              <tr>
+                <td><strong>Sprint 6</strong></td>
+                <td>11–12</td>
+                <td>ייצוב, תוכן הדגמה (15 פריטים), חזרה, תיקוני באגים</td>
+                <td><span class="badge badge-g">M6 — הדגמה מוכנה</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card card-rl" style="margin-top:0.25rem;">
+          <p class="card-body"><strong>אילוץ קשה:</strong> כל 12 קריטריוני הקבלה (AC-1 עד AC-12) חייבים לעבור על מכשיר ההדגמה בפועל עד סוף שבוע 12.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 5 — Sprint 1: תשתית
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="5"
+      data-notes="Sprint 1 הוא לפתוח חסימות לכולם. עד סוף שבוע 2, לכל שלושת המפתחים חייבת להיות סביבת עבודה פועלת, קובץ סוגי TypeScript משותף, סכמת מסד נתונים פועלת, ופרוקסי קצה עובד. הפלט המשותף המרכזי הוא packages/shared/src/types.ts — Dev A אחראי עליו, אך קוד כל מפתח אחר תלוי בו. קריטריוני היציאה הם המבחנים הסוגרים: איננו מתחילים Sprint 2 עד שכל אחד מהם עובר.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint 1 · שבועות 1–2</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">תשתית — <span class="highlight-g">כולם לא חסומים</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Dev A — תשתית שרת</p>
+              <p class="card-body">הגדרת Monorepo (pnpm workspaces) &middot; סוגי TypeScript משותפים &middot; סכמת PostgreSQL (מיגרציה 001) &middot; שלד שרת Express &middot; אימות מנהל (JWT) &middot; נקודות קצה של העלאה ורשימה</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Dev B — שלד Edge SPA</p>
+              <p class="card-body">HTML + TypeScript + Vite ב-packages/client &middot; פס לשוניות 3 (Reels / ספרייה / הורדות) &middot; ניתוב (History API) &middot; CSS בסיסי גלובלי &middot; הגדרת IndexedDB &middot; אתחול DeviceProfile</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Dev C — Admin SPA + Edge Proxy</p>
+              <p class="card-body">HTML + TypeScript + Vite ב-packages/admin &middot; מסך כניסה מחובר לנקודת קצה JWT &middot; Dockerfile + nginx.conf לפרוקסי קצה &middot; פרוקסי מתחיל ומגיש על localhost:8080</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">קריטריוני יציאה Sprint 1</p>
+            <ul class="bullets" style="gap:0.45rem;">
+              <li><code style="color:var(--accent-green);font-size:0.85em;direction:ltr;display:inline-block;">pnpm install &amp;&amp; pnpm build</code> מצליח בכל החבילות</li>
+              <li>VM הענן כולל PostgreSQL פועל; מיגרציה 001 הוחלה</li>
+              <li><code style="color:var(--accent-green);font-size:0.85em;direction:ltr;display:inline-block;">GET /api/health</code> מחזיר 200</li>
+              <li>כניסת מנהל מחזירה אסימון JWT</li>
+              <li>מיכל Docker פרוקסי קצה מתחיל ומיישר <code style="color:var(--accent-green);font-size:0.85em;direction:ltr;display:inline-block;">GET /api/health</code> מהענן</li>
+              <li>מסך כניסה Admin SPA מגיע לשרת</li>
+              <li>Edge SPA נטען ב-Chrome דרך localhost:8080</li>
+            </ul>
+            <div class="card card-gl" style="margin-top:0.25rem;">
+              <p class="card-body"><strong>אבן דרך M1:</strong> סוף שבוע 2 — Monorepo בונה; סכמת DB קיימת; כל 3 האפליקציות מתחילות; פרוקסי קצה מיישר בהצלחה</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 6 — Sprint 2: פייפליין תוכן
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="6"
+      data-notes="Sprint 2 בונה עמוד השדרה של התוכן. עד סוף שבוע 4, קובץ שהועלה דרך פורטל הניהול חייב להופיע בקטלוג ולהיות ניתן להפעלה על מכשיר הקצה. זה הפייפליין שכל התכונות הבאות מתחברות אליו. Dev A מספק את הקטלוג ונקודות קצה של הזרמת קבצים. Dev B מחווט את Edge SPA לקטלוג ובונה את נגני הוידאו ו-PDF. Dev C בונה טופס העלאה של מנהל ו-UI לניהול תוכן. תמיכה בבקשת range לוידאו מאושרת בספרינט זה — היא נדרשת לזרימה יעילה ולעבודה נכונה של מטמון פרוקסי הקצה.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint 2 · שבועות 3–4</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">פייפליין תוכן — <span class="highlight-g">העלאה לקצה</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Dev A</p>
+              <p class="card-body">GET /api/catalog (תגובת קטלוג מלאה) &middot; GET /api/content/:id/file עם תמיכה בבקשת range (206) &middot; נקודת קצה של תמונה ממוזערת &middot; CRUD מלא לקטגוריות ותחומי עניין &middot; החלפת קובץ + קפיצת גרסה</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Dev B</p>
+              <p class="card-body">סנכרון קטלוג Edge SPA → IndexedDB &middot; רשימה שטוחה של ספרייה עם כרטיסי תוכן &middot; נגן וידאו בדפדפן (HTML5) &middot; מציג PDF דרך PDF.js &middot; כפתור רענון ידני</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Dev C</p>
+              <p class="card-body">טופס העלאה של מנהל (בורר קבצים, כותרת, תיאור, בוחרי קטגוריה/עניין, פס התקדמות) &middot; רשימת תוכן מנהל (ניתנת למיון) &middot; טופס עריכה &middot; מחיקה עם אישור &middot; CRUD UI לקטגוריות ועניינים &middot; סקריפט נתוני seed</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">קריטריוני יציאה Sprint 2</p>
+            <ul class="bullets" style="gap:0.45rem;">
+              <li>העלאת וידאו דרך מנהל → מופיע ב-GET /api/catalog</li>
+              <li>העלאת PDF דרך מנהל → מופיע ב-GET /api/catalog</li>
+              <li>Edge SPA מסנכרן קטלוג → פריטים מופיעים ברשימה השטוחה</li>
+              <li>קובץ וידאו מוזרם עם בקשות range (תגובה 206 מאושרת)</li>
+              <li>PDF נפתח ומתרנדר בדפדפן מ-Edge SPA</li>
+              <li>מחיקת תוכן במנהל → הוסר מהקטלוג בסנכרון הבא</li>
+              <li>פרוקסי הקצה שומר בקובץ תוכן במטמון (X-Cache-Status: HIT בבקשה 2)</li>
+            </ul>
+            <div class="card card-gl" style="margin-top:0.25rem;">
+              <p class="card-body"><strong>אבן דרך M2:</strong> סוף שבוע 4 — העלאה → קטלוג → זרם/צפייה על מכשיר קצה; קטגוריות ותחומי עניין קיימים</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 7 — Sprint 3: חוויית ריילס
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="7"
+      data-notes="Sprint 3 הוא הספרינט בסיכון הגבוה ביותר. פיד הריילס בסגנון TikTok הוא התכונה המבדלת של המוצר, אך הוא המורכב טכנית ביותר: scroll-snap, IntersectionObserver להפעלה אוטומטית, זיהוי מחוות מגע, מדיניות הפעלה אוטומטית של Chrome, prefetch וידאו, וסינון תחומי עניין — כולם מתאחדים. נקודת הביקורת המרכזית היא סוף שבוע 5: לטעון את פרוקסי הקצה על הטאבלט בפועל, לפתוח את פיד הריילס, ולאשר שהפעלה אוטומטית, גלילה, וגלישה חלקה עובדים בפועל. אם לא, עדיין יש לנו זמן Sprint 4 להתאושש או לצמצם. אם M3 לא מוצק עד סוף שבוע 6, מושכים ידיות צמצום מיידית.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint 3 · שבועות 5–6</p><div class="accent-bar-r"></div></div>
+        <h1 class="title-h1">חוויית ריילס — <span class="highlight-r">ספרינט הסיכון הגבוה ביותר</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-r">
+              <p class="card-title">⚠ מדוע זהו ספרינט הסיכון הגבוה ביותר</p>
+              <p class="card-body">דורש ש-scroll-snap + IntersectionObserver + מחוות מגע + מדיניות הפעלה אוטומטית של Chrome + prefetch וידאו יעבדו יחד על חומרת הטאבלט בפועל. חייב להיות מאומת בפועל עד סוף שבוע 6 (M3). אם נכשל, מושכים ידיות צמצום מיידית.</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Dev B (ראשי) + Dev C (תמיכה)</p>
+              <p class="card-body">פיד אנכי מסך מלא (CSS scroll-snap) &middot; הפעלה אוטומטית דרך IntersectionObserver &middot; מחוות החלקה (touchstart/touchend) &middot; שכבת tap-to-start לוידאו ראשון &middot; UI שכבה (כותרת, לייק, שמירה, הורדה) &middot; prefetch וידאו ב-30% הפעלה &middot; סינון לפי תחומי עניין &middot; מסך בחירת עניין &middot; מצב פיד ריק</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Dev C</p>
+              <p class="card-body">עץ קטגוריות ספרייה (2 רמות, ניתן לכיווץ) &middot; תגי סוג תוכן &middot; שורת חיפוש טקסט (סינון בצד הלקוח) &middot; כפתור הורדה על כרטיסי ספרייה &middot; הודעות מצב ריק</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">קריטריוני יציאה Sprint 3</p>
+            <ul class="bullets" style="gap:0.4rem;">
+              <li>פיד הריילס גולל בחלקות על טאבלט 10″ (ללא עיכוב; אושר בפועל)</li>
+              <li>הוידאו הראשון מתחיל תוך ≤ 2 שניות ברשת סבירה</li>
+              <li>הפעלה אוטומטית עובדת לאחר מחווה ראשונה של המשתמש</li>
+              <li>גלילה למעלה → וידאו הבא; גלילה למטה → וידאו קודם</li>
+              <li>בחירת עניין: בחר 2 עניינים → פיד מציג רק סרטונים תואמים</li>
+              <li>עץ קטגוריות ספרייה: הקש קטגוריה → רשימה מסוננת</li>
+              <li>חיפוש טקסט: הקלד מונח → רשימה מסוננת תוך 1 שניה</li>
+              <li>prefetch וידאו: גלילה לוידאו הבא מתחילה מהר יותר (איכותי)</li>
+            </ul>
+            <div class="card card-rl" style="margin-top:0.25rem;">
+              <p class="card-body"><strong>אבן דרך M3:</strong> סוף שבוע 6 — פיד בסגנון TikTok מאומת בפועל על טאבלט 10″. <strong>אם M3 בסיכון → מושכים ידיות צמצום מיידית.</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 8 — Sprint 4: ספרייה, הורדות ואופליין
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="8"
+      data-notes="Sprint 4 סוגר את לולאת האופליין. המנגנון המרכזי פשוט: כאשר משתמש מוריד קובץ, הוא מאלץ את מטמון nginx של פרוקסי הקצה להחזיק עותק מלא. לאחר מכן, האפליקציה קוראת ממטמון הפרוקסי ללא קשר לאם הענן נגיש. Dev A בודק זאת על ידי עצירת שרת הענן בפועל ואישור שהקבצים השמורים מוגשים. מחוון מצב הרשת וההודעות אופליין מבטיחים שהמשתמשים תמיד יודעים מה מצב האפליקציה.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint 4 · שבועות 7–8</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">ספרייה, הורדות &amp; <span class="highlight-b">אופליין</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-b">
+              <p class="card-title">Dev B</p>
+              <p class="card-body">זרימת הורדה (fetch → מטמון פרוקסי → IndexedDB DownloadRecord) &middot; פס התקדמות הורדה &middot; לשונית הורדות (רשימה עם כותרת, סוג, גודל, תאריך) &middot; הפעלה/צפייה בתוכן שהורד דרך מטמון פרוקסי &middot; מחיקה מהורדות &middot; מחוון מצב רשת (polling ל-/api/health) &middot; הודעות אופליין בריילס ובספרייה &middot; ניקוי עזובים בסנכרון</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Dev C</p>
+              <p class="card-body">תג "עודכן": השווה גרסת DownloadRecord עם גרסת קטלוג &middot; מצב כפתור הורדה (הורד vs. הורדה) &middot; ניווט עמודי PDF (הקודם/הבא, מונה) &middot; תצוגת נגן וידאו עצמאית &middot; עקביות תצוגת פרטי תוכן בין ריילס / ספרייה / הורדות</p>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">Dev A</p>
+              <p class="card-body">בדיקת אופליין Nginx: עצור שרת ענן → אשר שה-SPA נטען, הקטלוג מגיש מטמון עמום, קבצים מוגשים ממטמון &middot; תיעד תצורת nginx להגשת עמום &middot; בדיקת עומס: 5 זרמי וידאו במקביל; עבור ל-nginx X-Accel-Redirect אם נדרש &middot; אמת כותרות Accept-Ranges, Content-Length, ETag</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">קריטריוני יציאה Sprint 4</p>
+            <ul class="bullets" style="gap:0.4rem;">
+              <li>הורד וידאו → סמל "הורד" → מופיע בלשונית הורדות</li>
+              <li>הורד PDF → מופיע בלשונית הורדות</li>
+              <li>נתק רשת → לשונית הורדות פועלת במלואה</li>
+              <li>אופליין: הפעל וידאו שהורד → מופעל ללא רשת</li>
+              <li>אופליין: פתח PDF שהורד → מתרנדר ללא רשת</li>
+              <li>מחוון אופליין מופיע בריילס ובספרייה כשמנותק</li>
+              <li>תג "עודכן" מופיע לאחר שמנהל מעדכן פריט שהורד</li>
+              <li>מחק פריט שהורד → הוסר מלשונית הורדות</li>
+              <li>ניקוי עזובים: מחק תוכן במנהל → סנכרון → פריט הוסר</li>
+            </ul>
+            <div class="card card-gl" style="margin-top:0.25rem;">
+              <p class="card-body"><strong>אבן דרך M4:</strong> סוף שבוע 8 — הורד וידאו + PDF → נתק → הפעל/צפה אופליין; תג "עודכן" עובד</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 9 — Sprint 5: פורטל ניהול + אינטגרציה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="9"
+      data-notes="Sprint 5 הוא ספרינט האינטגרציה. עד סוף שבוע 10, סקריפט ההדגמה המלא של 15 שלבים ממפרט ה-MVP חייב לרוץ מקצה לקצה ללא שגיאות בסביבת staging. Dev A מריץ את מעבר אינטגרציית ה-API — כל 21 נקודות הקצה נבדקות וכל פערי אימות מתוקנים. Dev B עובר את סקריפט ההדגמה המלא על המכשיר בפועל ומתקן בעיות UX. Dev C מלטש את פורטל הניהול להשלמה. בשבוע 10, כל שלושת המפתחים מריצים את ההדגמה פעמיים יחד — פעם אחת עם רשת, פעם עם קישוריות לא יציבה מדומה. כל קריטריון קבלה שנכשל נכנס לרשימת באגים עם עדיפות ויחלטות צמצום היקף מסולמות.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint 5 · שבועות 9–10</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">פורטל ניהול + <span class="highlight-g">אינטגרציה מלאה</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">Dev A — מעבר אינטגרציית API</p>
+              <p class="card-body">בדיקה מקצה לקצה של כל 21 נקודות קצה API &middot; תיקון פערי אימות (סוג MIME, בדיקת magic-byte, גודל קובץ, עומק קטגוריה) &middot; אימות משך וידאו (&lt; 180 שניות) &middot; ביקורת תגובות שגיאה &middot; VM ענן פרוסה עם HTTPS</p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">Dev C — ליטוש סופי פורטל ניהול</p>
+              <p class="card-body">CRUD קטגוריה: סידור מחדש, UI הגבלת 2 רמות &middot; CRUD עניין: ליטוש סופי &middot; רשימת תוכן: מיון וסינון לפי סוג &middot; טופס העלאה: אימות בצד לקוח, הודעות שגיאה ברורות &middot; זרימת עדכון תוכן</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Dev B — הליכת הדגמה</p>
+              <p class="card-body">הליכת סקריפט הדגמה מלא של 15 שלבים על המכשיר בפועל &middot; תיקון בעיות UX שנמצאו &middot; מדידת זמן התחלת הפעלת וידאו &middot; כיוון prefetch אם נדרש</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">קריטריוני יציאה Sprint 5</p>
+            <ul class="bullets" style="gap:0.55rem;">
+              <li>כל 21 נקודות קצה API מגיבות נכון (בדיקת אינטגרציה ידנית)</li>
+              <li>סקריפט הדגמה מלא רץ מקצה לקצה ללא שגיאות ב-staging</li>
+              <li>AC-1 עד AC-12 מתועדים; כל קריטריון "חובה" ירוק או מסולם</li>
+              <li>VM ענן פרוסה ונגישה דרך HTTPS</li>
+              <li>דימוי Docker של פרוקסי קצה בנוי ורץ על מכשיר הקצה</li>
+            </ul>
+            <div class="card card-gl" style="margin-top:0.25rem;">
+              <p class="card-body"><strong>אבן דרך M5:</strong> סוף שבוע 10 — כל 15 שלבי הדגמה רצים מקצה לקצה; כל AC עובר או מסולם לבעל עניין</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 10 — Sprint 6: ייצוב והכנת הדגמה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="10"
+      data-notes="Sprint 6 הוא על הפיכת ההדגמה לאמינה ומלוטשת. Dev C טוען את כל 15 פריטי ההדגמה — 10 קבצי PDF ו-5 סרטונים — ומוודא שכל אחד מופיע נכון בכל שלוש התצוגות. Dev B מגדיר את מכשיר הקצה במצב קיוסק ומכוון ביצועים. Dev A מריץ בדיקות רגרסיה לאחר טעינת התוכן ומוודא שה-VM בענן יציב. הספרינט מסתיים בשתי חזרות מלאות של ההדגמה. כל בעיות P1 שנמצאות בחזרה 1 מתוקנות לפני חזרה 2. שני ימי מאגר משולבים לתיקונים אחרונים לפני יום ההדגמה.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">Sprint 6 · שבועות 11–12</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">ייצוב &amp; <span class="highlight-g">הכנת הדגמה</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-o">
+              <p class="card-title">Dev C — תוכן הדגמה (שבוע 11)</p>
+              <p class="card-body">טעינת כל 15 פריטי ההדגמה: 10 קבצי PDF + 5 סרטונים &middot; הקצאת קטגוריות ותחומי עניין לכל פריט &middot; אימות כל פריט בקטלוג, ספרייה וריילס &middot; אימות תמונות ממוזערות</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">Dev B — הגדרת מכשיר (שבוע 11)</p>
+              <p class="card-body">כיוון ביצועים: זמן התחלת וידאו, חלקות גלילה, תגובתיות החלקה &middot; מכשיר קצה: WSL2/VirtualBox + Docker + מיכל פרוקסי קצה (restart always) &middot; מצב קיוסק Chrome: ללא חלונות קופצים, ללא אינטראקציות OS, ניווט נשאר בתוך האפליקציה</p>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">Dev A — רגרסיה ויציבות (שבוע 11)</p>
+              <p class="card-body">בדיקת רגרסיה: כל נקודות קצה API לאחר טעינת תוכן הדגמה &middot; VM ענן: pm2/systemd ל-Node.js; nginx TLS; גיבוי PostgreSQL &middot; תיקון רגרסיות</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">קריטריוני יציאה Sprint 6</p>
+            <ul class="bullets" style="gap:0.55rem;">
+              <li>15 פריטי הדגמה טעונים וניתנים לניווט (AC-10)</li>
+              <li>כל 12 קריטריוני הקבלה (AC-1 עד AC-12) עוברים על מכשיר ההדגמה בפועל</li>
+              <li>חזרה על הדגמה הושלמה פעמיים ללא בעיות חוסמות</li>
+              <li>מצב קיוסק Chrome אושר: אפס אפליקציות חיצוניות, חלונות קופצים, או אינטראקציות OS (AC-11)</li>
+              <li>מיכל Docker פרוקסי קצה מאתחל אוטומטית לאחר הפעלת מכשיר מחדש</li>
+            </ul>
+            <div class="card card-gl" style="margin-top:0.25rem;">
+              <p class="card-body"><strong>אבן דרך M6:</strong> סוף שבוע 12 — 15 פריטים טעונים; חזרות פעמיים; כל AC ירוק; מכשיר מוגדר ויציב. <strong>הדגמה מוכנה.</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 11 — אבני דרך
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="11"
+      data-notes="שש אבני דרך מסמנות שערי הביטחון המרכזיים במהלך 12 השבועות. כל אבן דרך מוכיחה משהו קונקרטי על מוכנות המערכת. M1 מוכיחה שהסביבה עובדת. M2 מוכיחה שפייפליין הנתונים עובד. M3 — אבן הדרך בסיכון הגבוה ביותר — מוכיחה שפיד הריילס עובד על החומרה בפועל. M4 מוכיחה שפונקציונליות האופליין אמיתית. M5 מוכיחה שתרחיש ההדגמה המלא ניתן לביצוע. M6 היא השער האחרון לפני יום ההדגמה. M3 מסומנת באדום כי כישלון שם ישפיע בדומינו על שאר התוכנית.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">אבני דרך</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">6 אבני דרך, <span class="highlight-g">אחת לכל ספרינט</span></h1>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>אבן דרך</th><th>שבוע</th><th>מה היא מוכיחה</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>M1: הכל מתחיל</strong></td>
+                <td>סוף 2</td>
+                <td>Monorepo בונה; סכמת DB קיימת; כל 3 האפליקציות מתחילות; פרוקסי קצה מיישר בהצלחה</td>
+              </tr>
+              <tr>
+                <td><strong>M2: פייפליין תוכן עובד</strong></td>
+                <td>סוף 4</td>
+                <td>העלאה → קטלוג → זרם/צפייה על מכשיר קצה; קטגוריות ותחומי עניין קיימים</td>
+              </tr>
+              <tr class="critical-row">
+                <td><strong class="highlight-r">M3: ריילס על המכשיר ⚠</strong></td>
+                <td>סוף 6</td>
+                <td><strong>פיד בסגנון TikTok מאומת בפועל על טאבלט 10″; הפעלה אוטומטית, גלילה, תחומי עניין אושרו. אבן הדרך בסיכון הגבוה ביותר.</strong></td>
+              </tr>
+              <tr>
+                <td><strong>M4: לולאת אופליין מלאה</strong></td>
+                <td>סוף 8</td>
+                <td>הורד וידאו + PDF → נתק רשת → הפעל/צפה אופליין; תג "עודכן" עובד</td>
+              </tr>
+              <tr>
+                <td><strong>M5: סקריפט הדגמה עובר</strong></td>
+                <td>סוף 10</td>
+                <td>כל 15 שלבי ההדגמה רצים מקצה לקצה ב-staging; כל AC עובר או מסולם</td>
+              </tr>
+              <tr>
+                <td><strong>M6: הדגמה מוכנה</strong></td>
+                <td>סוף 12</td>
+                <td>15 פריטים טעונים; חזרות פעמיים; כל 12 AC ירוקים; מכשיר מוגדר ויציב</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card card-rl" style="margin-top:0.5rem;">
+          <p class="card-body"><strong>אם M3 (ריילס על המכשיר) לא מוצק עד סוף שבוע 6, הפעל ידיות צמצום מיידית.</strong> נותרו 6 שבועות להתאושש או לצמצם.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 12 — מסלול קריטי
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="12"
+      data-notes="המסלול הקריטי עובר דרך סוגי TypeScript המשותפים, לסכמת PostgreSQL, לנקודת קצה API של הקטלוג, לסנכרון קטלוג במכשיר הקצה, לסינון לפי תחומי עניין, לפיד ריילס מלא, ולאחר מכן לאימות בפועל על המכשיר ב-M3. כל שלב בשרשרת זו תלוי בשלב הקודם שהושלם. השרשרת הארוכה ביותר מסתיימת ב-M3 — שבוע 6. עיכוב בכל מקום בשרשרת זו מעכב את M3. תלויות נוספות ראויות לציון: הגדרת Docker של פרוקסי הקצה בשבוע 1 היא תנאי מוקדם לכל תכונות הקצה. בדיקת פרוקסי אופליין בשבוע 7 היא תנאי מוקדם קשה לאישור הפעלה אופליין בשבוע 8.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">מסלול קריטי</p><div class="accent-bar-r"></div></div>
+        <h1 class="title-h1">תלויות &amp; <span class="highlight-r">שרשרת הסיכון הגבוה ביותר</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">מסלול קריטי (שרשרת ארוכה ביותר → M3)</p>
+            <div class="card card-r">
+              <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.85em;line-height:2;color:var(--text-primary);direction:ltr;text-align:left;">
+                Monorepo setup (Dev A, wk 1)<br>
+                &nbsp;&nbsp;↓<br>
+                shared/types.ts (Dev A, wk 1)<br>
+                &nbsp;&nbsp;↓<br>
+                PostgreSQL schema (Dev A, wk 1)<br>
+                &nbsp;&nbsp;↓<br>
+                GET /api/catalog (Dev A, wk 3)<br>
+                &nbsp;&nbsp;↓<br>
+                Edge SPA catalog sync (Dev B, wk 3)<br>
+                &nbsp;&nbsp;↓<br>
+                Interest-based feed filtering (Dev B, wk 6)<br>
+                &nbsp;&nbsp;↓<br>
+                <span style="color:var(--accent-red);font-weight:700;">⚠ Reels on device — M3 (week 6)</span>
+              </p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <p class="label" style="margin-bottom:0.25rem;">תלויות קשות אחרות</p>
+            <div class="card card-b">
+              <p class="card-title">פרוקסי קצה → כל תכונות הקצה</p>
+              <p class="card-body">Docker פרוקסי קצה פועל (Dev C → Dev B, שבוע 1) הוא תנאי מוקדם לכל תכונת קצה ב-Sprints 2–6. פרוקסי חסום = Edge SPA חסום.</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">נקודת קצה קובץ → נגנים, הורדות, prefetch</p>
+              <p class="card-body">GET /api/content/:id/file (Dev A, שבוע 3) מחסם: נגן וידאו (שב' 4), מציג PDF (שב' 4), זרימת הורדה (שב' 7), prefetch ריילס (שב' 6).</p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">בדיקת פרוקסי אופליין → הפעלה אופליין</p>
+              <p class="card-body">בדיקת פרוקסי אופליין של Dev A (שבוע 7) חייבת להסתיים לפני שDev B יכול לאשר הפעלה אופליין (שבוע 8).</p>
+            </div>
+            <div class="card card-rl">
+              <p class="card-body"><strong>אות אזהרה:</strong> אם shared/types.ts או GET /api/catalog חורגים מעבר ליום 3 של שבוע 1 או שבוע 3 בהתאמה, סלם מיידית — הם משתרשרים ל-M3.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 13 — קריטריוני קבלה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="13"
+      data-notes="12 קריטריונים אלה הם ההגדרה הרשמית של 'סיים' ל-MVP. כל קריטריון חייב להיות מאומת על מכשיר ההדגמה בפועל — לא על מחשב פיתוח. שיטות האימות פשוטות בכוונה: הליכה ידנית, שעון עצור, בדיקה ויזואלית, או בדיקת מצב מטוס. היעדים קונקרטיים ובינאריים: או שהוידאו מתחיל בפחות מ-2 שניות או שלא. הצוות חייב להשלים מטריצת אישור AC לפני יום ההדגמה. כל קריטריון שלא ניתן לעמוד בו עד שבוע 10 מסולם ומופעלות ידיות צמצום.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">הגדרת סיום</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">12 קריטריוני קבלה — <span class="highlight-g">כולם חייבים לעבור</span></h1>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>#</th><th>קריטריון</th><th>שיטת אימות</th><th>יעד</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>AC-1</strong></td><td>זרימת ההדגמה מקצה לקצה מושלמת (כל 15 שלבי ההדגמה)</td><td>הליכת הדגמה ידנית</td><td>כל השלבים עוברים</td></tr>
+              <tr><td><strong>AC-2</strong></td><td>הפעלה אוטומטית וגלילה-לקידום עובדים בחלקות בריילס</td><td>בדיקת טאבלט בפועל</td><td>ללא עיכוב; גלילה אמינה</td></tr>
+              <tr><td><strong>AC-3</strong></td><td>הפעלת וידאו מתחילה ≤ 2 שניות ברשת סבירה</td><td>שעון עצור עם רוחב פס מדומה</td><td>≤ 2 שניות</td></tr>
+              <tr><td><strong>AC-4</strong></td><td>חיפוש ספרייה מחזיר תוצאות לפריטים ידועים</td><td>בדיקה ידנית</td><td>תוצאות תוך 5 שניות</td></tr>
+              <tr><td><strong>AC-5</strong></td><td>PDF מתרנדר נכון בדפדפן ל-3+ מסמכי בדיקה</td><td>בדיקה ויזואלית</td><td>כל הדפים מתרנדרים</td></tr>
+              <tr><td><strong>AC-6</strong></td><td>וידאו שהורד מופעל אופליין ללא רשת</td><td>בדיקת מצב מטוס</td><td>100% פונקציונלי</td></tr>
+              <tr><td><strong>AC-7</strong></td><td>PDF שהורד מתרנדר אופליין ללא רשת</td><td>בדיקת מצב מטוס</td><td>100% פונקציונלי</td></tr>
+              <tr><td><strong>AC-8</strong></td><td>העלאת מנהל → נראות בקצה ≤ 30 שניות לאחר סנכרון</td><td>בדיקה מתוזמנת</td><td>≤ 30 שניות</td></tr>
+              <tr><td><strong>AC-9</strong></td><td>בחירת עניין מסננת את פיד הריילס נכון</td><td>בחר עניין → אמת פיד</td><td>סינון נכון</td></tr>
+              <tr><td><strong>AC-10</strong></td><td>15 פריטי הדגמה (10 קבצי PDF + 5 סרטונים) טעונים וניתנים לניווט</td><td>בדיקת תוכן</td><td>כל 15 נגישים</td></tr>
+              <tr><td><strong>AC-11</strong></td><td>כל האינטראקציה בתוך Chrome — ללא חלונות קופצים, ללא אפליקציות חיצוניות</td><td>בדיקה ויזואלית על מכשיר קיוסק</td><td>אפס חריגים</td></tr>
+              <tr><td><strong>AC-12</strong></td><td>האפליקציה מטפלת בנפילת רשת בחן — ללא קריסות, הודעה ברורה</td><td>ניתוק בזמן שימוש פעיל</td><td>ללא קריסה; הודעה מוצגת</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 14 — ידיות צמצום
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="14"
+      data-notes="ידיות צמצום הן צמצומי היקף שאושרו מראש שהצוות יכול למשוך כאשר ספרינט מאחר. הן מסודרות: התחל מידית 1 ועבוד מטה. אל תדלג קדימה. לכל ידית יש טריגר ספציפי — תנאי שאמור לגרום לך למשוך אותה. שלוש הידיות הראשונות זולות יחסית: ויתור על תג "עודכן", כפתורי לייק/שמירה, וסינון תחומי עניין חוסך עד 10 ימים סה"כ תוך שמירה על היתכנות הדגמת הליבה. ידית 6, ויתור על תמיכה ב-PDF, היא אובדן יכולת גדול ויש לשקול אותה רק אם הבנייה מאחרת מאוד בשבוע 10. ידית 7, ויתור על הורדות אופליין, היא המוצא האחרון — היא מסירה מבדל ליבה. לעולם אל תמשוך שום ידית מבלי לאשר עם הצוות המלא ובעל העניין.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">מגירת חירום</p><div class="accent-bar-o"></div></div>
+        <h1 class="title-h1">ידיות צמצום — <span class="highlight-o">משוך לפי סדר עדיפות</span></h1>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>עדיפות</th><th>ידית</th><th>מה היא מסירה</th><th>מאמץ שנחסך</th><th>מתי למשוך</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-g">ראשונה</span></td>
+                <td>ויתור על תג "עודכן"</td>
+                <td>CAP-3.7</td>
+                <td>~2–3 ימים</td>
+                <td>Sprint 3 או 4 מאחר</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-g">שנייה</span></td>
+                <td>ויתור על כפתורי לייק / שמירה</td>
+                <td>CAP-2.7, CAP-2.8</td>
+                <td>~2–3 ימים</td>
+                <td>Sprint 3 מאחר</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-b">שלישית</span></td>
+                <td>ויתור על בחירת עניין + סינון פיד</td>
+                <td>CAP-1.4, CAP-1.5, CAP-2.5</td>
+                <td>~4–5 ימים</td>
+                <td>M3 בסיכון או Sprint 4 מאחר</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-b">רביעית</span></td>
+                <td>זרע קטגוריות; ויתור על CRUD קטגוריה במנהל</td>
+                <td>CAP-6.8</td>
+                <td>~3–4 ימים</td>
+                <td>Sprint 5 מאחר</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-b">חמישית</span></td>
+                <td>זרע עניינים; ויתור על CRUD עניין במנהל</td>
+                <td>CAP-6.9</td>
+                <td>~1–2 ימים</td>
+                <td>Sprint 5 מאחר</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-o">שישית</span></td>
+                <td>ויתור על תמיכה ב-PDF; MVP וידאו בלבד</td>
+                <td>CAP-3.5, CAP-4.3, CAP-4.4, CAP-6.4</td>
+                <td>~5–7 ימים</td>
+                <td>Sprint 5 או 6 מאחר מאוד</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-r">שביעית (מוצא אחרון)</span></td>
+                <td>ויתור על הורדות / צפייה אופליין</td>
+                <td>CAP-5.x</td>
+                <td>~7–10 ימים</td>
+                <td>מוצא אחרון בלבד</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card card-rl" style="margin-top:0.4rem;">
+          <p class="card-body"><strong>כלל:</strong> גזור מלמעלה. אל תדלג קדימה. אל תמשוך שום ידית מבלי לאשר עם הצוות המלא ובעל העניין.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 15 — סיכונים
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="15"
+      data-notes="תשעה סיכונים מזוהים בתוכנית המשלוח. חמשת בעלי ההשפעה הגבוהה ביותר מוצגים כאן. PR1 ו-PR2 שניהם מאיימים על M3: עיכוב בפיד הריילס, ו-Chrome החוסם הפעלה אוטומטית. שניהם תוכננו עבורם: שכבת tap-to-start מטפלת במדיניות הפעלה אוטומטית, ו-Swiper.js הוא גיבוי אם CSS scroll-snap אינו מספיק. PR3 הוא בעיית שמירת בקשות range של מטמון nginx — יש לבדוק זאת ב-Sprint 3 לפני שזרימת ההורדה תלויה בה. PR4 הוא מיפוי פורט רשת WSL2, שיש לבדוק בשבוע 1. PR8, עיכוב כללי בבנייה, מוקטן על ידי קצב נקודת הביקורת השבועית ותהליך ידיות הצמצום המובנה.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">רשם סיכונים</p><div class="accent-bar-r"></div></div>
+        <h1 class="title-h1">5 סיכונים עיקריים — <span class="highlight-r">עם הפחתות</span></h1>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>#</th><th>סיכון</th><th>סבירות</th><th>השפעה</th><th>Sprint</th><th>הפחתה</th></tr>
+            </thead>
+            <tbody>
+              <tr class="critical-row">
+                <td><strong>PR1</strong></td>
+                <td>פיד הריילס מגמגם על הטאבלט (גלילה, הפעלה אוטומטית, החלקה)</td>
+                <td><span class="highlight-o">בינונית</span></td>
+                <td><span class="highlight-r">גבוהה</span></td>
+                <td>3</td>
+                <td>אב טיפוס בשבוע 5; בדוק על מכשיר; גיבוי ל-Swiper.js אם CSS scroll-snap לא מספיק</td>
+              </tr>
+              <tr class="critical-row">
+                <td><strong>PR2</strong></td>
+                <td>מדיניות הפעלה אוטומטית של Chrome חוסמת וידאו במצב קיוסק</td>
+                <td><span class="highlight-o">בינונית</span></td>
+                <td><span class="highlight-r">גבוהה</span></td>
+                <td>3</td>
+                <td>שכבת tap-to-start לוידאו ראשון; סרטונים לאחר מכן נשענים על אינטראקציה קודמת של המשתמש</td>
+              </tr>
+              <tr>
+                <td><strong>PR3</strong></td>
+                <td>שמירת בקשות range של nginx proxy_cache שבורה</td>
+                <td><span class="highlight-o">בינונית</span></td>
+                <td><span class="highlight-r">גבוהה</span></td>
+                <td>4</td>
+                <td>בדוק ב-Sprint 3; אם שבורה, חמם מטמון מראש עם GET מלא לפני הפעלת וידאו</td>
+              </tr>
+              <tr>
+                <td><strong>PR4</strong></td>
+                <td>מיפוי פורט רשת WSL2 / VirtualBox לא טריוויאלי</td>
+                <td><span class="highlight-o">בינונית</span></td>
+                <td><span class="highlight-o">בינונית</span></td>
+                <td>1</td>
+                <td>בדוק קישוריות פרוקסי קצה → ענן בשבוע 1; WSL2 ממפה פורטים אוטומטית ברוב גרסאות Windows 10/11</td>
+              </tr>
+              <tr>
+                <td><strong>PR8</strong></td>
+                <td>הבנייה מאחרת ביותר מ-1 ספרינט</td>
+                <td><span class="highlight-o">בינונית</span></td>
+                <td><span class="highlight-r">גבוהה</span></td>
+                <td>כל ספרינט</td>
+                <td>הפעל ידיות צמצום לפי סדר עדיפות; בקר בכל נקודת ביקורת שבועית; אל תמתין עד שבוע 12</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card card-gl" style="margin-top:0.4rem;">
+          <p class="card-body"><strong>קצב נקודות ביקורת שבועיות:</strong> כל יום שישי — בוצע / חסום / היקף / הבא. תעד החלטות צמצום ב-<span style="font-family:'Courier New',monospace;font-size:0.9em;direction:ltr;display:inline-block;">notes/decisions.md</span>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 16 — מפת דרך לאחר MVP
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="16"
+      data-notes="ה-MVP הוא אב טיפוס מוכן להמשך. הארכיטקטורה תוכננה כדי לאפשר עבודה המשכית ללא כתיבות מחדש גדולות. שישה פריטים מזוהים לשלב הבא. Delta sync הוא שיפור המדרגיות בעדיפות הגבוהה ביותר — משיכת הקטלוג המלאה הנוכחית לא תתרחב למאות פריטים. אימות משתמש נדחה מה-MVP אך מודל הנתונים כבר מעוצב עבורו: DeviceProfile.deviceId הופך ל-userId. HLS adaptive streaming מטפל בתוכן ארוך יותר ורוחב פס משתנה. edge proactive prefetch מעביר את השמירה מריאקטיבית למתוזמנת. כיסוי בדיקות צריך להתווסף לפני תכונות חדשות. כלי ניטור כמו Sentry ו-pino דרושים לפני שהמערכת תעלה עם משתמשים אמיתיים.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">לאחר MVP</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מפת דרך להמשך — <span class="highlight-b">לאחר MVP</span></h1>
+        <div class="three-col">
+          <div class="card card-b">
+            <p class="card-title">1. Delta Sync <span class="badge badge-b" style="margin-right:0.4rem;">עדיפות 1</span></p>
+            <p class="card-body">החלף משיכת קטלוג מלאה בתגובה מבוססת delta באמצעות <code style="color:var(--accent-blue);direction:ltr;display:inline-block;">?since={timestamp}</code>. השרת מחזיר רק פריטים שהשתנו + מערך נמחקים. שיפור המדרגיות בעדיפות הגבוהה ביותר ככל שהקטלוג גדל.</p>
+          </div>
+          <div class="card card-b">
+            <p class="card-title">2. אימות משתמש</p>
+            <p class="card-body">ל-Edge SPA אין זהות משתמש ב-MVP. כאשר אימות מתווסף, <code style="color:var(--accent-blue);direction:ltr;display:inline-block;">DeviceProfile.deviceId</code> הופך ל-<code style="color:var(--accent-blue);direction:ltr;display:inline-block;">userId</code>; API מוסיף middleware אימות; LocalAction מקבל דגל <code style="color:var(--accent-blue);direction:ltr;display:inline-block;">synced</code> להעלאה אצווה.</p>
+          </div>
+          <div class="card card-b">
+            <p class="card-title">3. HLS Adaptive Streaming</p>
+            <p class="card-body">MP4 + בקשות range עובד לקטעים ≤ 3 דקות. לתוכן ארוך יותר או רוחב פס משתנה, הוסף HLS segmentation (ffmpeg בהעלאה) ונגן HLS (hls.js). אלמנט <code style="color:var(--accent-blue);direction:ltr;display:inline-block;">&lt;video&gt;</code> ניתן להחלפה ללא שינוי שאר הארכיטקטורה.</p>
+          </div>
+          <div class="card card-g">
+            <p class="card-title">4. Prefetch יזום בקצה</p>
+            <p class="card-body">הוסף משרה מתוזמנת בתוך מיכל Docker (cron) שמושכת את כל התוכן למטמון לפי לוח זמנים — במקום להמתין לבקשת משתמש ראשונה. מבטיח שכל התוכן זמין אופליין אפילו לפני גישה ראשונה.</p>
+          </div>
+          <div class="card card-g">
+            <p class="card-title">5. כיסוי בדיקות</p>
+            <p class="card-body">ל-MVP אין בדיקות אוטומטיות. הצוות הבא צריך להוסיף בדיקות יחידה לשכבת הסירוויס (CatalogService, ContentFileService, AuthService) ובדיקות אינטגרציה לנקודות קצה קריטיות <em>לפני</em> הוספת תכונות חדשות.</p>
+          </div>
+          <div class="card card-g">
+            <p class="card-title">6. ניטור</p>
+            <p class="card-body">הוסף רישום בקשות מובנה בצד שרת (pino) והתראות שגיאה (Sentry) לפני כניסה לייצור עם משתמשים אמיתיים. הגדר לוח Grafana או שווה ערך ללאטנסי ושיעור שגיאות.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 17 — שאלות
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="17"
+      data-notes="סיים עם הזמנה לשאלות ותשובות. מסרים מרכזיים להשאיר אצל הקהל: 1) 3 מפתחים, 6 ספרינטים, 12 שבועות, 12 קריטריוני קבלה. 2) M3 — ריילס על המכשיר עד סוף שבוע 6 — היא אבן הדרך בסיכון הגבוה ביותר. אם היא מחליקה, יש לנו ידיות צמצום מובנות מוכנות. 3) 'סיים' מוגדר בצורה קונקרטית: כל קריטריון נבדק על מכשיר ההדגמה בפועל. 4) הארכיטקטורה מוכנה להמשך. 5) סט המפרטים המלא (7 מסמכים) זמין לבדיקה. מקור: product/07_delivery-plan.md.">
+      <div class="slide-inner centered" style="gap:var(--gap-lg);justify-content:center;min-height:70vh;">
+        <h1 class="title-hero" style="letter-spacing:-0.02em;">שאלות</h1>
+        <hr class="divider" style="width:100%;max-width:500px;">
+        <div style="width:100%;max-width:900px;">
+          <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;">מסרים מרכזיים</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div class="card card-g"><p class="card-body"><strong class="highlight-g">3 מפתחים · 6 ספרינטים · 12 שבועות · 12 AC</strong> — כולם חייבים לעבור על מכשיר ההדגמה בפועל</p></div>
+            <div class="card card-r"><p class="card-body"><strong class="highlight-r">M3 (שבוע 6) היא אבן הדרך בסיכון הגבוה ביותר.</strong> אם ריילס על המכשיר חורג, מושכים ידיות צמצום מיידית.</p></div>
+            <div class="card card-b"><p class="card-body"><strong>7 ידיות צמצום</strong>, מסודרות לפי עדיפות — שלוש הראשונות חוסכות עד 10 ימים מבלי לאבד את היתכנות ההדגמה הליבה</p></div>
+            <div class="card card-g"><p class="card-body"><strong>ארכיטקטורה מוכנה להמשך</strong> — delta sync, אימות, HLS, וניטור הם עדיפויות השלב הבא</p></div>
+          </div>
+        </div>
+        <div style="width:100%;max-width:900px;">
+          <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">מסמכי מקור</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;">
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/07_delivery-plan.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">תוכניות ספרינט, אבני דרך, סיכונים, AC — מחייב</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/03_mvp-spec.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">רשימת תכונות, סקריפט הדגמה, קריטריוני קבלה</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/04_system-architecture.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">החלטות ארכיטקטורה ומפת רכיבים</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/north-star.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">חזון, זרימות, אילוצים — מקור אמת מחייב</span></div>
+          </div>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">DK-05 &middot; גרסה 1.0 &middot; מרץ 2026</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL = slides.length;
+    const state = { current: 0, notesVisible: false, transitioning: false };
+    const progressBar  = document.getElementById('progress-bar');
+    const curEl        = document.getElementById('cur');
+    const totEl        = document.getElementById('tot');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const notesOverlay = document.getElementById('notes-overlay');
+    const notesContent = document.getElementById('notes-content');
+    totEl.textContent = TOTAL;
+
+    function goTo(index) {
+      if (state.transitioning) return;
+      if (index < 0 || index >= TOTAL) return;
+      if (index === state.current) return;
+      state.transitioning = true;
+      const prev = slides[state.current];
+      const next = slides[index];
+      const forward = index > state.current;
+      next.style.transition = 'none';
+      /* RTL: forward = enter from left (-60px); backward = enter from right (+60px) */
+      next.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      next.style.opacity = '0';
+      next.classList.remove('active', 'exit-left');
+      next.getBoundingClientRect();
+      prev.style.transition = '';
+      /* RTL: forward = exit to right (+60px); backward = exit to left (-60px) */
+      prev.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      prev.style.opacity = '0';
+      prev.classList.remove('active');
+      next.style.transition = '';
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+      next.classList.add('active');
+      state.current = index;
+      updateUI();
+      /* RTL: resting off-screen position is left (-60px) */
+      setTimeout(() => { state.transitioning = false; prev.style.transform = 'translateX(-60px)'; }, 480);
+    }
+
+    function updateUI() {
+      progressBar.style.width = ((state.current + 1) / TOTAL * 100) + '%';
+      curEl.textContent = state.current + 1;
+      btnPrev.disabled = state.current === 0;
+      btnNext.disabled = state.current === TOTAL - 1;
+      if (state.notesVisible) notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+    }
+
+    function toggleNotes() {
+      state.notesVisible = !state.notesVisible;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+        notesOverlay.removeAttribute('hidden');
+      } else { notesOverlay.setAttribute('hidden', ''); }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    }
+
+    document.addEventListener('keydown', e => {
+      switch (e.key) {
+        /* RTL keyboard: ArrowLeft = forward (next), ArrowRight = backward (prev) */
+        case 'ArrowLeft':  case 'ArrowDown': case ' ': e.preventDefault(); goTo(state.current + 1); break;
+        case 'ArrowRight': case 'ArrowUp':              e.preventDefault(); goTo(state.current - 1); break;
+        case 'Home': e.preventDefault(); goTo(0); break;
+        case 'End':  e.preventDefault(); goTo(TOTAL - 1); break;
+        case 'n': case 'N': e.preventDefault(); toggleNotes(); break;
+        case 'f': case 'F': e.preventDefault(); toggleFullscreen(); break;
+        case 'Escape': if (state.notesVisible) toggleNotes(); break;
+      }
+    });
+
+    let txStart = 0, tyStart = 0;
+    document.addEventListener('touchstart', e => { txStart = e.touches[0].clientX; tyStart = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - txStart;
+      const dy = e.changedTouches[0].clientY - tyStart;
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (Math.abs(dx) < 50 || angle > 60) return;
+      /* RTL swipe: swipe left (dx < 0) = forward/next; swipe right (dx > 0) = backward/prev */
+      if (dx < 0) goTo(state.current + 1); else goTo(state.current - 1);
+    });
+
+    btnPrev.addEventListener('click', () => goTo(state.current - 1));
+    btnNext.addEventListener('click', () => goTo(state.current + 1));
+    document.getElementById('notes-close').addEventListener('click', toggleNotes);
+
+    slides.forEach((s, i) => {
+      if (i === 0) { s.style.opacity = '1'; s.style.transform = 'translateX(0)'; s.classList.add('active'); }
+      else { s.style.opacity = '0'; s.style.transform = 'translateX(-60px)'; s.classList.remove('active'); }
+    });
+    updateUI();
+  </script>
+</body>
+</html>

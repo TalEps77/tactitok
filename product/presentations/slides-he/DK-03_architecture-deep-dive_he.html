@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TactiTok: צלילה לעומק הארכיטקטורה — DK-03</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:        #0a0f1e;
+      --bg-secondary:      #111827;
+      --bg-tertiary:       #1a2438;
+      --bg-card:           #0f1a2e;
+      --accent-green:      #22c55e;
+      --accent-green-dim:  #166534;
+      --accent-green-glow: rgba(34,197,94,0.15);
+      --accent-blue:       #60a5fa;
+      --accent-blue-dim:   #1e3a5f;
+      --accent-blue-glow:  rgba(96,165,250,0.15);
+      --accent-orange:     #fb923c;
+      --accent-orange-dim: #9a3412;
+      --text-primary:      #f1f5f9;
+      --text-secondary:    #94a3b8;
+      --text-muted:        #475569;
+      --border-subtle:     rgba(255,255,255,0.06);
+      --border-green:      rgba(34,197,94,0.35);
+      --border-blue:       rgba(96,165,250,0.35);
+      --border-orange:     rgba(251,146,60,0.35);
+      --d-spa:    #a5d8ff;
+      --d-admin:  #ffd8a8;
+      --d-api:    #d0bfff;
+      --d-db:     #c3fae8;
+      --d-proxy:  #b2f2bb;
+      --d-note:   #fff3bf;
+      --font:              'Heebo', system-ui, -apple-system, sans-serif;
+      --sz-hero:   clamp(2.4rem, 4.5vw, 4.2rem);
+      --sz-h1:     clamp(1.7rem, 3vw, 2.8rem);
+      --sz-h2:     clamp(1.3rem, 2.2vw, 1.9rem);
+      --sz-h3:     clamp(1.05rem, 1.8vw, 1.45rem);
+      --sz-body:   clamp(0.88rem, 1.5vw, 1.1rem);
+      --sz-small:  clamp(0.78rem, 1.2vw, 0.95rem);
+      --sz-label:  clamp(0.64rem, 1vw, 0.78rem);
+      --pad:       clamp(2.5rem, 5vw, 5.5rem);
+      --gap-sm:    0.75rem;
+      --gap-md:    1.5rem;
+      --gap-lg:    2.5rem;
+      --gap-xl:    3.5rem;
+      --radius:    6px;
+      --radius-lg: 10px;
+      --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-slide:  420ms;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-primary); font-family: var(--font); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-green), #4ade80); width: 5.00%; z-index: 200; transition: width 300ms var(--ease-slide); box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+    #slide-counter { position: fixed; top: 1rem; left: 1.5rem; font-size: var(--sz-label); font-weight: 600; letter-spacing: 0.1em; color: var(--text-muted); z-index: 200; user-select: none; }
+    #slide-counter .cur { color: var(--accent-green); font-weight: 700; }
+    #nav-controls { position: fixed; bottom: 1.5rem; left: 1.5rem; display: flex; gap: 0.4rem; z-index: 200; }
+    #nav-controls button { width: 2.4rem; height: 2.4rem; border: 1px solid var(--border-green); border-radius: var(--radius); background: rgba(34,197,94,0.07); color: var(--accent-green); font-size: 1rem; cursor: pointer; transition: background 180ms ease, transform 120ms ease; display: flex; align-items: center; justify-content: center; }
+    #nav-controls button:hover { background: rgba(34,197,94,0.18); transform: scale(1.05); }
+    #nav-controls button:disabled { opacity: 0.25; pointer-events: none; }
+    #kb-hint { position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%); font-size: var(--sz-label); color: var(--text-muted); letter-spacing: 0.06em; z-index: 200; user-select: none; white-space: nowrap; }
+    #notes-overlay { position: fixed; bottom: 0; left: 0; right: 0; max-height: 32vh; background: rgba(5,8,18,0.97); border-top: 2px solid var(--accent-green); padding: 1.1rem 1.5rem 1.1rem 2rem; z-index: 300; overflow-y: auto; backdrop-filter: blur(8px); }
+    #notes-overlay[hidden] { display: none; }
+    #notes-label { font-size: var(--sz-label); font-weight: 700; color: var(--accent-green); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    #notes-content { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.65; }
+    #notes-close { position: absolute; top: 0.8rem; left: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; transition: color 150ms; }
+    #notes-close:hover { color: var(--text-primary); }
+    #slides-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+    .slide { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: var(--pad); opacity: 0; transform: translateX(-60px); pointer-events: none; transition: opacity var(--dur-slide) var(--ease-slide), transform var(--dur-slide) var(--ease-slide); will-change: transform, opacity; }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 1; }
+    .slide.exit-left { opacity: 0; transform: translateX(60px); pointer-events: none; }
+    .slide-inner { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: var(--gap-md); }
+    .slide-inner.centered { align-items: center; text-align: center; justify-content: center; }
+    .label { font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-green); }
+    .accent-bar { width: 2.5rem; height: 3px; background: var(--accent-green); border-radius: 2px; margin-top: 0.35rem; }
+    .label-block { display: flex; flex-direction: column; gap: 0; }
+    .title-hero { font-size: var(--sz-hero); font-weight: 900; line-height: 1.1; }
+    .title-h1   { font-size: var(--sz-h1);   font-weight: 800; line-height: 1.15; }
+    .title-h2   { font-size: var(--sz-h2);   font-weight: 700; line-height: 1.2; }
+    .title-h3   { font-size: var(--sz-h3);   font-weight: 700; line-height: 1.25; }
+    .highlight-g { color: var(--accent-green); }
+    .highlight-b { color: var(--accent-blue); }
+    .card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 1.25rem 1.4rem; }
+    .card-g { border-top: 3px solid var(--accent-green); }
+    .card-b { border-top: 3px solid var(--accent-blue); }
+    .card-o { border-top: 3px solid var(--accent-orange); }
+    .card-gl { border-right: 3px solid var(--accent-green); }
+    .card-title { font-size: var(--sz-small); font-weight: 700; letter-spacing: 0.06em; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .card-body { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bullets li { display: flex; align-items: flex-start; gap: 0.7rem; font-size: var(--sz-body); color: var(--text-primary); line-height: 1.55; }
+    .bullets li::before { content: '◂'; color: var(--accent-green); font-size: 0.8em; flex-shrink: 0; margin-top: 0.22em; }
+    .bullets li strong { color: var(--text-primary); font-weight: 600; }
+    .badge { display: inline-block; padding: 0.18em 0.55em; border-radius: 3px; font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-g { background: rgba(34,197,94,0.12); color: var(--accent-green); border: 1px solid var(--border-green); }
+    .badge-b { background: rgba(96,165,250,0.12); color: var(--accent-blue);  border: 1px solid var(--border-blue); }
+    .badge-o { background: rgba(251,146,60,0.12); color: var(--accent-orange); border: 1px solid var(--border-orange); }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { background: var(--bg-tertiary); color: var(--accent-green); font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 0.9rem; text-align: right; border-bottom: 1px solid var(--border-green); }
+    .data-table td { padding: 0.55rem 0.9rem; font-size: var(--sz-small); border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); vertical-align: top; line-height: 1.5; }
+    .data-table tr:nth-child(even) td { background: rgba(26,36,56,0.5); }
+    .data-table .muted { color: var(--text-secondary); }
+    .divider { width: 100%; height: 1px; background: linear-gradient(270deg, var(--accent-green), transparent); border: none; margin: 0; }
+    .pull-quote { border-right: 3px solid var(--accent-green); padding: 1rem 1.5rem; background: rgba(34,197,94,0.05); border-radius: var(--radius) 0 0 var(--radius); }
+    .pull-quote p { font-size: var(--sz-h3); font-style: italic; line-height: 1.55; color: var(--text-primary); font-weight: 500; }
+    .doc-ref { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 0.65rem 1rem; font-size: var(--sz-small); display: flex; align-items: center; gap: 0.5rem; }
+    .doc-ref-icon { color: var(--accent-green); flex-shrink: 0; }
+    .doc-ref-path { font-family: 'Courier New', monospace; color: var(--text-secondary); font-size: 0.85em; }
+    .code-block { background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 1rem 1.2rem; font-family: 'Courier New', monospace; font-size: var(--sz-small); color: var(--accent-green); overflow-x: auto; line-height: 1.7; white-space: pre; }
+    .check-g { color: var(--accent-green); font-weight: 700; }
+    .check-r { color: #f87171; font-weight: 700; }
+    .print-only { display: none !important; }
+    @media print {
+      html, body { overflow: auto; height: auto; background: white; color: #111; }
+      #progress-bar, #slide-counter, #nav-controls, #kb-hint, #notes-overlay { display: none !important; }
+      #slides-container { overflow: visible; height: auto; position: static; }
+      .slide { position: relative !important; transform: none !important; opacity: 1 !important; pointer-events: auto !important; display: flex !important; width: 100%; min-height: 100vh; page-break-after: always; break-after: page; background: white; padding: 2cm 2.5cm; align-items: flex-start; }
+      .title-hero, .title-h1, .title-h2, .title-h3 { color: #111; }
+      .highlight-g { color: #166534; } .label { color: #166534; } .accent-bar { background: #166534; }
+      .card { background: #f9fafb; border-color: #d1d5db; }
+      .data-table th { background: #f3f4f6; color: #166534; } .data-table td { color: #111; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+  <div id="slide-counter"><span class="cur" id="cur">1</span> / <span id="tot">20</span></div>
+  <nav id="nav-controls" aria-label="ניווט שקופיות">
+    <button id="btn-prev" aria-label="שקופית קודמת" title="קודם (←)">&#8592;</button>
+    <button id="btn-next" aria-label="שקופית הבאה" title="הבא (→)">&#8594;</button>
+  </nav>
+  <div id="kb-hint">◀ מקשי חצים או החלקה &nbsp;·&nbsp; F מסך מלא &nbsp;·&nbsp; N הערות</div>
+  <div id="notes-overlay" hidden>
+    <p id="notes-label">הערות מגיש</p>
+    <button id="notes-close" aria-label="סגור הערות">&#10005;</button>
+    <p id="notes-content"></p>
+  </div>
+
+  <main id="slides-container">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 1 — כריכה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-slide="1"
+      data-notes="מצגת זו מיועדת לקהל טכני: מעריכים, מנחים אקדמיים ומפתחי המשך. היא מכסה יעדי ארכיטקטורה, עיצוב קונטיינר תלת-שכבתי, טופולוגיית פריסה, נימוקי edge proxy, מודל הנתונים, משטח ה-API והחלטות טכנולוגיות מרכזיות. זמן משוער: 20–25 דקות. מסמכי מקור: product/04_system-architecture.md, product/05_data-model.md, product/06_api-contract.md.">
+      <div class="slide-inner centered" style="gap:var(--gap-lg);min-height:70vh;justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+          <polygon points="36,4 68,21 68,51 36,68 4,51 4,21" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+          <polygon points="36,10 62,24 62,48 36,62 10,48 10,24" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="36" y="41" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#22c55e" font-family="Inter,system-ui,sans-serif" letter-spacing="-0.5">TT</text>
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+          <p class="label">DK-03 &mdash; צלילה לעומק הארכיטקטורה</p>
+          <h1 class="title-hero" style="letter-spacing:-0.02em;">TactiTok <span class="highlight-g">ארכיטקטורה</span></h1>
+          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:640px;line-height:1.5;">מערכת תלת-שכבתית נקייה ומינימלית, בנויה לקצה</p>
+        </div>
+        <hr class="divider" style="width:100%;max-width:500px;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+          <span class="badge badge-b">מעריכים טכניים</span>
+          <span class="badge badge-g">מנחים אקדמיים</span>
+          <span class="badge badge-o">מפתחי המשך</span>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">מקור: product/04_system-architecture.md &middot; product/05_data-model.md &middot; product/06_api-contract.md</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 2 — יעדי ארכיטקטורה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="2"
+      data-notes="ששת היעדים האלה הם המסנן לכל החלטת ארכיטקטורה. כאשר שתי אפשרויות היו שוות במורכבות, בחרנו באחת שתומכת טוב יותר באופליין. בספק, בחרנו באפשרות הפשוטה יותר. AG1 ו-AG5 הם המגבילים ביותר — הם מתנגשים זה בזה, וה-edge proxy (nginx ב-Docker) הוא הפתרון.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">יעדי ארכיטקטורה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">שישה יעדים שמניעים <span class="highlight-g">כל החלטה</span></h1>
+        <div class="three-col">
+          <div class="card card-g"><p class="card-title">AG1 — ארכיטקטורה פשוטה ככל האפשר</p><p class="card-body">3 מפתחים סטודנטים, 8–10 שבועות. מינימום חלקים נעים. שפה אחת. אין מיקרו-שירותים.</p></div>
+          <div class="card card-g"><p class="card-title">AG2 — פונקציונלי מקצה לקצה</p><p class="card-body">העלאה → קטלוג → הזרמה → הורדה → אופליין — הכל חייב לעבוד. אין תהליכים למחצה ב-MVP.</p></div>
+          <div class="card card-g"><p class="card-title">AG3 — מוכן להמשכיות</p><p class="card-body">הפרדת שכבות נקייה. צוות המשך יכול להרחיב כל שכבה מבלי לשכתב את האחרות.</p></div>
+          <div class="card card-b"><p class="card-title">AG4 — סטאק טכנולוגי אחיד</p><p class="card-body">TypeScript בכל מקום — צד לקוח וצד שרת. סוגים משותפים. עומס קוגניטיבי מופחת.</p></div>
+          <div class="card card-b"><p class="card-title">AG5 — מודע לאופליין מהיום הראשון</p><p class="card-body">Edge proxy + חבילת SPA מקומית מובנים בארכיטקטורה. לא מתווספים בשלב מאוחר.</p></div>
+          <div class="card card-b"><p class="card-title">AG6 — ממוטב לדמו</p><p class="card-body">התחלת וידאו מהירה, גלילה חלקה, אופליין אמין. דרישות אלה מניעות את בחירות הארכיטקטורה.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 3 — מניעים ואילוצים
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="3"
+      data-notes="האילוץ הייחודי ביותר הוא טופולוגיית הקיוסק. Chrome על Windows מתחבר ל-localhost:8080 — לעולם לא ישירות לענן. זו אינה ארכיטקטורת אינטרנט סטנדרטית. היא נובעת משתי דרישות: המכשיר חייב לעבוד אופליין, והתוכן חייב להישמר במטמון מקומית ללא קוד Service Worker מורכב. אילוץ הסקלה של 20 מכשירים הוא משחרר — משמעותו שVM ענן יחיד ללא load balancer מספיק.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">מניעים ואילוצים</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מה <span class="highlight-g">מעצב</span> את הארכיטקטורה</h1>
+        <table class="data-table">
+          <thead><tr><th>מניע</th><th>השפעה על הארכיטקטורה</th></tr></thead>
+          <tbody>
+            <tr><td><strong>3 מפתחים · 10 שבועות</strong></td><td class="muted">מינימום רכיבים; שפה אחת; אין מיקרו-שירותים</td></tr>
+            <tr><td><strong>Chrome kiosk ← localhost בלבד</strong></td><td class="muted">Edge proxy ב-Docker; Chrome לא מתחבר ישירות לענן</td></tr>
+            <tr><td><strong>רוחב פס לא יציב / מוגבל</strong></td><td class="muted">Edge proxy שומר תוכן ומטא-דאטה מקומית; מפחית תלות בענן</td></tr>
+            <tr><td><strong>נדרשת תמיכת אופליין היברידית</strong></td><td class="muted">proxy_cache_use_stale; IndexedDB למצב מכשיר בלבד</td></tr>
+            <tr><td><strong>פיד וידאו בסגנון TikTok</strong></td><td class="muted">ניגון אוטומטי, scroll-snap, טעינה מראש ב-30% צפייה</td></tr>
+            <tr><td><strong>~20 מכשירי קצה מקביליים</strong></td><td class="muted">שרת ענן יחיד מספיק; אין צורך ב-load balancer</td></tr>
+            <tr><td><strong>ללא אימות משתמש בקצה</strong></td><td class="muted">אין middleware אימות ב-API ציבורי; admin משתמש בסיסמה + JWT</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 4 — גבולות המערכת
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="4"
+      data-notes="הפריטים מחוץ לתחום הם דחיות מפורשות, לא השמטות. הפשטת האחסון מאפשרת החלפת S3/MinIO ללא מגע בשכבת השירות. ה-auth middleware מקדים-מחווט אך עוקף לנתיבי קצה. מודול הסנכרון מעוצב לקבל ממשק SyncProvider כדי שניתן יהיה להחליף pull ב-push ללא שכתוב ה-SPA.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">גבולות המערכת</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מה בתחום — <span class="highlight-g">מה מחוץ לתחום</span></h1>
+        <div class="two-col">
+          <div class="card card-g">
+            <p class="card-title" style="color:var(--accent-green);">&#10003; בתחום — נבנה על ידי הצוות</p>
+            <ul class="bullets" style="margin-top:0.5rem;">
+              <li><strong>Edge SPA</strong> — Reels, Library, Downloads (HTML/TS)</li>
+              <li><strong>Edge Proxy</strong> — Docker/nginx; הגשת SPA, proxy cache, אופליין</li>
+              <li><strong>שרת API</strong> — Node.js/Express; Content API, Admin API</li>
+              <li><strong>Admin SPA</strong> — העלאה, קטלוג, קטגוריות (HTML/TS)</li>
+              <li><strong>PostgreSQL</strong> — מטא-דאטה, קטגוריות, תחומי עניין</li>
+              <li><strong>File Store</strong> — MP4 + PDF במערכת הקבצים של השרת</li>
+            </ul>
+          </div>
+          <div class="card card-o">
+            <p class="card-title" style="color:var(--accent-orange);">&#10007; מחוץ לתחום — נדחה במפורש</p>
+            <ul class="bullets" style="margin-top:0.5rem;">
+              <li><strong>זהות משתמש / אימות</strong> — הקצה הוא אנונימי (קיוסק)</li>
+              <li><strong>קידוד וידאו</strong> — MP4 מוכן להעלאה בלבד</li>
+              <li><strong>אנליטיקה / טלמטריה</strong> — Like/Save מקומי בלבד</li>
+              <li><strong>סנכרון Push</strong> — מבוסס Pull בפתיחת האפליקציה</li>
+              <li><strong>CDN, S3, load balancer</strong> — שרת יחיד, ~20 מכשירים</li>
+              <li><strong>DRM, RBAC, מוניטורינג</strong> — בידוד רשת הוא הגבול</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 5 — ארכיטקטורת קונטיינרים (DG-02)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="5"
+      data-notes="זוהי תצוגת הקונטיינר (DG-02). ההבנה המרכזית היא תפקידו הכפול של edge proxy: הוא מגיש את חבילת ה-SPA מקומית כך שChrome תמיד נטען מהר ללא תלות בענן, ומטמין את כל תגובות ה-API וקבצי התוכן כך שהאופליין פועל בשקיפות. ה-Admin SPA הוא המשטח היחיד המתחבר ישירות לענן. packages/shared מספק TypeScript DTOs המשמשים את שלושת חבילות הקוד.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">DG-02 &middot; ארכיטקטורת קונטיינרים</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">שמונה קונטיינרים, <span class="highlight-g">שלושה אזורים</span></h1>
+        <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
+          <svg viewBox="0 0 900 290" width="100%" style="max-height:260px;display:block;margin:0 auto;" role="img" aria-label="Container architecture: HQ Admin zone, Cloud Server zone, Edge Device zone">
+            <defs>
+              <marker id="arr-o" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ffd8a8"/></marker>
+              <marker id="arr-b" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#60a5fa"/></marker>
+              <marker id="arr-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#22c55e"/></marker>
+            </defs>
+            <rect width="900" height="290" rx="8" fill="#0d1424"/>
+            <!-- HQ Zone -->
+            <rect x="8" y="8" width="145" height="240" rx="5" fill="rgba(255,216,168,0.06)" stroke="#ffd8a8" stroke-width="1"/>
+            <text x="80" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="#ffd8a8" font-family="Inter,system-ui,sans-serif" letter-spacing="1">HQ / ADMIN</text>
+            <rect x="18" y="38" width="125" height="60" rx="4" fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
+            <text x="80" y="59" text-anchor="middle" font-size="11" font-weight="700" fill="#3d2800" font-family="Inter,system-ui,sans-serif">Admin SPA</text>
+            <text x="80" y="75" text-anchor="middle" font-size="9" fill="#5d4800" font-family="Inter,system-ui,sans-serif">HTML · TypeScript</text>
+            <text x="80" y="89" text-anchor="middle" font-size="8.5" fill="#5d4800" font-family="Inter,system-ui,sans-serif">desktop browser</text>
+            <!-- Arrow Admin → Cloud -->
+            <line x1="153" y1="68" x2="175" y2="68" stroke="#ffd8a8" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-o)"/>
+            <text x="164" y="62" text-anchor="middle" font-size="7.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">HTTPS</text>
+            <!-- Cloud Zone -->
+            <rect x="177" y="8" width="245" height="240" rx="5" fill="rgba(208,191,255,0.06)" stroke="#d0bfff" stroke-width="1"/>
+            <text x="300" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="#d0bfff" font-family="Inter,system-ui,sans-serif" letter-spacing="1">CLOUD SERVER</text>
+            <!-- nginx TLS -->
+            <rect x="188" y="35" width="110" height="48" rx="4" fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="243" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">nginx TLS</text>
+            <text x="243" y="70" text-anchor="middle" font-size="8.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">:443 → proxy_pass :3000</text>
+            <!-- API Server -->
+            <rect x="188" y="96" width="222" height="60" rx="4" fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <text x="299" y="118" text-anchor="middle" font-size="11" font-weight="700" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">API Server</text>
+            <text x="299" y="133" text-anchor="middle" font-size="9" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">Node.js · Express · :3000</text>
+            <text x="299" y="148" text-anchor="middle" font-size="8.5" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">Content API · Admin API · Auth</text>
+            <!-- PostgreSQL -->
+            <rect x="188" y="172" width="100" height="52" rx="4" fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="238" y="194" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">PostgreSQL</text>
+            <text x="238" y="209" text-anchor="middle" font-size="8.5" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">:5432 · metadata</text>
+            <!-- File Store -->
+            <rect x="300" y="172" width="110" height="52" rx="4" fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="355" y="194" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">File Store</text>
+            <text x="355" y="209" text-anchor="middle" font-size="8.5" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">./data/content/</text>
+            <!-- Arrow Cloud → Edge -->
+            <line x1="422" y1="100" x2="455" y2="115" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-b)"/>
+            <text x="448" y="100" text-anchor="middle" font-size="8" fill="#60a5fa" font-family="Inter,system-ui,sans-serif">HTTPS</text>
+            <!-- Edge Zone -->
+            <rect x="458" y="8" width="434" height="240" rx="5" fill="rgba(165,216,255,0.06)" stroke="#a5d8ff" stroke-width="1"/>
+            <text x="675" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="#a5d8ff" font-family="Inter,system-ui,sans-serif" letter-spacing="1">EDGE DEVICE × N</text>
+            <!-- Edge Proxy -->
+            <rect x="468" y="35" width="195" height="175" rx="4" fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="565" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Edge Proxy</text>
+            <text x="565" y="73" text-anchor="middle" font-size="9" fill="#2d6032" font-family="Inter,system-ui,sans-serif">nginx in Docker · :8080</text>
+            <line x1="480" y1="82" x2="652" y2="82" stroke="#2d7a3a" stroke-width="0.7" opacity="0.5"/>
+            <text x="565" y="100" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Serves SPA bundle</text>
+            <text x="565" y="116" text-anchor="middle" font-size="8.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">/var/www/spa/ (baked into image)</text>
+            <text x="565" y="135" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Proxy cache — 10 GB</text>
+            <text x="565" y="151" text-anchor="middle" font-size="8.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">content · metadata · 30 d TTL</text>
+            <text x="565" y="170" text-anchor="middle" font-size="8.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">proxy_cache_use_stale → offline</text>
+            <text x="565" y="188" text-anchor="middle" font-size="8.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">X-Cache-Status: HIT / MISS / STALE</text>
+            <!-- Arrow Proxy → SPA -->
+            <line x1="663" y1="128" x2="693" y2="128" stroke="#22c55e" stroke-width="2" marker-end="url(#arr-g)"/>
+            <text x="678" y="120" text-anchor="middle" font-size="8" fill="#22c55e" font-family="Inter,system-ui,sans-serif">HTTP</text>
+            <!-- Edge SPA -->
+            <rect x="693" y="35" width="188" height="175" rx="4" fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="787" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Edge SPA</text>
+            <text x="787" y="73" text-anchor="middle" font-size="9" fill="#1a4060" font-family="Inter,system-ui,sans-serif">HTML · TS · Chrome kiosk</text>
+            <line x1="705" y1="82" x2="869" y2="82" stroke="#1a5e8a" stroke-width="0.7" opacity="0.5"/>
+            <text x="787" y="101" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Reels · Library · Downloads</text>
+            <text x="787" y="118" text-anchor="middle" font-size="8.5" fill="#1a4060" font-family="Inter,system-ui,sans-serif">localhost:8080 only</text>
+            <text x="787" y="140" text-anchor="middle" font-size="9.5" font-weight="600" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">IndexedDB</text>
+            <text x="787" y="156" text-anchor="middle" font-size="8.5" fill="#1a4060" font-family="Inter,system-ui,sans-serif">profile · downloads · actions</text>
+            <text x="787" y="178" text-anchor="middle" font-size="8.5" fill="#1a4060" font-family="Inter,system-ui,sans-serif">PDF.js · HTML5 video</text>
+            <!-- Legend -->
+            <rect x="8" y="258" width="11" height="11" rx="2" fill="#ffd8a8"/><text x="24" y="268" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Admin SPA</text>
+            <rect x="95" y="258" width="11" height="11" rx="2" fill="#d0bfff"/><text x="111" y="268" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">API Server</text>
+            <rect x="185" y="258" width="11" height="11" rx="2" fill="#c3fae8"/><text x="201" y="268" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">PostgreSQL / Files</text>
+            <rect x="315" y="258" width="11" height="11" rx="2" fill="#b2f2bb"/><text x="331" y="268" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">nginx / Edge Proxy</text>
+            <rect x="452" y="258" width="11" height="11" rx="2" fill="#a5d8ff"/><text x="468" y="268" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Edge SPA / Chrome</text>
+          </svg>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;">packages/shared — TypeScript DTOs ואימות — מיובא על ידי Edge SPA, Admin SPA, ו-API Server</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 6 — תצוגת פריסה (DG-03)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="6"
+      data-notes="סביבת הריצה הכוללת פשוטה במכוון. VM ענן: שלושה תהליכים מנוהלים על ידי systemd. מכשיר קצה: קונטיינר Docker אחד. Chrome על Windows לעולם לא יודע אם התוכן מהענן או מ-proxy cache המקומי — הוא תמיד מבקש localhost:8080. WSL2 ממפה פורטי localhost אוטומטית כך שקונטיינרי Docker נגישים מ-Windows ללא תצורה נוספת. VirtualBox יצטרך העברת פורטים מפורשת.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">DG-03 &middot; תצוגת פריסה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">תהליכים, פורטים, <span class="highlight-g">ומכונות</span></h1>
+        <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
+          <svg viewBox="0 0 900 240" width="100%" style="max-height:210px;display:block;margin:0 auto;" role="img" aria-label="Deployment topology: Cloud VM, Edge Device (Windows + Linux VM), HQ Desktop">
+            <defs>
+              <marker id="dep-b" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#60a5fa"/></marker>
+              <marker id="dep-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#22c55e"/></marker>
+            </defs>
+            <rect width="900" height="240" rx="8" fill="#0d1424"/>
+            <!-- Cloud VM Zone -->
+            <rect x="8" y="8" width="240" height="210" rx="5" fill="rgba(208,191,255,0.06)" stroke="#d0bfff" stroke-width="1"/>
+            <text x="128" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="#d0bfff" font-family="Inter,system-ui,sans-serif" letter-spacing="1">CLOUD VM (Linux)</text>
+            <rect x="20" y="35" width="216" height="40" rx="4" fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="128" y="51" text-anchor="middle" font-size="10" font-weight="700" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">nginx TLS · :443</text>
+            <text x="128" y="66" text-anchor="middle" font-size="8.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">proxy_pass → localhost:3000 · systemd</text>
+            <line x1="128" y1="75" x2="128" y2="88" stroke="#d0bfff" stroke-width="1.5" marker-end="url(#dep-b)"/>
+            <rect x="20" y="90" width="216" height="52" rx="4" fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <text x="128" y="110" text-anchor="middle" font-size="10" font-weight="700" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">Node.js API Server · :3000</text>
+            <text x="128" y="125" text-anchor="middle" font-size="8.5" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">localhost only · systemd / pm2</text>
+            <text x="128" y="138" text-anchor="middle" font-size="8.5" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">Content API · Admin API · Auth</text>
+            <line x1="88" y1="142" x2="68" y2="158" stroke="#c3fae8" stroke-width="1" marker-end="url(#dep-g)"/>
+            <line x1="168" y1="142" x2="188" y2="158" stroke="#c3fae8" stroke-width="1" marker-end="url(#dep-g)"/>
+            <rect x="20" y="160" width="95" height="45" rx="4" fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="67" y="180" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">PostgreSQL</text>
+            <text x="67" y="195" text-anchor="middle" font-size="8" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">:5432 · systemd</text>
+            <rect x="125" y="160" width="111" height="45" rx="4" fill="#c3fae8" stroke="#1a7a5e" stroke-width="1.5"/>
+            <text x="180" y="180" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">File Store</text>
+            <text x="180" y="195" text-anchor="middle" font-size="8" fill="#0d3d30" font-family="Inter,system-ui,sans-serif">./data/content/</text>
+            <!-- Arrow Cloud → Edge -->
+            <line x1="248" y1="68" x2="295" y2="68" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5,2" marker-end="url(#dep-b)"/>
+            <text x="271" y="60" text-anchor="middle" font-size="7.5" fill="#60a5fa" font-family="Inter,system-ui,sans-serif">HTTPS :443</text>
+            <!-- Edge Device Zone -->
+            <rect x="298" y="8" width="475" height="210" rx="5" fill="rgba(165,216,255,0.06)" stroke="#a5d8ff" stroke-width="1"/>
+            <text x="535" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="#a5d8ff" font-family="Inter,system-ui,sans-serif" letter-spacing="1">EDGE DEVICE × N (Windows PC)</text>
+            <!-- Windows sub-zone -->
+            <rect x="308" y="33" width="190" height="175" rx="4" fill="rgba(165,216,255,0.04)" stroke="#74c0fc" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="403" y="49" text-anchor="middle" font-size="8" font-weight="600" fill="#74c0fc" font-family="Inter,system-ui,sans-serif">WINDOWS</text>
+            <rect x="318" y="56" width="170" height="80" rx="4" fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="403" y="76" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">Chrome (kiosk)</text>
+            <text x="403" y="92" text-anchor="middle" font-size="8.5" fill="#1a4060" font-family="Inter,system-ui,sans-serif">http://localhost:8080</text>
+            <text x="403" y="107" text-anchor="middle" font-size="8.5" fill="#1a4060" font-family="Inter,system-ui,sans-serif">IndexedDB · Edge SPA</text>
+            <text x="403" y="122" text-anchor="middle" font-size="8.5" fill="#1a4060" font-family="Inter,system-ui,sans-serif">Reels · Library · Downloads</text>
+            <!-- Arrow Chrome → Docker -->
+            <line x1="500" y1="97" x2="528" y2="97" stroke="#22c55e" stroke-width="2" marker-end="url(#dep-g)"/>
+            <text x="514" y="89" text-anchor="middle" font-size="7.5" fill="#22c55e" font-family="Inter,system-ui,sans-serif">HTTP</text>
+            <!-- Linux VM / Docker sub-zone -->
+            <rect x="506" y="33" width="255" height="175" rx="4" fill="rgba(178,242,187,0.04)" stroke="#51cf66" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="633" y="49" text-anchor="middle" font-size="8" font-weight="600" fill="#51cf66" font-family="Inter,system-ui,sans-serif">LINUX VM (WSL2 / VirtualBox) · Docker</text>
+            <rect x="516" y="56" width="234" height="140" rx="4" fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="633" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">tactitok-edge-proxy</text>
+            <text x="633" y="91" text-anchor="middle" font-size="8.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">nginx · :8080 (HTTP) · restart:always</text>
+            <line x1="528" y1="100" x2="738" y2="100" stroke="#2d7a3a" stroke-width="0.7" opacity="0.5"/>
+            <text x="633" y="117" text-anchor="middle" font-size="8.5" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">/var/www/spa/ — SPA bundle (baked in)</text>
+            <text x="633" y="133" text-anchor="middle" font-size="8.5" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">/var/cache/nginx/ — 10 GB proxy cache</text>
+            <text x="633" y="149" text-anchor="middle" font-size="8.5" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">proxy_cache_use_stale → offline mode</text>
+            <text x="633" y="165" text-anchor="middle" font-size="8" fill="#2d6032" font-family="Inter,system-ui,sans-serif">Built from: packages/client dist/ + nginx.conf</text>
+            <text x="633" y="183" text-anchor="middle" font-size="8" fill="#2d6032" font-family="Inter,system-ui,sans-serif">docker run --restart=always -p 8080:80</text>
+            <!-- HQ Desktop (small, right) -->
+            <rect x="786" y="8" width="106" height="210" rx="5" fill="rgba(255,216,168,0.06)" stroke="#ffd8a8" stroke-width="1"/>
+            <text x="839" y="26" text-anchor="middle" font-size="8" font-weight="700" fill="#ffd8a8" font-family="Inter,system-ui,sans-serif" letter-spacing="0.8">HQ DESKTOP</text>
+            <rect x="796" y="38" width="86" height="80" rx="4" fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
+            <text x="839" y="60" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3d2800" font-family="Inter,system-ui,sans-serif">Admin SPA</text>
+            <text x="839" y="76" text-anchor="middle" font-size="8" fill="#5d4800" font-family="Inter,system-ui,sans-serif">browser</text>
+            <text x="839" y="100" text-anchor="middle" font-size="7.5" fill="#5d4800" font-family="Inter,system-ui,sans-serif">HTTPS :443</text>
+            <text x="839" y="113" text-anchor="middle" font-size="7.5" fill="#5d4800" font-family="Inter,system-ui,sans-serif">→ Cloud VM</text>
+          </svg>
+        </div>
+        <div class="two-col" style="margin-top:var(--gap-sm);">
+          <div class="card card-g" style="padding:0.75rem 1rem;"><p class="card-body"><strong>ענן:</strong> 3 תהליכי systemd — nginx · Node.js · PostgreSQL — שותפים ב-VM יחיד</p></div>
+          <div class="card card-b" style="padding:0.75rem 1rem;"><p class="card-body"><strong>קצה:</strong> קונטיינר Docker אחד למכשיר · restart:always · WSL2 ממפה פורטים ל-Windows אוטומטית</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 7 — ה-Edge Proxy
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="7"
+      data-notes="החלטה AD7 היא החלטת הארכיטקטורה החשובה ביותר. העברת ה-cache לשכבת הרשת מבטלת מחלקת מורכבות שלמה מה-SPA. אין קוד ספציפי לאופליין ב-Edge SPA. הוא תמיד שולח את אותן בקשות ל-localhost:8080. ה-proxy מחליט אם להעביר לענן או לשרת מ-cache. זה גם אומר שה-SPA פשוט יותר וקל יותר לבדיקה — יש רק נתיב קוד אחד.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">החלטת ארכיטקטורה AD7</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מדוע <span class="highlight-g">nginx Caching</span> ולא Service Worker</h1>
+        <div class="two-col">
+          <div class="card" style="border-top:3px solid #f87171;">
+            <p class="card-title" style="color:#f87171;">&#10007; גישת Service Worker — נדחתה</p>
+            <ul class="bullets" style="margin-top:0.5rem;">
+              <li><span class="check-r">✗</span> קוד caching מורכב בצד ה-SPA</li>
+              <li><span class="check-r">✗</span> ניהול Cache API — מכסה, פינוי, גרסאות</li>
+              <li><span class="check-r">✗</span> שני נתיבי קוד: מחובר לעומת אופליין</li>
+              <li><span class="check-r">✗</span> ביטול cache הוא אחריות ה-SPA</li>
+              <li><span class="check-r">✗</span> לא מטמין תגובות range-request לוידאו היטב</li>
+              <li><span class="check-r">✗</span> קשה לדיבוג; נדרש HTTPS גם בפיתוח</li>
+            </ul>
+          </div>
+          <div class="card card-g">
+            <p class="card-title" style="color:var(--accent-green);">&#10003; nginx proxy_cache — נבחר</p>
+            <ul class="bullets" style="margin-top:0.5rem;">
+              <li><span class="check-g">✓</span> אפס קוד caching ב-SPA</li>
+              <li><span class="check-g">✓</span> נתיב קוד זהה מחובר ואופליין</li>
+              <li><span class="check-g">✓</span> nginx מטפל בפינוי, TTL, הגשה מעותקת</li>
+              <li><span class="check-g">✓</span> כותרת X-Cache-Status מציגה HIT / MISS / STALE</li>
+              <li><span class="check-g">✓</span> מטמין קבצי וידאו מלאים — range requests מוגשים מ-cache</li>
+              <li><span class="check-g">✓</span> 10 GB cache מקומי במערכת הקבצים של Linux VM</li>
+            </ul>
+          </div>
+        </div>
+        <div class="pull-quote">
+          <p>"קוד האונליין וקוד האופליין של ה-SPA הם <strong>זהים</strong>. ה-proxy מטפל בהכל."</p>
+        </div>
+        <div style="display:flex;gap:var(--gap-sm);flex-wrap:wrap;">
+          <span class="badge badge-g">הגשת חבילת SPA</span>
+          <span class="badge badge-g">Proxy ל-API ותוכן</span>
+          <span class="badge badge-g">הגשת cache אופליין</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 8 — תצורת nginx
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="8"
+      data-notes="proxy_cache_use_stale הוא ההוראה המרכזית. כאשר הענן אינו ניתן להגעה מכל סיבה — timeout, 502, 503, 504 — nginx מגיש אוטומטית את העותק השמור שלו ללא כל טיפול מיוחד הנדרש ב-SPA. URLs של קבצי תוכן כוללות פרמטר שאילתה ?v={version}. כאשר admin מעדכן וידאו, הגרסה עולה ויוצרת מפתח cache חדש, עוקפת את הקובץ הישן שנשמר ב-cache ללא כל ביטול ידני.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">תצורת Edge Proxy</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">הגדרות Cache שמניעות <span class="highlight-g">התנהגות האופליין</span></h1>
+        <div class="two-col" style="align-items:start;">
+          <pre class="code-block" style="font-size:0.72rem;line-height:1.6;">proxy_cache_path /var/cache/nginx
+  max_size=10g  inactive=30d;
+
+# Content files — rarely change
+location /api/content/ {
+  proxy_pass https://CLOUD_SERVER;
+  proxy_cache_valid 200 30d;
+  proxy_cache_use_stale
+    error timeout updating
+    http_502 http_503 http_504;
+  add_header X-Cache-Status
+    $upstream_cache_status;
+}
+
+# Catalog metadata — shorter TTL
+location /api/catalog {
+  proxy_pass https://CLOUD_SERVER;
+  proxy_cache_valid 200 5m;
+  proxy_cache_use_stale
+    error timeout updating;
+}
+
+# SPA — served from Docker image
+location / {
+  root /var/www/spa;
+  try_files $uri $uri/ /index.html;
+}</pre>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <table class="data-table">
+              <thead><tr><th>הגדרה</th><th>ערך</th><th>סיבה</th></tr></thead>
+              <tbody>
+                <tr><td>גודל cache מקסימלי</td><td>10 GB</td><td class="muted">~15 פריטים × ≤100 MB מתאים</td></tr>
+                <tr><td>TTL קובצי תוכן</td><td>30 יום</td><td class="muted">משתנה לעתים רחוקות; ?v= מבטל cache</td></tr>
+                <tr><td>TTL קטלוג</td><td>5 דקות</td><td class="muted">מספיק תכוף; stale בסדר באופליין</td></tr>
+                <tr><td>הגשה מעותקת</td><td>error, timeout, 5xx</td><td class="muted">מצב אופליין בכל כשל ענן</td></tr>
+              </tbody>
+            </table>
+            <div class="card card-b">
+              <p class="card-title">ביטול Cache</p>
+              <p class="card-body">URLs של תוכן כוללות <code style="color:var(--accent-green);">?v={version}</code>. כאשר admin מעדכן וידאו, הגרסה עולה. מפתח cache חדש = cache MISS = קובץ חדש מהענן. אין צורך בביטול ידני.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 9 — זרימת תוכן
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="9"
+      data-notes="זרימה C — טעינה מראש של reels — קריטית לחווית משתמש בדמו. בקשת range לטעינה מראש מגרה את ה-proxy לשמור ב-cache את קובץ הוידאו הבא במלואו. כשהמשתמש גולל, הקובץ כבר מקומי. זה מה שגורם ל-reels להיות חלקים גם ברשתות לא יציבות. ה-proxy עושה את העבודה הכבדה; ה-SPA רק שולח בקשת range ב-30% צפייה והשאר אוטומטי.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">זרימת תוכן ונתונים</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">שלוש <span class="highlight-g">זרימות מרכזיות</span></h1>
+        <div class="three-col">
+          <div class="card card-o">
+            <p class="card-title">זרימה A — העלאת Admin</p>
+            <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.5rem;">
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-orange);font-weight:700;">1</span><span>Admin מעלה MP4 / PDF דרך Admin SPA</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-orange);font-weight:700;">2</span><span>שרת API מאמת: MIME, גודל ≤100 MB</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-orange);font-weight:700;">3</span><span>קובץ מאוחסן: <code style="color:var(--accent-green);">./data/content/{uuid}.ext</code></span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-orange);font-weight:700;">4</span><span>מטא-דאטה מוכנס ל-PostgreSQL (version=1)</span></div>
+            </div>
+          </div>
+          <div class="card card-b">
+            <p class="card-title">זרימה B — סנכרון קטלוג</p>
+            <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.5rem;">
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-blue);font-weight:700;">1</span><span>Edge SPA נפתח ← <code style="color:var(--accent-green);">GET /api/catalog</code> ← :8080</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-blue);font-weight:700;">2</span><span>Proxy: MISS ← העברה לענן ← cache 5 דק'</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-blue);font-weight:700;">3</span><span>SPA שומר תמונת מצב של קטלוג ב-IndexedDB</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-blue);font-weight:700;">4</span><span>סינון צד לקוח עבור Reels ו-Library</span></div>
+            </div>
+          </div>
+          <div class="card card-g">
+            <p class="card-title">זרימה C — טעינה מראש של וידאו (Reels)</p>
+            <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.5rem;">
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-green);font-weight:700;">1</span><span>משתמש צופה בוידאו N (מ-proxy cache)</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-green);font-weight:700;">2</span><span>ב-30%: SPA שולח range request לוידאו N+1</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-green);font-weight:700;">3</span><span>Proxy מביא <em>קובץ מלא</em> מהענן ← cache 30 יום</span></div>
+              <div style="display:flex;gap:0.5rem;font-size:var(--sz-small);"><span style="color:var(--accent-green);font-weight:700;">4</span><span>גלילה ← ניגון מיידי מ-cache מקומי</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 10 — יכולת אופליין
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="10"
+      data-notes="זוהי שיפור v0.2. בעיצוב המקורי ה-Edge SPA השתמש ב-Service Workers וב-Cache API. כאשר עברנו לגישת nginx proxy, ניגון אופליין הפך אפשרי לכל וידאו שנצפה בעבר — לא רק תוכן שהורד במפורש. קוד ה-SPA הפך פשוט יותר וכיסוי האופליין השתפר בו-זמנית. נקודת 'האופליין השקוף' היא המרכזית: אין אפס קוד ספציפי לאופליין ב-SPA.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">תמיכת אופליין</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מה עובד כאשר <span class="highlight-g">הענן אינו זמין</span></h1>
+        <table class="data-table">
+          <thead><tr><th>תכונה</th><th>מחובר</th><th>אופליין</th><th>איך</th></tr></thead>
+          <tbody>
+            <tr><td>הפעלת אפליקציה</td><td class="muted">&#10003;</td><td><strong style="color:var(--accent-green);">&#10003;</strong></td><td class="muted">SPA מקומי בתמונת Docker</td></tr>
+            <tr><td>פיד Reels</td><td class="muted">&#10003; הזרמה</td><td><strong style="color:var(--accent-green);">&#10003;</strong> שנצפה בעבר</td><td class="muted">Proxy מגיש קבצי וידאו מ-cache</td></tr>
+            <tr><td>גלישת Library</td><td class="muted">&#10003; טרי</td><td><strong style="color:var(--accent-green);">&#10003;</strong> קטלוג מ-cache</td><td class="muted">Proxy מגיש /api/catalog מ-cache</td></tr>
+            <tr><td>ניגון וידאו / PDF</td><td class="muted">&#10003; הזרמה</td><td><strong style="color:var(--accent-green);">&#10003;</strong> אם נגיש או הורד</td><td class="muted">Proxy cache HIT</td></tr>
+            <tr><td>לשונית Downloads</td><td class="muted">&#10003;</td><td><strong style="color:var(--accent-green);">&#10003;</strong> תמיד</td><td class="muted">רשומות IndexedDB; קבצים ב-proxy cache</td></tr>
+            <tr><td>שינוי תחום עניין</td><td class="muted">&#10003;</td><td><strong style="color:var(--accent-green);">&#10003;</strong> מקומי בלבד</td><td class="muted">כתיבה ל-IndexedDB</td></tr>
+            <tr><td>סנכרון מטא-דאטה</td><td class="muted">&#10003; טרי</td><td><span style="color:#f87171;">✗ מוצג ישן</span></td><td class="muted">proxy_cache_use_stale; חותמת זמן "סונכרן לאחרונה"</td></tr>
+          </tbody>
+        </table>
+        <div class="pull-quote">
+          <p>ניגון אופליין הוא <strong>שקוף</strong>. ה-SPA שולח את אותה בקשה מחובר ואופליין — ה-proxy מטפל בהבדל.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 11 — מודל נתונים: שרת (DG-04)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="11"
+      data-notes="ContentItem הוא הישות המרכזית. יש לו קובץ אחד (MP4 או PDF) ויכול לשייך לקטגוריות ותחומי עניין מרובים דרך טבלאות חיבור. Category תומך בהיררכיה עצמית של 2 רמות — עומק מקסימלי נאכף בלוגיקת האפליקציה, לא בבסיס הנתונים. Interest היא רשימת תגיות שטוחה. אין ישות User ב-MVP — פרופיל המכשיר נמצא רק ב-IndexedDB של הדפדפן.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">DG-04 &middot; מודל נתונים — שרת</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">חמש ישויות ב-<span class="highlight-g">PostgreSQL</span></h1>
+        <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
+          <svg viewBox="0 0 900 260" width="100%" style="max-height:230px;display:block;margin:0 auto;" role="img" aria-label="ERD: ContentItem linked to Category and Interest via junction tables">
+            <defs>
+              <marker id="erd-t" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#c3fae8"/></marker>
+              <marker id="erd-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#b2f2bb"/></marker>
+              <marker id="erd-p" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#d0bfff"/></marker>
+            </defs>
+            <rect width="900" height="260" rx="8" fill="#0d1424"/>
+            <!-- PostgreSQL zone -->
+            <rect x="8" y="8" width="884" height="236" rx="6" fill="rgba(195,250,232,0.03)" stroke="#c3fae8" stroke-width="1"/>
+            <text x="450" y="25" text-anchor="middle" font-size="9" font-weight="700" fill="#c3fae8" font-family="Inter,system-ui,sans-serif" letter-spacing="1">SERVER — PostgreSQL</text>
+
+            <!-- ContentItem (center) -->
+            <rect x="310" y="32" width="280" height="170" rx="5" fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <text x="450" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">ContentItem</text>
+            <line x1="322" y1="60" x2="578" y2="60" stroke="#7c5cbc" stroke-width="0.8" opacity="0.5"/>
+            <text x="450" y="76" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">id (UUID, PK) · title · description</text>
+            <text x="450" y="91" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">type: ENUM('video','pdf') · filename</text>
+            <text x="450" y="106" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">filePath · fileSize · mimeType</text>
+            <text x="450" y="121" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">duration (nullable) · thumbnailPath</text>
+            <text x="450" y="136" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">version (INT, default 1)</text>
+            <text x="450" y="151" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">createdAt · updatedAt</text>
+            <text x="450" y="170" text-anchor="middle" font-size="8" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">idx: type · updatedAt · tsvector(title,desc)</text>
+            <text x="450" y="185" text-anchor="middle" font-size="8" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">Hard delete · No drafts in MVP</text>
+
+            <!-- ContentCategory junction -->
+            <rect x="120" y="75" width="170" height="60" rx="5" fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="205" y="96" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">ContentCategory</text>
+            <text x="205" y="111" text-anchor="middle" font-size="8.5" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">contentId FK · categoryId FK</text>
+            <text x="205" y="125" text-anchor="middle" font-size="8" fill="#1a4060" font-family="Inter,system-ui,sans-serif">PK: (contentId, categoryId)</text>
+            <!-- Arrow ContentItem → ContentCategory -->
+            <line x1="310" y1="105" x2="290" y2="105" stroke="#a5d8ff" stroke-width="1.5" marker-end="url(#erd-t)"/>
+            <text x="300" y="98" text-anchor="middle" font-size="7.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">M:N</text>
+
+            <!-- Category -->
+            <rect x="12" y="40" width="100" height="100" rx="5" fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="62" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Category</text>
+            <line x1="18" y1="68" x2="106" y2="68" stroke="#2d7a3a" stroke-width="0.7" opacity="0.5"/>
+            <text x="62" y="82" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">id (UUID, PK)</text>
+            <text x="62" y="96" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">name · sortOrder</text>
+            <text x="62" y="110" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">parentId → self</text>
+            <text x="62" y="124" text-anchor="middle" font-size="7.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">max depth=2 (app)</text>
+            <!-- Arrow ContentCategory → Category -->
+            <line x1="120" y1="100" x2="112" y2="88" stroke="#b2f2bb" stroke-width="1.5" marker-end="url(#erd-g)"/>
+
+            <!-- ContentInterest junction -->
+            <rect x="610" y="75" width="170" height="60" rx="5" fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
+            <text x="695" y="96" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">ContentInterest</text>
+            <text x="695" y="111" text-anchor="middle" font-size="8.5" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">contentId FK · interestId FK</text>
+            <text x="695" y="125" text-anchor="middle" font-size="8" fill="#1a4060" font-family="Inter,system-ui,sans-serif">PK: (contentId, interestId)</text>
+            <!-- Arrow ContentItem → ContentInterest -->
+            <line x1="590" y1="105" x2="610" y2="105" stroke="#a5d8ff" stroke-width="1.5" marker-end="url(#erd-t)"/>
+            <text x="600" y="98" text-anchor="middle" font-size="7.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">M:N</text>
+
+            <!-- Interest -->
+            <rect x="790" y="40" width="100" height="90" rx="5" fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
+            <text x="840" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3d2800" font-family="Inter,system-ui,sans-serif">Interest</text>
+            <line x1="796" y1="68" x2="884" y2="68" stroke="#cc8800" stroke-width="0.7" opacity="0.5"/>
+            <text x="840" y="82" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">id (UUID, PK)</text>
+            <text x="840" y="96" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">name (UNIQUE)</text>
+            <text x="840" y="110" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">createdAt</text>
+            <text x="840" y="124" text-anchor="middle" font-size="7.5" fill="#5d4800" font-family="Inter,system-ui,sans-serif">flat list (no tree)</text>
+            <!-- Arrow ContentInterest → Interest -->
+            <line x1="780" y1="100" x2="790" y2="88" stroke="#ffd8a8" stroke-width="1.5" marker-end="url(#erd-p)"/>
+
+            <!-- Legend -->
+            <rect x="12" y="222" width="11" height="11" rx="2" fill="#d0bfff"/><text x="28" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">ContentItem (central)</text>
+            <rect x="170" y="222" width="11" height="11" rx="2" fill="#b2f2bb"/><text x="186" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Category (self-ref 1:N)</text>
+            <rect x="350" y="222" width="11" height="11" rx="2" fill="#ffd8a8"/><text x="366" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Interest (flat tags)</text>
+            <rect x="490" y="222" width="11" height="11" rx="2" fill="#a5d8ff"/><text x="506" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Junction tables (M:N, cascade delete)</text>
+          </svg>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;">5 ישויות שרת &middot; UUIDs לכל PKs &middot; מחיקה קשה ב-MVP &middot; סכמה מבוססת Migration (Prisma / Knex)</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 12 — מודל נתונים: קצה (IndexedDB)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="12"
+      data-notes="ארבע ישויות ה-IndexedDB מכסות שלושה עניינים: תצורת מכשיר (DeviceProfile), גלישה אופליין (CachedCatalog), מעקב הורדות מפורש (DownloadRecord) ומעורבות מקומית (LocalAction). Chrome Cache API ו-Service Workers אינם בשימוש. ה-proxy מטפל בכל caching התוכן. DownloadRecord הוא מטא-דאטה טהור — הקובץ בפועל נמצא ב-nginx proxy_cache במערכת הקבצים של Linux VM.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">מודל נתונים — דפדפן בקצה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">ארבע ישויות מקומיות ב-<span class="highlight-g">IndexedDB</span></h1>
+        <div class="two-col">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-b">
+              <p class="card-title">DeviceProfile &mdash; singleton</p>
+              <p class="card-body">deviceId (UUID אוטומטי, יציב בין סשנים)<br>selectedInterestIds: string[]<br>createdAt · updatedAt<br><em>המשכיות: החלף deviceId ב-userId כשמוסיפים אימות</em></p>
+            </div>
+            <div class="card card-b">
+              <p class="card-title">CachedCatalog &mdash; singleton</p>
+              <p class="card-body">items: ContentItemDTO[] &mdash; קטלוג שרת מלא<br>categories: CategoryDTO[] &middot; interests: InterestDTO[]<br>lastSyncedAt: חותמת ISO<br><em>מוחלף לגמרי בכל משיכת סנכרון</em></p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
+            <div class="card card-g">
+              <p class="card-title">DownloadRecord &mdash; ממוין לפי contentId</p>
+              <p class="card-body">contentId · title · type · fileSize<br>downloadedAt · version (לתג "עודכן")<br><strong>מטא-דאטה בלבד &mdash; הקובץ בפועל נמצא ב-nginx proxy_cache</strong><br><em>מחיקת רשומה ≠ מחיקת קובץ (proxy מנהל פינוי)</em></p>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">LocalAction &mdash; ממוין לפי (contentId, action)</p>
+              <p class="card-body">contentId · action: 'like' | 'save'<br>active: boolean · timestamp<br><strong>אין סנכרון שרת ב-MVP</strong><br><em>מעוצב להעלאה אצווית עתידית כשתהיה זהות</em></p>
+            </div>
+          </div>
+        </div>
+        <div class="card card-gl" style="padding:0.75rem 1rem;">
+          <p class="card-body"><strong>שינוי v0.2:</strong> DownloadRecord לא מאחסן יותר מפתח cache או הפניית blob. Chrome Cache API אינו בשימוש. כל הגנת תוכן מטופלת על ידי nginx proxy_cache במערכת הקבצים של Linux VM.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 13 — משטח ה-API
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="13"
+      data-notes="פיצול ציבורי/admin נקי. למכשירי קצה יש גישה לקריאה בלבד ללא אימות. סיסמת admin היא סוד משותף יחיד המאוחסן כמשתנה סביבה בשרת. JWT tokens פגים לאחר 8 שעות ומאוחסנים ב-sessionStorage כך שהם נמחקים בסגירת הכרטיסייה. פרמטר שאילתה ?v={version} ב-URLs של קבצי תוכן הוא מנגנון ביטול ה-cache — לא ETags הנכרכים בביטול proxy, לא פקודות ביטול ידניות.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">חוזה API &middot; 21 נקודות קצה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">שני משטחים, <span class="highlight-g">הפרדה נקייה</span></h1>
+        <div class="two-col">
+          <div class="card card-b">
+            <p class="card-title">Public API &mdash; צד Edge, ללא אימות</p>
+            <div style="display:flex;flex-direction:column;gap:0.35rem;margin-top:0.5rem;font-family:'Courier New',monospace;font-size:var(--sz-small);">
+              <div><span style="color:var(--accent-green);">GET</span> <span style="color:var(--text-secondary);">/api/health</span> &mdash; בדיקת קישוריות</div>
+              <div><span style="color:var(--accent-green);">GET</span> <span style="color:var(--text-secondary);">/api/catalog</span> &mdash; JSON קטלוג מלא</div>
+              <div><span style="color:var(--accent-green);">GET</span> <span style="color:var(--text-secondary);">/api/content/:id</span> &mdash; מטא-דאטה פריט</div>
+              <div><span style="color:var(--accent-green);">GET</span> <span style="color:var(--text-secondary);">/api/content/:id/file?v={ver}</span></div>
+              <div style="color:var(--text-muted);font-size:0.85em;padding-right:0.5rem;">Range requests (206) נתמך &middot; proxy cached</div>
+              <div><span style="color:var(--accent-green);">GET</span> <span style="color:var(--text-secondary);">/api/content/:id/thumbnail</span></div>
+            </div>
+            <div class="card-body" style="margin-top:0.75rem;border-top:1px solid var(--border-subtle);padding-top:0.5rem;">קריאה בלבד · ללא אימות · edge proxy מטמין את כל התגובות</div>
+          </div>
+          <div class="card card-o">
+            <p class="card-title">Admin API &mdash; JWT Bearer · טוקנים ל-8 שעות</p>
+            <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.5rem;font-family:'Courier New',monospace;font-size:var(--sz-small);">
+              <div><span style="color:var(--accent-orange);">POST</span> <span style="color:var(--text-secondary);">/api/admin/login</span></div>
+              <div><span style="color:var(--accent-orange);">POST</span> <span style="color:var(--text-secondary);">/api/admin/content</span> &mdash; multipart upload</div>
+              <div><span style="color:#fb923c;">PUT</span>&nbsp; <span style="color:var(--text-secondary);">/api/admin/content/:id</span> &mdash; metadata</div>
+              <div><span style="color:#fb923c;">PUT</span>&nbsp; <span style="color:var(--text-secondary);">/api/admin/content/:id/file</span> &mdash; version++</div>
+              <div><span style="color:#f87171;">DEL</span> <span style="color:var(--text-secondary);">/api/admin/content/:id</span> &mdash; cascade</div>
+              <div><span style="color:var(--text-muted);font-size:0.85em;">CRUD /api/admin/categories (4 endpoints)</span></div>
+              <div><span style="color:var(--text-muted);font-size:0.85em;">CRUD /api/admin/interests (4 endpoints)</span></div>
+            </div>
+            <div class="card-body" style="margin-top:0.75rem;border-top:1px solid var(--border-subtle);padding-top:0.5rem;">סיסמה משותפת יחידה כמשתנה סביבה · JWT ב-sessionStorage</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--gap-sm);flex-wrap:wrap;">
+          <span class="badge badge-g">REST over JSON</span>
+          <span class="badge badge-b">Range requests (206)</span>
+          <span class="badge badge-b">?v= cache-busting</span>
+          <span class="badge badge-o">מעטפת שגיאה עקבית</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 14 — סטאק טכנולוגי
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="14"
+      data-notes="האילוץ המגדיר הוא TypeScript בכל מקום. ה-Edge SPA, Admin SPA ושרת ה-API כולם חולקים סוגים מ-packages/shared. זה מונע סטייה בחוזה ה-API — אם השרת משנה צורת DTO, הלקוח נכשל בקומפילציה, לא בזמן ריצה. pnpm workspaces monorepo תומך ב-tsconfig.base.json יחיד ו-pipeline CI יחיד. הסטאק ביזוי מכוון — אין כלים אקזוטיים, רק פרויקטים נתמכים היטב עם מערכות אקולוגיות גדולות.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">החלטות טכנולוגיות</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">סטאק אחד, <span class="highlight-g">תלויות מינימליות</span></h1>
+        <table class="data-table">
+          <thead><tr><th>שכבה</th><th>טכנולוגיה</th><th>למה נבחרה</th></tr></thead>
+          <tbody>
+            <tr><td>צד לקוח (Edge + Admin)</td><td><strong>HTML + TypeScript</strong></td><td class="muted">ללא תלות ב-framework; סטאק פשוט יותר; מספיק למורכבות SPA</td></tr>
+            <tr><td>צד שרת</td><td><strong>Node.js 20 LTS + Express 4</strong></td><td class="muted">אותה שפה כמו צד לקוח; הזרמת קבצים; מספיק ל-~20 לקוחות</td></tr>
+            <tr><td>מסד נתונים</td><td><strong>PostgreSQL 15+</strong></td><td class="muted">חיפוש טקסט (ILIKE); קריאות מקביליות; מוכן להמשכיות</td></tr>
+            <tr><td>אחסון קבצים</td><td><strong>מערכת קבצים מקומית + הפשטה</strong></td><td class="muted">הפשוט ביותר; הממשק מאפשר החלפת S3/MinIO ללא שינוי שכבת השירות</td></tr>
+            <tr><td>הזרמת וידאו</td><td><strong>MP4 + HTTP range requests (206)</strong></td><td class="muted">ללא קידוד; Chrome מטפל בצורה טבעית; קטעים ≤3 דקות</td></tr>
+            <tr><td>Edge caching</td><td><strong>nginx proxy_cache (Docker)</strong></td><td class="muted">אפס קוד לקוח לאופליין; בוגר; TTL הניתן להגדרה</td></tr>
+            <tr><td>Monorepo</td><td><strong>pnpm workspaces</strong></td><td class="muted">סוגי TypeScript משותפים; pipeline CI יחיד; ללא סטייה גרסאות</td></tr>
+            <tr><td>עיבוד PDF</td><td><strong>PDF.js</strong></td><td class="muted">מתוחזק על ידי Mozilla; בדפדפן; ללא עיבוד בצד השרת</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 15 — החלטות ארכיטקטורה AD1–AD6
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="15"
+      data-notes="שש ההחלטות האלה מהוות את היסוד. AD1 (monorepo) ו-AD5 (הפשטת מערכת קבצים) הם הקריטיים ביותר להמשכיות. ה-monorepo חייב להיות מוקם בספרינט 1 — התאמה של סוגים משותפים מאוחר יותר כואבת. הפשטת האחסון חייבת להיות במקום לפני יישום ההעלאה הראשון כדי שניתן יהיה להחליפה ב-S3/MinIO ללא מגע בשכבת השירות.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">החלטות ארכיטקטורה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">חלק 1 — <span class="highlight-g">בחירות יסוד</span></h1>
+        <div class="three-col">
+          <div class="card card-g"><p class="card-title">AD1 — TypeScript Monorepo</p><p class="card-body">שפה אחת. סוגים משותפים בין לקוח ושרת מונעים סטייה בחוזה API בזמן קומפילציה. Pipeline CI אחד.</p></div>
+          <div class="card card-g"><p class="card-title">AD2 — HTML + TypeScript לשני ה-SPAs</p><p class="card-body">ללא תלות ב-framework. סטאק פשוט יותר. מספיק למורכבות SPA. נמנע מעקומת למידה של React.</p></div>
+          <div class="card card-g"><p class="card-title">AD3 — Node.js + Express</p><p class="card-body">אותה שפה כמו צד לקוח. הזרמת קבצים פשוטה (206 range). מספיק ל-~20 לקוחות מקביליים.</p></div>
+          <div class="card card-b"><p class="card-title">AD4 — PostgreSQL</p><p class="card-body">רמת ייצור. חיפוש טקסט (ILIKE ל-MVP; tsvector בהמשך). קריאות מקביליות. סכמה מבוססת Migration מהיום הראשון.</p></div>
+          <div class="card card-b"><p class="card-title">AD5 — מערכת קבצים לתוכן</p><p class="card-body">הפשוטה ביותר. ללא שירות חיצוני. הפשטת <code style="color:var(--accent-green);">store/retrieve/delete</code> מאפשרת החלפת S3/MinIO ללא שינוי שכבת השירות.</p></div>
+          <div class="card card-b"><p class="card-title">AD6 — MP4 + HTTP Range (206)</p><p class="card-body">ללא pipeline קידוד. Chrome מטפל בהזרמה מבוססת range באופן טבעי. קטעים ≤3 דקות מספיקים ל-MVP.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 16 — החלטות ארכיטקטורה AD7–AD12
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="16"
+      data-notes="AD7 ו-AD12 יחד מגדירים את סיפור האופליין. ה-SPA תמיד מקומי (AD12), תוכן תמיד שמור ב-cache בשכבת הרשת (AD7), ו-IndexedDB עוקב רק אחר מה שהמשתמש אינטראקציה איתו במפורש (AD8). שילוב זה אומר שמכשיר הקצה ניתן לשימוש באמת בשטח ללא קישוריות — וקוד ה-SPA פשוט יותר כי יש רק נתיב קוד אחד.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">החלטות ארכיטקטורה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">חלק 2 — <span class="highlight-g">בחירות אופליין ופריסה</span></h1>
+        <div class="three-col">
+          <div class="card card-g"><p class="card-title">AD7 — nginx Proxy Cache</p><p class="card-body">מחליף Service Worker + Cache API. אפס קוד אופליין ב-SPA. אופליין שקוף לכל תוכן שנגיש בעבר.</p></div>
+          <div class="card card-g"><p class="card-title">AD8 — IndexedDB למצב בלבד</p><p class="card-body">פרופיל, רשומות הורדה, פעולות מקומיות. כל caching תוכן מואצל ל-proxy. קוד SPA נשאר פשוט — נתיב קוד אחד.</p></div>
+          <div class="card card-g"><p class="card-title">AD9 — תהליך Node.js יחיד</p><p class="card-body">3 מפתחים, 10 שבועות, ~20 משתמשים. Monolith עם מודולי שירות פנימיים נקיים. pm2 cluster זמין במידת הצורך.</p></div>
+          <div class="card card-b"><p class="card-title">AD10 — nginx TLS (ענן)</p><p class="card-body">דפוס סטנדרטי. מעביר TLS מ-Node. Let's Encrypt או self-signed לדמו. proxy_pass ל-localhost:3000.</p></div>
+          <div class="card card-b"><p class="card-title">AD11 — סנכרון קטלוג מלא</p><p class="card-body">~15 פריטים = &lt;10 KB JSON. סנכרון delta מוסיף מורכבות ללא תועלת. API מקבל <code style="color:var(--accent-green);">?since=</code> לdelta עתידי.</p></div>
+          <div class="card card-b"><p class="card-title">AD12 — SPA בתמונת Docker</p><p class="card-body">SPA תמיד זמין מקומית. ללא תלות בענן להפעלת אפליקציה. עדכון = בנייה מחדש + פריסת תמונת Docker.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 17 — נדחה במפורש
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="17"
+      data-notes="כל פריט נשקל ונדחה באופן פעיל, לא הושמט. הדחייה החשובה ביותר היא Service Workers — אינטואיטיבית מכיוון שSWs הם הדרך הסטנדרטית לעשות אופליין ב-PWAs. אבל בטופולוגיה שלנו, ה-proxy נמצא בשכבת הרשת, לא שכבת הדפדפן, שהיא טוב יותר בקפדנות: פועל לכל הבקשות כולל הזרמת וידאו, לא רק בקשות מיורטות על ידי SW. הפשטת האחסון וממשק SyncProvider הם התחייבויות הנדסיות לתוספות עתידיות.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">נדחה ונדחה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מה לא בנינו <span class="highlight-g">ולמה</span></h1>
+        <table class="data-table">
+          <thead><tr><th>חלופה</th><th>מדוע נדחה / נדחה</th></tr></thead>
+          <tbody>
+            <tr><td><strong>HLS / DASH adaptive streaming</strong></td><td class="muted">דורש ffmpeg; MP4 range requests מספיקים לקטעים ≤3 דקות ב-~20 מכשירים</td></tr>
+            <tr><td><strong>Service Worker + Cache API</strong></td><td class="muted">הוחלף על ידי nginx proxy_cache; SW מוסיף מורכבות ללא יתרון בטופולוגיה זו</td></tr>
+            <tr><td><strong>GraphQL</strong></td><td class="muted">REST פשוט יותר; קטלוג קטן; GraphQL מוסיף עקומת למידה ללא תועלת</td></tr>
+            <tr><td><strong>שכבת Redis cache</strong></td><td class="muted">~20 מכשירים מקביליים; PostgreSQL מטפל בזה; Redis הוא מורכבות מיותרת</td></tr>
+            <tr><td><strong>S3 / MinIO לתוכן</strong></td><td class="muted">מערכת קבצים + הפשטת אחסון; החלף את המימוש, לא את הממשק</td></tr>
+            <tr><td><strong>מיקרו-שירותים</strong></td><td class="muted">3 מפתחים, 10 שבועות, ~20 משתמשים — monolith עם מודולים פנימיים נקיים</td></tr>
+            <tr><td><strong>WebSocket / SSE push sync</strong></td><td class="muted">סנכרון מבוסס Pull מספיק ל-MVP; push ניתן להוספה לאותו שרת Express בהמשך</td></tr>
+            <tr><td><strong>Docker Compose / Kubernetes</strong></td><td class="muted">קונטיינר יחיד למכשיר קצה; <code style="color:var(--accent-green);">docker run --restart=always</code> מספיק</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 18 — ארכיטקטורת המשכיות
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="18"
+      data-notes="הערות ההמשכיות הן התחייבויות הנדסיות, לא חשיבה אופטימית. כל הערה מתארת הרחבה שארכיטקטורת ה-MVP תומכת בה במפורש. הפשטת האחסון, ה-auth middleware המקדים-מחווט, ממשק SyncProvider — אלה נמצאים בקוד ה-MVP כ-stubs. צוות המשך יורש אב טיפוס עובד, לא מוצר שלא ניתן לשימוש. הערת ההמשכיות החשובה ביותר היא אסטרטגיית migration של מסד הנתונים — חייבת להיות מוקמת מספרינט 1.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">הערות המשכיות</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">כיצד צוות המשך <span class="highlight-g">מרחיב זאת</span></h1>
+        <ul class="bullets">
+          <li><strong>זהות משתמש:</strong> Content API מקדים-מחווט middleware אימות אך עוקף אותו לנתיבי קצה. הוסף passport.js; החלף deviceId ב-userId ב-DeviceProfile. לא נדרשים שינויים אחרים.</li>
+          <li><strong>אחסון אובייקטים (S3/MinIO):</strong> ContentFileService חושף <code style="color:var(--accent-green);">store / retrieve / delete</code>. החלף את מימוש מערכת הקבצים — שכבת השירות וה-API לא משתנים.</li>
+          <li><strong>CDN:</strong> ה-proxy כבר מגיש עם כותרות <code style="color:var(--accent-green);">Cache-Control</code> ו-<code style="color:var(--accent-green);">ETag</code>. שילוב CDN הוא שינוי תצורה, לא שינוי קוד.</li>
+          <li><strong>Push sync (WebSocket/SSE):</strong> שרת Express תומך ב-WS לצד REST. עצב ממשק SyncProvider כדי שניתן יהיה להחליף Pull ב-Push ללא שכתוב SPA.</li>
+          <li><strong>אנליטיקה:</strong> LocalActions שומר deviceId + contentId + timestamp. סנכרון אצווה לשרת כשיש זהות. סכמת IndexedDB מוכנה — לא נדרשים שינויים.</li>
+          <li><strong>טעינה מראש יזומה לקצה:</strong> הוסף עבודת רקע ל-proxy שמושך את כל התוכן החדש ל-cache בשינוי קטלוג. כרגע מטמין בגישה ראשונה; טעינה מראש יזומה מכסה את כל התוכן לפני בקשת משתמש ראשונה.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 19 — סיכונים והפחתות
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="19"
+      data-notes="AR1 ו-AR5 הם הסיכונים בעלי ההשפעה הגבוהה ביותר. AR1 מופחת על ידי חלופת nginx X-Accel-Redirect — אם Node.js לא יכול לטפל בעומס וידאו, nginx מגיש קבצים ישירות ממערכת הקבצים. AR5 הוא סיכון UX; ה-scroll-snap בסגנון TikTok חייב להיות מוגדר כפרוטוטיפ בשבוע 1 כך שיהיה זמן לעבור לגישה אחרת אם נדרש. AR2 ו-AR8 הם סיכוני הגדרה שניתן לטפל בהם עם תיעוד טוב ותכנות בצמד בספרינט 1.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">מרשם סיכונים</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">סיכונים מובילים <span class="highlight-g">והפחתות</span></h1>
+        <table class="data-table">
+          <thead><tr><th>סיכון</th><th>L</th><th>I</th><th>הפחתה</th></tr></thead>
+          <tbody>
+            <tr><td><strong>AR1</strong> — Node.js צוואר בקבוק בהגשת וידאו ל-20 לקוחות מקביליים</td><td class="muted">בינוני</td><td class="muted" style="color:#f87171;"><strong>גבוה</strong></td><td class="muted">בדיקה עם עומס מדומה; חלופה: nginx X-Accel-Redirect מגיש קבצים ישירות מהדיסק</td></tr>
+            <tr><td><strong>AR5</strong> — CSS scroll-snap עלול להיות לא חלק על טאבלט</td><td class="muted">בינוני</td><td class="muted" style="color:#f87171;"><strong>גבוה</strong></td><td class="muted">פרוטוטיפ בשבוע 1; שקול Swiper.js או handler מגע מותאם אם scroll-snap מקורי לא מספיק</td></tr>
+            <tr><td><strong>AR2</strong> — Docker / Linux VM לא מוכרים לסטודנטים</td><td class="muted">בינוני</td><td class="muted">בינוני</td><td class="muted">תבנית Dockerfile מוכנה מראש; תכנות בצמד בספרינט 1</td></tr>
+            <tr><td><strong>AR8</strong> — מיפוי פורטים Linux VM → Windows localhost דורש תצורה</td><td class="muted">בינוני</td><td class="muted">בינוני</td><td class="muted">בדוק רשת VM מוקדם; WSL2 ממפה פורטים אוטומטית; VirtualBox צריך העברה מפורשת</td></tr>
+            <tr><td><strong>AR9</strong> — nginx proxy_cache לא מטמין תגובות range request כראוי</td><td class="muted">נמוך</td><td class="muted" style="color:#f87171;"><strong>גבוה</strong></td><td class="muted">בדוק מוקדם; אם נדרש, הגדר proxy להביא קובץ מלא ולהגיש ranges מ-cache</td></tr>
+            <tr><td><strong>AA5</strong> — סטודנטים לא מכירים Dockerfile + nginx config</td><td class="muted">בינוני</td><td class="muted">בינוני</td><td class="muted">ספק תבנית מוכנה מראש; מוסיף ~1–2 ימים אם לגמרי לא מוכרים</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 20 — שאלות ותשובות
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="20"
+      data-notes="מסמכי הייחוס כולם נמצאים ב-repository. מסמך הארכיטקטורה כולל הערות המשכיות לכל רכיב מרכזי. מסמך מודל הנתונים כולל את כל סוגי השדות, האילוצים ואסטרטגיית ה-migration. מסמך חוזה ה-API כולל צורות בקשה/תגובה מלאות ומודל האימות. מדד הדיאגרמות מקשר את כל 17 דיאגרמות Excalidraw.">
+      <div class="slide-inner centered" style="gap:var(--gap-lg);justify-content:center;min-height:70vh;">
+        <h1 class="title-hero" style="letter-spacing:-0.02em;">שאלות</h1>
+        <hr class="divider" style="width:100%;max-width:500px;">
+        <div class="two-col" style="width:100%;max-width:780px;margin-top:var(--gap-sm);">
+          <div class="card card-g" style="text-align:center;padding:1.5rem;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">&#9881;&#65039;</div>
+            <h3 class="title-h3" style="margin-bottom:0.4rem;">שאלות טכניות</h3>
+            <p class="card-body">ארכיטקטורה, מודל נתונים, עיצוב API, תצורת edge proxy, מימוש אופליין, הגדרת Docker, מבנה monorepo.</p>
+          </div>
+          <div class="card card-b" style="text-align:center;padding:1.5rem;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">&#128203;</div>
+            <h3 class="title-h3" style="margin-bottom:0.4rem;">שאלות תפעוליות</h3>
+            <p class="card-body">הגדרת דמו, מפת דרכים להמשכיות, תוכנית ספרינט, החלטות תחום, מבנה צוות, הפחתות סיכון.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%;max-width:680px;margin-top:var(--gap-sm);">
+          <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.25rem;">מסמכי ייחוס</p>
+          <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/04_system-architecture.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">החלטות ארכיטקטורה והערות המשכיות</span></div>
+          <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">כל 9 ישויות עם שדות ואילוצים</span></div>
+          <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/06_api-contract.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">21 נקודות קצה, DTOs, מודל אימות</span></div>
+          <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/visuals/diagram-index.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">כל 17 דיאגרמות (קישורי Excalidraw)</span></div>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">DK-03 &middot; גרסה 1.0 &middot; 2026-03-21</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL = slides.length;
+    const state = { current: 0, notesVisible: false, transitioning: false };
+    const progressBar  = document.getElementById('progress-bar');
+    const curEl        = document.getElementById('cur');
+    const totEl        = document.getElementById('tot');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const notesOverlay = document.getElementById('notes-overlay');
+    const notesContent = document.getElementById('notes-content');
+    totEl.textContent = TOTAL;
+
+    function goTo(index) {
+      if (state.transitioning) return;
+      if (index < 0 || index >= TOTAL) return;
+      if (index === state.current) return;
+      state.transitioning = true;
+      const prev = slides[state.current];
+      const next = slides[index];
+      const forward = index > state.current;
+      next.style.transition = 'none';
+      next.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      next.style.opacity = '0';
+      next.classList.remove('active', 'exit-left');
+      next.getBoundingClientRect();
+      prev.style.transition = '';
+      prev.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      prev.style.opacity = '0';
+      prev.classList.remove('active');
+      next.style.transition = '';
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+      next.classList.add('active');
+      state.current = index;
+      updateUI();
+      setTimeout(() => { state.transitioning = false; prev.style.transform = 'translateX(-60px)'; }, 480);
+    }
+
+    function updateUI() {
+      progressBar.style.width = ((state.current + 1) / TOTAL * 100) + '%';
+      curEl.textContent = state.current + 1;
+      btnPrev.disabled = state.current === 0;
+      btnNext.disabled = state.current === TOTAL - 1;
+      if (state.notesVisible) notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+    }
+
+    function toggleNotes() {
+      state.notesVisible = !state.notesVisible;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+        notesOverlay.removeAttribute('hidden');
+      } else { notesOverlay.setAttribute('hidden', ''); }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    }
+
+    document.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case ' ': e.preventDefault(); goTo(state.current + 1); break;
+        case 'ArrowLeft':  case 'ArrowUp':             e.preventDefault(); goTo(state.current - 1); break;
+        case 'Home': e.preventDefault(); goTo(0); break;
+        case 'End':  e.preventDefault(); goTo(TOTAL - 1); break;
+        case 'n': case 'N': e.preventDefault(); toggleNotes(); break;
+        case 'f': case 'F': e.preventDefault(); toggleFullscreen(); break;
+        case 'Escape': if (state.notesVisible) toggleNotes(); break;
+      }
+    });
+
+    let txStart = 0, tyStart = 0;
+    document.addEventListener('touchstart', e => { txStart = e.touches[0].clientX; tyStart = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - txStart;
+      const dy = e.changedTouches[0].clientY - tyStart;
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (Math.abs(dx) < 50 || angle > 60) return;
+      if (dx > 0) goTo(state.current + 1); else goTo(state.current - 1);
+    });
+
+    btnPrev.addEventListener('click', () => goTo(state.current - 1));
+    btnNext.addEventListener('click', () => goTo(state.current + 1));
+    document.getElementById('notes-close').addEventListener('click', toggleNotes);
+
+    slides.forEach((s, i) => {
+      if (i === 0) { s.style.opacity = '1'; s.style.transform = 'translateX(0)'; s.classList.add('active'); }
+      else { s.style.opacity = '0'; s.style.transform = 'translateX(-60px)'; s.classList.remove('active'); }
+    });
+    updateUI();
+  </script>
+
+</body>
+</html>

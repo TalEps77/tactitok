@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TactiTok — DK-07 אבטחה ופרישה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:        #0a0f1e;
+      --bg-secondary:      #111827;
+      --bg-tertiary:       #1a2438;
+      --bg-card:           #0f1a2e;
+      --accent-green:      #22c55e;
+      --accent-green-dim:  #166534;
+      --accent-green-glow: rgba(34,197,94,0.15);
+      --accent-blue:       #60a5fa;
+      --accent-blue-dim:   #1e3a5f;
+      --accent-blue-glow:  rgba(96,165,250,0.15);
+      --accent-orange:     #fb923c;
+      --accent-orange-dim: #9a3412;
+      --accent-red:        #f87171;
+      --accent-red-dim:    #7f1d1d;
+      --text-primary:      #f1f5f9;
+      --text-secondary:    #94a3b8;
+      --text-muted:        #475569;
+      --border-subtle:     rgba(255,255,255,0.06);
+      --border-green:      rgba(34,197,94,0.35);
+      --border-blue:       rgba(96,165,250,0.35);
+      --border-orange:     rgba(251,146,60,0.35);
+      --border-red:        rgba(248,113,113,0.35);
+      --font:              'Heebo', system-ui, -apple-system, sans-serif;
+      --sz-hero:   clamp(2.4rem, 4.5vw, 4.2rem);
+      --sz-h1:     clamp(1.7rem, 3vw, 2.8rem);
+      --sz-h2:     clamp(1.3rem, 2.2vw, 1.9rem);
+      --sz-h3:     clamp(1.05rem, 1.8vw, 1.45rem);
+      --sz-body:   clamp(0.88rem, 1.5vw, 1.1rem);
+      --sz-small:  clamp(0.78rem, 1.2vw, 0.95rem);
+      --sz-label:  clamp(0.64rem, 1vw, 0.78rem);
+      --pad:       clamp(2.5rem, 5vw, 5.5rem);
+      --gap-sm:    0.75rem;
+      --gap-md:    1.5rem;
+      --gap-lg:    2.5rem;
+      --gap-xl:    3.5rem;
+      --radius:    6px;
+      --radius-lg: 10px;
+      --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-slide:  420ms;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-primary); font-family: var(--font); color: var(--text-primary); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    /* Progress bar stays LTR — universally understood */
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-green), #4ade80); width: 10%; z-index: 200; transition: width 300ms var(--ease-slide); box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+    /* RTL: counter on the left */
+    #slide-counter { position: fixed; top: 1rem; left: 1.5rem; font-size: var(--sz-label); font-weight: 600; letter-spacing: 0.05em; color: var(--text-muted); z-index: 200; user-select: none; }
+    #slide-counter .cur { color: var(--accent-green); font-weight: 700; }
+    /* RTL: nav buttons on the left */
+    #nav-controls { position: fixed; bottom: 1.5rem; left: 1.5rem; display: flex; gap: 0.4rem; z-index: 200; }
+    #nav-controls button { width: 2.4rem; height: 2.4rem; border: 1px solid var(--border-green); border-radius: var(--radius); background: rgba(34,197,94,0.07); color: var(--accent-green); font-size: 1rem; cursor: pointer; transition: background 180ms ease, transform 120ms ease; display: flex; align-items: center; justify-content: center; }
+    #nav-controls button:hover { background: rgba(34,197,94,0.18); transform: scale(1.05); }
+    #nav-controls button:disabled { opacity: 0.25; pointer-events: none; }
+    #kb-hint { position: fixed; bottom: 1.6rem; left: 50%; transform: translateX(-50%); font-size: var(--sz-label); color: var(--text-muted); letter-spacing: 0.04em; z-index: 200; user-select: none; white-space: nowrap; }
+    /* RTL: notes close on left, padding flipped */
+    #notes-overlay { position: fixed; bottom: 0; left: 0; right: 0; max-height: 32vh; background: rgba(5,8,18,0.97); border-top: 2px solid var(--accent-green); padding: 1.1rem 1.5rem 1.1rem 2rem; z-index: 300; overflow-y: auto; backdrop-filter: blur(8px); }
+    #notes-overlay[hidden] { display: none; }
+    #notes-label { font-size: var(--sz-label); font-weight: 700; color: var(--accent-green); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    #notes-content { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.65; }
+    #notes-close { position: absolute; top: 0.8rem; left: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; transition: color 150ms; }
+    #notes-close:hover { color: var(--text-primary); }
+    #slides-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+    /* RTL: slides enter from left */
+    .slide { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: var(--pad); opacity: 0; transform: translateX(-60px); pointer-events: none; transition: opacity var(--dur-slide) var(--ease-slide), transform var(--dur-slide) var(--ease-slide); will-change: transform, opacity; }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 1; }
+    .slide-inner { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: var(--gap-md); }
+    .slide-inner.centered { align-items: center; text-align: center; justify-content: center; }
+    .label   { font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-green); }
+    .label-b { font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-blue); }
+    .label-o { font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-orange); }
+    .label-r { font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-red); }
+    .accent-bar   { width: 2.5rem; height: 3px; background: var(--accent-green);  border-radius: 2px; margin-top: 0.35rem; }
+    .accent-bar-b { width: 2.5rem; height: 3px; background: var(--accent-blue);   border-radius: 2px; margin-top: 0.35rem; }
+    .accent-bar-o { width: 2.5rem; height: 3px; background: var(--accent-orange); border-radius: 2px; margin-top: 0.35rem; }
+    .accent-bar-r { width: 2.5rem; height: 3px; background: var(--accent-red);    border-radius: 2px; margin-top: 0.35rem; }
+    .label-block { display: flex; flex-direction: column; gap: 0; }
+    .title-hero { font-size: var(--sz-hero); font-weight: 900; line-height: 1.1; }
+    .title-h1   { font-size: var(--sz-h1);   font-weight: 800; line-height: 1.15; }
+    .title-h2   { font-size: var(--sz-h2);   font-weight: 700; line-height: 1.2; }
+    .title-h3   { font-size: var(--sz-h3);   font-weight: 700; line-height: 1.25; }
+    .highlight-g { color: var(--accent-green); }
+    .highlight-b { color: var(--accent-blue); }
+    .highlight-o { color: var(--accent-orange); }
+    .highlight-r { color: var(--accent-red); }
+    .card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 1.25rem 1.4rem; }
+    .card-g { border-top: 3px solid var(--accent-green); }
+    .card-b { border-top: 3px solid var(--accent-blue); }
+    .card-o { border-top: 3px solid var(--accent-orange); }
+    .card-r { border-top: 3px solid var(--accent-red); }
+    /* RTL: inline-start border = border-right */
+    .card-gl { border-right: 3px solid var(--accent-green); }
+    .card-bl { border-right: 3px solid var(--accent-blue); }
+    .card-title { font-size: var(--sz-small); font-weight: 700; letter-spacing: 0.04em; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .card-body  { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+    /* RTL: bullet marker ◂ */
+    .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bullets li { display: flex; align-items: flex-start; gap: 0.7rem; font-size: var(--sz-body); color: var(--text-primary); line-height: 1.55; }
+    .bullets li::before { content: '◂'; color: var(--accent-green); font-size: 0.8em; flex-shrink: 0; margin-top: 0.22em; }
+    .bullets li strong { color: var(--text-primary); font-weight: 600; }
+    .bullets-b li::before { color: var(--accent-blue); }
+    .bullets-o li::before { color: var(--accent-orange); }
+    .bullets-r li::before { color: var(--accent-red); }
+    .badge { display: inline-block; padding: 0.18em 0.55em; border-radius: 3px; font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-g { background: rgba(34,197,94,0.12);  color: var(--accent-green);  border: 1px solid var(--border-green); }
+    .badge-b { background: rgba(96,165,250,0.12);  color: var(--accent-blue);   border: 1px solid var(--border-blue); }
+    .badge-o { background: rgba(251,146,60,0.12);  color: var(--accent-orange); border: 1px solid var(--border-orange); }
+    .badge-r { background: rgba(248,113,113,0.12); color: var(--accent-red);    border: 1px solid var(--border-red); }
+    /* RTL: table headers align right */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { background: var(--bg-tertiary); color: var(--accent-green); font-size: var(--sz-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.6rem 0.9rem; text-align: right; border-bottom: 1px solid var(--border-green); }
+    .data-table th.blue { color: var(--accent-blue); border-bottom-color: var(--border-blue); }
+    .data-table td { padding: 0.5rem 0.9rem; font-size: var(--sz-small); border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); vertical-align: top; line-height: 1.5; }
+    .data-table tr:nth-child(even) td { background: rgba(26,36,56,0.5); }
+    .data-table .muted { color: var(--text-secondary); }
+    .data-table .mono { font-family: 'Courier New', monospace; font-size: 0.88em; }
+    .data-table .highlight-g { color: var(--accent-green); font-weight: 600; }
+    .data-table .highlight-b { color: var(--accent-blue); font-weight: 600; }
+    .data-table .highlight-o { color: var(--accent-orange); font-weight: 600; }
+    .data-table .highlight-r { color: var(--accent-red); font-weight: 600; }
+    /* RTL: gradient from right */
+    .divider { width: 100%; height: 1px; background: linear-gradient(270deg, var(--accent-green), transparent); border: none; margin: 0; }
+    .table-container { overflow-x: auto; }
+    /* Zone boxes (RTL: accent on right) */
+    .zone-box { border-radius: var(--radius-lg); padding: 1.4rem 1.6rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .zone-box-g { background: rgba(34,197,94,0.05);   border: 1px solid var(--border-green);  border-right: 4px solid var(--accent-green); }
+    .zone-box-o { background: rgba(251,146,60,0.05);  border: 1px solid var(--border-orange); border-right: 4px solid var(--accent-orange); }
+    .zone-box-b { background: rgba(96,165,250,0.05);  border: 1px solid var(--border-blue);   border-right: 4px solid var(--accent-blue); }
+    .zone-box-r { background: rgba(248,113,113,0.05); border: 1px solid var(--border-red);    border-right: 4px solid var(--accent-red); }
+    .zone-title { font-size: var(--sz-h3); font-weight: 800; }
+    .zone-sub   { font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+    /* RTL: note-box and info-box accent on right */
+    .note-box { background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.25); border-right: 3px solid var(--accent-orange); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+    .note-box strong { color: var(--accent-orange); }
+    .info-box { background: rgba(96,165,250,0.05); border: 1px solid rgba(96,165,250,0.2); border-right: 3px solid var(--accent-blue); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: var(--sz-small); color: var(--text-secondary); line-height: 1.6; }
+    .info-box strong { color: var(--accent-blue); }
+    .doc-ref { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 0.65rem 1rem; font-size: var(--sz-small); display: flex; align-items: center; gap: 0.5rem; }
+    .doc-ref-icon { color: var(--accent-green); flex-shrink: 0; }
+    .doc-ref-path { font-family: 'Courier New', monospace; color: var(--text-secondary); font-size: 0.85em; }
+    @media print {
+      html, body { overflow: auto; height: auto; background: white; color: #111; }
+      #progress-bar, #slide-counter, #nav-controls, #kb-hint, #notes-overlay { display: none !important; }
+      #slides-container { overflow: visible; height: auto; position: static; }
+      .slide { position: relative !important; transform: none !important; opacity: 1 !important; pointer-events: auto !important; display: flex !important; width: 100%; min-height: 100vh; page-break-after: always; break-after: page; background: white; padding: 2cm 2.5cm; align-items: flex-start; }
+      .title-hero, .title-h1, .title-h2, .title-h3 { color: #111; }
+      .highlight-g { color: #166534; } .label { color: #166534; } .accent-bar { background: #166534; }
+      .highlight-b { color: #1e3a8a; } .label-b { color: #1e3a8a; }
+      .highlight-o { color: #92400e; } .label-o { color: #92400e; }
+      .highlight-r { color: #991b1b; } .label-r { color: #991b1b; }
+      .card { background: #f9fafb; border-color: #d1d5db; }
+      .data-table th { background: #f3f4f6; color: #166534; } .data-table td { color: #111; }
+      .zone-box { background: #f9fafb; border-color: #d1d5db; }
+      .note-box { background: #fff7ed; border-color: #f59e0b; }
+      .info-box { background: #eff6ff; border-color: #3b82f6; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+  <div id="slide-counter"><span class="cur" id="cur">1</span> / <span id="tot">10</span></div>
+  <nav id="nav-controls" aria-label="ניווט שקופיות">
+    <button id="btn-prev" aria-label="שקופית קודמת" title="קודמת (←)">&#8592;</button>
+    <button id="btn-next" aria-label="שקופית הבאה" title="הבאה (→)">&#8594;</button>
+  </nav>
+  <div id="kb-hint">← → לניווט &nbsp;&middot;&nbsp; N להערות &nbsp;&middot;&nbsp; F למסך מלא</div>
+  <div id="notes-overlay" hidden>
+    <p id="notes-label">הערות מציג</p>
+    <button id="notes-close" aria-label="סגור הערות">&#10005;</button>
+    <p id="notes-content"></p>
+  </div>
+
+  <main id="slides-container">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 1 — כותרת
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-slide="1"
+      data-notes="ברוכים הבאים ל-DK-07 — יציבת אבטחה ופרישה. מסד זה מיועד לסוקרי אבטחה ומעריכים צבאיים הזקוקים להבין כיצד TactiTok מטפל בתוכן מבצעי רגיש. נסקור את שלושת אזורי האמון, אבטחת תעבורה, אימות, טיפול בתוכן ומה ה-MVP אינו מאבטח במפורש. מקורות: product/docs-he/02_system-boundaries.md §10 ו-product/docs-he/04_system-architecture.md §11.">
+      <div class="slide-inner centered" style="gap:var(--gap-lg);min-height:70vh;justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+          <polygon points="36,4 68,21 68,51 36,68 4,51 4,21" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+          <polygon points="36,10 62,24 62,48 36,62 10,48 10,24" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="36" y="41" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#22c55e" font-family="Heebo,system-ui,sans-serif" letter-spacing="-0.5">TT</text>
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
+          <p class="label">DK-07 &mdash; אבטחה ופרישה</p>
+          <h1 class="title-hero" style="letter-spacing:-0.02em;">TactiTok <span class="highlight-g">אבטחה</span> ו<span class="highlight-b">פרישה</span></h1>
+          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:680px;line-height:1.5;">אזורי אמון &middot; אבטחת תעבורה &middot; אימות &middot; תוכן רגיש &middot; סביבת הדגמה</p>
+        </div>
+        <hr class="divider" style="width:100%;max-width:500px;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+          <span class="badge badge-g">3 אזורי אמון</span>
+          <span class="badge badge-b">TLS בכל מקום</span>
+          <span class="badge badge-o">קהל: סוקרי אבטחה / מעריכים צבאיים</span>
+        </div>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);">גרסה 0.1 &middot; מרץ 2026 &middot; מקורות: 02_system-boundaries.md §10 &middot; 04_system-architecture.md §11</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 2 — מדוע האבטחה חשובה כאן
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="2"
+      data-notes="האתגר המרכזי: TactiTok מגיש תוכן אימון מבצעי רגיש על מכשיר קיוסק ללא זהות משתמש. אין התחברות לגורם השדה. תוכן לא יגיע לגורמים לא מיועדים. המערכת תוכננה לסביבת שדה מבוקרת, אך המכשיר עצמו הוא חצי-מהימן — הוא אינו תחת ניהול הצוות. שקופית זו מסבירה מדוע אבטחה חשובה גם עבור מה שנראה כצופה תוכן פשוט.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">הקשר</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">מדוע האבטחה חשובה כאן</h1>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="zone-box zone-box-o">
+              <p class="zone-title highlight-o">הבעיה</p>
+              <ul class="bullets bullets-o" style="margin-top:0.25rem;">
+                <li><strong>תוכן רגיש</strong> — חומר אימון מבצעי שאינו לגישה ציבורית</li>
+                <li><strong>ללא זהות משתמש</strong> — קיוסק שדה הוא אנונימי מעיצוב</li>
+                <li><strong>מכשיר שדה</strong> — אינו מנוהל על-ידי צוות הפיתוח</li>
+                <li><strong>ללא DRM</strong> — האבטחה מבוססת על בידוד רשת + TLS</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="zone-box zone-box-g">
+              <p class="zone-title highlight-g">היקף אבטחת MVP</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>TLS על כל תעבורת ענן</strong> — תוכן לא עובר בטקסט ברור</li>
+                <li><strong>אימות מנהל</strong> — רק צוות מורשה יכול לפרסם תוכן</li>
+                <li><strong>ללא טלמטריה</strong> — לא יוצאים נתוני שימוש מהמכשיר</li>
+                <li><strong>אימות תוכן</strong> — לא מתקבלים קבצים ניתנים להרצה</li>
+              </ul>
+            </div>
+            <div class="note-box">
+              <strong>מחוץ להיקף MVP:</strong> נעילת קיוסק ברמת מערכת הפעלה, כללי חומת אש VM, אבטחה פיזית של המכשיר, DRM/סיווג תוכן — אלו אחריות תשתית.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 3 — שלושה אזורי אמון
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="3"
+      data-notes="מערכת TactiTok מחולקת לשלושה אזורי אמון. אזור 1 — שרת הענן — מהימן לחלוטין: כל הנתונים הסמכותיים נמצאים כאן, והוא מוגבל ברשת. אזור 2 — מכשיר הקצה — חצי-מהימן: ללא זהות משתמש, גישת קריאה בלבד לתוכן. אזור 3 — לקוח מנהל — מאומת: צוות מטה עם סיסמה משותפת, פועל ברשת המטה. האמון פוחת כשמתרחקים מהשרת. ראה גם: תרשים DG-16 במדד התרשימים.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">ארכיטקטורת אמון</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">שלושה אזורי אמון</h1>
+        <div style="display:flex;flex-direction:column;gap:var(--gap-md);margin-top:0.5rem;">
+          <div class="zone-box zone-box-g">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <span class="badge badge-g">אזור 1</span>
+              <p class="zone-title highlight-g">שרת — מהימן</p>
+            </div>
+            <p class="zone-sub">VM ענן: Content API, Admin API, PostgreSQL, מאגר קבצים. מקור אמת סמכותי. כל הנתונים כאן. HTTPS מסתיים כאן. גישת הרשת מוגבלת.</p>
+          </div>
+          <div class="zone-box zone-box-o">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <span class="badge badge-o">אזור 2</span>
+              <p class="zone-title highlight-o">מכשיר קצה — חצי-מהימן</p>
+            </div>
+            <p class="zone-sub">קיוסק שדה: ללא זהות משתמש, גישה אנונימית, קטלוג קריאה בלבד. Chrome מתחבר לפרוקסי הקצה דרך localhost בלבד. מטמון מקומי מחזיק תוכן שנגשו אליו קודם. לא ניתן לשנות נתוני שרת.</p>
+          </div>
+          <div class="zone-box zone-box-b">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <span class="badge badge-b">אזור 3</span>
+              <p class="zone-title highlight-b">לקוח מנהל — מאומת</p>
+            </div>
+            <p class="zone-sub">מחשב מטה: סיסמה משותפת + טוקן סשן, Admin API בלבד, פועל ברשת המטה. הסשן נמחק בסגירת הלשונית (sessionStorage, לא localStorage).</p>
+          </div>
+        </div>
+        <div class="info-box" style="margin-top:0.25rem;"><strong>הפניה לתרשים:</strong> DG-16 (אזורי אמון/אבטחה) מספק ייצוג ויזואלי של גבולות אלו.</div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 4 — אזור 1 — שרת (מהימן)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="4"
+      data-notes="אזור 1 הוא שרת הענן. כל מה שהצוות בונה ופורס ל-VM הענן נמצא כאן. הוא מקור האמת הסמכותי לכל נתוני הקטלוג וקבצי התוכן. השרת מסיים TLS — כל התעבורה המגיעה לפורט 443 מפוענחת על-ידי nginx, שמעביר לשרת ה-Node.js ב-localhost:3000. מסד PostgreSQL ומאגר הקבצים נגישים רק מ-localhost ב-VM — הם לא נחשפים לרשת ישירות. הגבלת גישת השרת לרשת ידועה (VPN או רשימת IP) מצמצמת משטח התקיפה, אם כי זו החלטת תשתית.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">אזור 1 — מהימן</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1"><span class="highlight-g">אזור 1</span> — שרת</h1>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-g">
+              <p class="card-title">מה רץ כאן</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>Content API</strong> — קטלוג קריאה בלבד + הגשת קבצים למכשירי קצה</li>
+                <li><strong>Admin API</strong> — העלאה מאומתת, CRUD מטאדטה, ניהול קטגוריות</li>
+                <li><strong>PostgreSQL</strong> — כל מטאדטת הקטלוג (localhost בלבד)</li>
+                <li><strong>מאגר קבצים</strong> — סרטונים ו-PDF שהועלו (localhost בלבד)</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-g">
+              <p class="card-title">מאפייני אבטחה</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>סיום HTTPS</strong> — nginx על פורט 443; TLS 1.2+</li>
+                <li><strong>DB + מאגר קבצים</strong> — localhost בלבד; לא נגישים ישירות לרשת</li>
+                <li><strong>סמכותי</strong> — כל שינויי תוכן כאן; הקצה הוא קריאה בלבד</li>
+                <li><strong>הגבלת רשת</strong> — הגבל לטווח IP ידוע אם אפשרי (תשתית)</li>
+              </ul>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">Content API ללא אימות</p>
+              <p class="card-body">מכשירי קצה קוראים תוכן באופן אנונימי. ללא middleware אימות ב-<code style="font-family:monospace;">/api/catalog</code> או <code style="font-family:monospace;">/api/content</code>. ההגבלה היא ברשת, לא בזהות.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 5 — אזור 2 — מכשיר קצה (חצי-מהימן)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="5"
+      data-notes="אזור 2 הוא מכשיר הקצה בשדה. הוא חצי-מהימן מכיוון שאיננו שולטים במערכת ההפעלה, תצורת ה-VM, או גישה פיזית. מה כן בשליטתנו: מיכל ה-Docker שמריץ את פרוקסי nginx המטמון ואת חבילת ה-Edge SPA. Chrome ב-Windows מתחבר ל-localhost:8080 — הוא לא מגיע ישירות לענן. הפרוקסי מאמת את חיבור HTTPS לענן. מכשיר הקצה הוא קריאה בלבד: ניתן למשוך מטאדטת קטלוג וקבצי תוכן, אך לא להעלות, למחוק, או לשנות דבר בשרת. אחסון מקומי (IndexedDB + מטמון פרוקסי) אינו מוצפן — ארגז החול של הדפדפן הוא הגבול ל-MVP.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label-o">אזור 2 — חצי-מהימן</p><div class="accent-bar-o"></div></div>
+        <h1 class="title-h1"><span class="highlight-o">אזור 2</span> — מכשיר קצה</h1>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-o">
+              <p class="card-title">מודל קיוסק — ללא זהות</p>
+              <ul class="bullets bullets-o" style="margin-top:0.25rem;">
+                <li><strong>גישה אנונימית</strong> — ללא התחברות, ללא זהות משתמש, פרופיל מכשיר בלבד</li>
+                <li><strong>קריאה בלבד</strong> — ניתן למשוך קטלוג + תוכן, לא לשנות נתוני שרת</li>
+                <li><strong>פרופיל מכשיר</strong> — בחירת תחומי עניין שמורה מקומית ב-IndexedDB; לא נשלחת לשרת</li>
+              </ul>
+            </div>
+            <div class="card card-o">
+              <p class="card-title">בידוד רשת</p>
+              <ul class="bullets bullets-o" style="margin-top:0.25rem;">
+                <li><strong>Chrome ↔ פרוקסי</strong> — HTTP דרך localhost בלבד (אותו מחשב, ללא חשיפת רשת)</li>
+                <li><strong>פרוקסי ↔ ענן</strong> — HTTPS; הפרוקסי מאמת תעודת TLS של הענן</li>
+                <li><strong>ללא גישת ענן ישירה</strong> מ-Chrome — הפרוקסי הוא נקודת יציאה היחידה</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-o">
+              <p class="card-title">מה אנו שולטים בקצה</p>
+              <ul class="bullets bullets-o" style="margin-top:0.25rem;">
+                <li><strong>מיכל Docker</strong> — פרוקסי nginx + חבילת SPA (בבעלות הצוות)</li>
+                <li><strong>מטמון פרוקסי</strong> — ב-filesystem של ה-VM הלינוקס, לא נגיש ישירות מ-Windows</li>
+                <li><strong>קוד SPA</strong> — כל לוגיקת הדפדפן</li>
+              </ul>
+            </div>
+            <div class="note-box">
+              <strong>לא בשליטת הצוות:</strong> מערכת הפעלה Windows, תצורת VM לינוקס, Docker daemon, הגדרת מצב קיוסק, גישה פיזית למכשיר. אחסון דפדפן מקומי אינו מוצפן — ארגז החול הוא גבול ה-MVP.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 6 — אזור 3 — לקוח מנהל (מאומת)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="6"
+      data-notes="אזור 3 הוא לקוח המנהל — דפדפן מחשב המטה שניגש לפורטל המנהל. זהו המשטח המאומת היחיד ב-MVP. האימות הוא סיסמה משותפת (לא חשבונות למשתמש). בכניסה מוצלחת, השרת מחזיר טוקן סשן — JWT או טוקן אטום — שה-Admin SPA מאחסן ב-sessionStorage. שימוש ב-sessionStorage ולא ב-localStorage אומר שהטוקן נמחק אוטומטית עם סגירת הלשונית, מפחית סכנת שימוש חוזר בסשן ישן. כל נתיבי Admin API מוגנים לחלוטין — כל שינויי תוכן דורשים טוקן סשן תקף בכותרת Authorization.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label-b">אזור 3 — מאומת</p><div class="accent-bar-b"></div></div>
+        <h1 class="title-h1"><span class="highlight-b">אזור 3</span> — לקוח מנהל</h1>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-b">
+              <p class="card-title">מודל אימות</p>
+              <ul class="bullets bullets-b" style="margin-top:0.25rem;">
+                <li><strong>סיסמה משותפת</strong> — פרטי גישה יחידים לכל צוות המנהלים במטה (MVP)</li>
+                <li><strong>טוקן סשן</strong> — מוחזר בכניסה; נשלח בכותרת <code style="font-family:monospace;">Authorization</code> בכל קריאת Admin API</li>
+                <li><strong>sessionStorage</strong> — הטוקן נמחק אוטומטית עם סגירת הלשונית</li>
+                <li><strong>תפוגת טוקן</strong> — בצד שרת; טוקנים שפגו תוקפם נדחים</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-b">
+              <p class="card-title">טווח גישה</p>
+              <ul class="bullets bullets-b" style="margin-top:0.25rem;">
+                <li><strong>Admin API בלבד</strong> — העלאה, CRUD מטאדטה, ניהול קטגוריות</li>
+                <li><strong>רשת מטה</strong> — פורטל המנהל לא מיועד להיות ציבורי</li>
+                <li><strong>ללא RBAC</strong> — תפקיד יחיד; הרשאות למשתמש הן פוסט-MVP</li>
+              </ul>
+            </div>
+            <div class="info-box">
+              <strong>הערת המשכיות:</strong> מודל הסיסמה המשותפת + תפקיד יחיד הוא פשוט במכוון ל-MVP. נתיב שדרוג פוסט-MVP יוסיף חשבונות למשתמש ו-RBAC באותו Admin API — ללא שינויים מבניים.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 7 — אבטחת תעבורה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="7"
+      data-notes="כל תעבורת הרשת ב-TactiTok משתמשת ב-TLS 1.2 או גבוה יותר, עם חריג מכוון לחיבור localhost בין Chrome לפרוקסי הקצה — שהוא באותו מחשב ולא עובר ברשת. שרת הענן מסיים TLS על פורט 443 באמצעות nginx. לסביבת הדגמה, תעודה חתומה עצמית מקובלת; Let's Encrypt הוא האפשרות המועדפת אם יש שם דומיין. פרוקסי הקצה מאמת את תעודת TLS של שרת הענן — הוא לא מדלג על האימות. HTTP על localhost אינו מחשש אבטחה כי התעבורה לא עוזבת את המכשיר.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">אבטחת תעבורה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">אבטחת תעבורה</h1>
+        <div class="table-container" style="margin-top:0.5rem;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>חיבור</th>
+                <th>פרוטוקול</th>
+                <th>הערות</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="highlight-g">Chrome → פרוקסי קצה</td>
+                <td><span class="badge badge-o">HTTP</span></td>
+                <td class="muted">localhost בלבד — אותו מחשב פיזי; ללא חשיפת רשת</td>
+              </tr>
+              <tr>
+                <td class="highlight-g">פרוקסי קצה → שרת ענן</td>
+                <td><span class="badge badge-g">HTTPS TLS 1.2+</span></td>
+                <td class="muted">הפרוקסי מאמת תעודת TLS של הענן; דוחה תעודות לא תקינות</td>
+              </tr>
+              <tr>
+                <td class="highlight-b">מחשב מטה → שרת ענן</td>
+                <td><span class="badge badge-g">HTTPS TLS 1.2+</span></td>
+                <td class="muted">TLS סטנדרטי של דפדפן; פורטל מנהל מוגש דרך HTTPS</td>
+              </tr>
+              <tr>
+                <td class="highlight-g">ענן: nginx פורט 443</td>
+                <td><span class="badge badge-g">סיום TLS</span></td>
+                <td class="muted">nginx מסיים TLS; מעביר ל-Node.js על localhost:3000</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div class="card card-g">
+            <p class="card-title">תעודת TLS (הדגמה)</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li><strong>מועדף:</strong> Let's Encrypt (חינם, חידוש אוטומטי, אם יש שם דומיין)</li>
+              <li><strong>חלופה:</strong> תעודה חתומה עצמית (מקובלת לסביבת מעבדה/הדגמה)</li>
+            </ul>
+          </div>
+          <div class="card card-g">
+            <p class="card-title">מדוע HTTP ב-localhost מקובל</p>
+            <ul class="bullets" style="margin-top:0.25rem;">
+              <li>התעבורה נשארת בתוך אותו מחשב פיזי</li>
+              <li>ממשק רשת לא נחצה — loopback בלבד</li>
+              <li>עקבי עם ארכיטקטורת דפדפן/פרוקסי סטנדרטית</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 8 — אבטחת תוכן
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="8"
+      data-notes="אבטחת התוכן עוסקת בשתי דאגות עיקריות: מניעת העלאות קבצים זדוניות, והבטחה שקבצי תוכן לא ייחשפו ישירות. בהעלאה, השרת מאמת גם סוג MIME וגם סיומת קובץ — דוחה כל דבר שאינו MP4 או PDF סטנדרטי. לא מתקבלים קבצים ניתנים להרצה. קבצים שהועלו נשמרים תחת שמות שנוצרו על-ידי השרת עם content-id — ללא נתיב שסופק על-ידי המשתמש שיכול לאפשר path traversal. תוכן מוגש דרך שרת ה-API, לא דרך URLs ישירות של filesystem. במכשיר הקצה, מטמון הפרוקסי שומר קבצים ב-filesystem של ה-VM הלינוקס, שאינו נגיש ישירות מ-Windows — Chrome ניגש לתוכן שמטומן רק דרך ממשק ה-HTTP של הפרוקסי. לא יוצאים נתוני טלמטריה ממכשיר הקצה ב-MVP.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">אבטחת תוכן</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">אבטחת תוכן</h1>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-g">
+              <p class="card-title">אימות העלאה (שרת)</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>סוג MIME + סיומת קובץ</strong> — שניהם מאומתים בהעלאה; אי-התאמה נדחית</li>
+                <li><strong>ללא קבצים ניתנים להרצה</strong> — רק MP4 וידאו ו-PDF סטנדרטי מתקבלים</li>
+                <li><strong>הגבלת גודל</strong> — קבצים מעל 100 MB נדחים</li>
+                <li><strong>שמות קבצים שנוצרו</strong> — נשמרים כ-<code style="font-family:monospace;">{contentId}.{ext}</code>; ללא נתיבים שסופקו על-ידי המשתמש</li>
+              </ul>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">הגשת קבצים</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>ללא URLs ישירות של filesystem</strong> — קבצים מוגשים רק דרך נקודת קצה API</li>
+                <li><strong>API שולט בכותרות</strong> — Content-Type, Accept-Ranges, Cache-Control נקבעים על-ידי השרת</li>
+                <li><strong>ללא סכנת path traversal</strong> — content-id מאומת לפני חיפוש קובץ</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-g">
+              <p class="card-title">בידוד מטמון קצה</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>מטמון פרוקסי</strong> ב-filesystem של ה-VM הלינוקס — לא נגיש מ-Windows</li>
+                <li><strong>Chrome ניגש</strong> לקבצים שמטומנים רק דרך HTTP של הפרוקסי — לא ישירות</li>
+                <li><strong>IndexedDB</strong> — מאחסן רשומות מטאדטה בלבד; ללא נתוני קבצים גולמיים</li>
+              </ul>
+            </div>
+            <div class="card card-g">
+              <p class="card-title">ללא טלמטריה</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>אפס נתוני שימוש</strong> יוצאים ממכשיר הקצה ב-MVP</li>
+                <li><strong>פעולות לייק/שמירה</strong> שמורות מקומית ב-IndexedDB בלבד — ללא סנכרון שרת</li>
+                <li><strong>ללא פלטפורמת אנליטיקה</strong> משולבת</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 9 — היקף MVP — מה לא מכוסה
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="9"
+      data-notes="שקופית זו חשובה להגדרת ציפיות כנות עם סוקרי אבטחה. יציבת האבטחה של TactiTok מתאימה לדגמת מעבדה של תוכן רגיש-אך-לא-מסווג. זו אינה מערכת ייצור מוקשחת. הצוות אינו אחראי במפורש להגדרת קיוסק ברמת מערכת ההפעלה, כללי חומת אש VM, אבטחה פיזית, או DRM תוכן. אלו הן אחריות תשתית או היקף פוסט-MVP. אחסון דפדפן מקומי (IndexedDB ומטמון פרוקסי) אינו מוצפן — ארגז החול של הדפדפן הוא הגבול. סוקרים צריכים להבין שזהו אב-טיפוס, לא פרישה מאובטחת ייצור.">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label-r">היקף אבטחה</p><div class="accent-bar-r"></div></div>
+        <h1 class="title-h1">היקף MVP — מה <span class="highlight-r">לא</span> מכוסה</h1>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="zone-box zone-box-r">
+              <p class="zone-title highlight-r">אחריות תשתית</p>
+              <ul class="bullets bullets-r" style="margin-top:0.25rem;">
+                <li><strong>הגדרת קיוסק ברמת מערכת ההפעלה</strong> — מצב קיוסק Chrome ונעילת Windows מוגדרים מראש על-ידי צוות הפרישה; לא תוצר הצוות</li>
+                <li><strong>כללי חומת אש VM</strong> — קבוצות אבטחת רשת / כללי iptables של ה-VM הם אחריות צוות התשתית</li>
+                <li><strong>אבטחה פיזית</strong> — אבטחת הטאבלט מפני גישה פיזית היא אחריות מבצעית</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="zone-box zone-box-r">
+              <p class="zone-title highlight-r">היקף פוסט-MVP</p>
+              <ul class="bullets bullets-r" style="margin-top:0.25rem;">
+                <li><strong>DRM / סיווג תוכן</strong> — ללא ניהול זכויות דיגיטליות; הגנת התוכן מסתמכת על בידוד רשת + TLS בלבד</li>
+                <li><strong>הצפנת אחסון דפדפן מקומי</strong> — IndexedDB ומטמון פרוקסי אינם מוצפנים; ארגז החול הוא גבול ה-MVP</li>
+                <li><strong>אימות משתמש בקצה</strong> — קיוסק השדה הוא אנונימי במכוון ב-MVP</li>
+                <li><strong>רישום ביקורת</strong> — ללא מסלול ביקורת גישה מעבר ללוגי בקשות שרת סטנדרטיים</li>
+              </ul>
+            </div>
+            <div class="note-box">
+              <strong>לסוקרים:</strong> זהו אב-טיפוס מעבדה לסביבת הדגמה. מודל האבטחה מתאים להקשר זה. פרישת ייצור תדרוש הקשחה בתחומים המפורטים לעיל.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         שקופית 10 — יציבת סביבת ההדגמה + שאלות
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="slide" data-slide="10"
+      data-notes="סביבת ההדגמה מריצה את כל המחסנית כמתואר: שרת ענן נגיש בכתובת רשת ידועה, מכשירי קצה מתחברים דרך הפרוקסי, פורטל מנהל נגיש לצוות המטה. סוקרים יכולים לאמת: HTTPS על שרת הענן, ש-Chrome מתחבר ל-localhost בלבד, שפורטל המנהל דורש סיסמה, שהעלאת קובץ שאינו MP4/PDF נדחית, וניתוק מהרשת — תוכן שנגשו אליו קודם ממשיך לנגן. שאלות נפוצות: האם יש מעקב משתמש (לא), האם ניתן לחלץ תוכן (מטמון הפרוקסי הוא ב-VM לינוקס, לא נגיש ישירות מ-Windows), ומה קורה אם השרת קורס (הקצה מגיש תוכן שמטומן במצב לא מקוון).">
+      <div class="slide-inner">
+        <div class="label-block"><p class="label">סביבת הדגמה</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">יציבת סביבת ההדגמה</h1>
+        <div class="two-col" style="margin-top:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-g">
+              <p class="card-title">הגדרת מעבדה/הדגמה</p>
+              <ul class="bullets" style="margin-top:0.25rem;">
+                <li><strong>שרת ענן</strong> — נגיש ברשת ידועה; HTTPS עם תעודה חתומה עצמית או Let's Encrypt</li>
+                <li><strong>מכשירי קצה (×N)</strong> — כל אחד מריץ מיכל Docker עם פרוקסי nginx + חבילת SPA; Chrome מתחבר ל-localhost:8080</li>
+                <li><strong>פורטל מנהל</strong> — נגיש לסוקרים ברשת המטה; לא ציבורי</li>
+                <li><strong>תוכן הדגמה</strong> — 10 PDF + 5 סרטונים טעונים מראש; קטלוג מסונכרן לקצה בהפעלה ראשונה</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+            <div class="card card-b">
+              <p class="card-title">מה המבקרים יכולים לאמת ידנית</p>
+              <ul class="bullets bullets-b" style="margin-top:0.25rem;">
+                <li>סמל HTTPS נעול בדפדפן על שרת הענן</li>
+                <li>שורת הכתובת של Chrome מציגה <code style="font-family:monospace;">localhost</code> — ללא URL ענן ישיר</li>
+                <li>פורטל מנהל דורש התחברות לפני כל שינוי תוכן</li>
+                <li>העלאת קובץ שאינו MP4/PDF נדחית</li>
+                <li>ניתוק מהרשת — תוכן שנגשו אליו קודם ממשיך לנגן</li>
+                <li>DevTools דפדפן: ללא בקשות רשת חיצוניות ממכשיר הקצה (ללא טלמטריה)</li>
+              </ul>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-top:0.25rem;">
+              <span class="badge badge-g">מקור: 02_system-boundaries.md §10</span>
+              <span class="badge badge-b">04_system-architecture.md §11</span>
+            </div>
+          </div>
+        </div>
+        <hr class="divider" style="margin-top:0.5rem;">
+        <p style="font-size:var(--sz-h3);font-weight:700;text-align:center;color:var(--text-secondary);">שאלות?</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ─── STATE ──────────────────────────────────────────────────────
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL = slides.length;
+    const state = { current: 0, notesVisible: false, transitioning: false };
+
+    // ─── DOM REFS ────────────────────────────────────────────────────
+    const progressBar  = document.getElementById('progress-bar');
+    const curEl        = document.getElementById('cur');
+    const totEl        = document.getElementById('tot');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const notesOverlay = document.getElementById('notes-overlay');
+    const notesContent = document.getElementById('notes-content');
+
+    totEl.textContent = TOTAL;
+
+    // ─── GO TO SLIDE (RTL: forward slides enter from left) ──────────
+    function goTo(index) {
+      if (state.transitioning) return;
+      if (index < 0 || index >= TOTAL) return;
+      if (index === state.current) return;
+
+      state.transitioning = true;
+
+      const prev = slides[state.current];
+      const next = slides[index];
+      const forward = index > state.current;
+
+      next.style.transition = 'none';
+      next.style.transform = forward ? 'translateX(-60px)' : 'translateX(60px)';
+      next.style.opacity = '0';
+      next.classList.remove('active');
+
+      next.getBoundingClientRect();
+
+      prev.style.transition = '';
+      prev.style.transform = forward ? 'translateX(60px)' : 'translateX(-60px)';
+      prev.style.opacity = '0';
+      prev.classList.remove('active');
+
+      next.style.transition = '';
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+      next.classList.add('active');
+
+      state.current = index;
+      updateUI();
+
+      setTimeout(() => {
+        state.transitioning = false;
+        prev.style.transform = 'translateX(-60px)';
+      }, 480);
+    }
+
+    // ─── UPDATE UI ──────────────────────────────────────────────────
+    function updateUI() {
+      progressBar.style.width = ((state.current + 1) / TOTAL * 100) + '%';
+      curEl.textContent = state.current + 1;
+      btnPrev.disabled = state.current === 0;
+      btnNext.disabled = state.current === TOTAL - 1;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+      }
+    }
+
+    // ─── NOTES ──────────────────────────────────────────────────────
+    function toggleNotes() {
+      state.notesVisible = !state.notesVisible;
+      if (state.notesVisible) {
+        notesContent.textContent = slides[state.current].dataset.notes || 'אין הערות לשקופית זו.';
+        notesOverlay.removeAttribute('hidden');
+      } else {
+        notesOverlay.setAttribute('hidden', '');
+      }
+    }
+
+    // ─── FULLSCREEN ──────────────────────────────────────────────────
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // ─── KEYBOARD ───────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case ' ':
+          e.preventDefault(); goTo(state.current + 1); break;
+        case 'ArrowLeft': case 'ArrowUp':
+          e.preventDefault(); goTo(state.current - 1); break;
+        case 'Home':  e.preventDefault(); goTo(0); break;
+        case 'End':   e.preventDefault(); goTo(TOTAL - 1); break;
+        case 'n': case 'N': e.preventDefault(); toggleNotes(); break;
+        case 'f': case 'F': e.preventDefault(); toggleFullscreen(); break;
+        case 'Escape': if (state.notesVisible) toggleNotes(); break;
+      }
+    });
+
+    // ─── TOUCH / SWIPE (RTL: swipe left = forward) ──────────────────
+    let txStart = 0, tyStart = 0;
+    document.addEventListener('touchstart', e => {
+      txStart = e.touches[0].clientX;
+      tyStart = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - txStart;
+      const dy = e.changedTouches[0].clientY - tyStart;
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (Math.abs(dx) < 50 || angle > 60) return;
+      // RTL: swipe left (dx<0) = forward, swipe right (dx>0) = back
+      if (dx < 0) goTo(state.current + 1);
+      else        goTo(state.current - 1);
+    });
+
+    // ─── BUTTONS ─────────────────────────────────────────────────────
+    btnPrev.addEventListener('click', () => goTo(state.current - 1));
+    btnNext.addEventListener('click', () => goTo(state.current + 1));
+    document.getElementById('notes-close').addEventListener('click', toggleNotes);
+
+    // ─── INIT (RTL: inactive slides start at translateX(-60px)) ─────
+    slides.forEach((s, i) => {
+      s.style.opacity   = i === 0 ? '1' : '0';
+      s.style.transform = i === 0 ? 'translateX(0)' : 'translateX(-60px)';
+      if (i === 0) s.classList.add('active');
+    });
+    updateUI();
+  </script>
+
+</body>
+</html>
