@@ -214,7 +214,7 @@
          SLIDE 3 — ARCHITECTURE IN 2 MINUTES
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="3"
-      data-notes="The 3-tier topology: Cloud VM (Node.js + PostgreSQL + nginx TLS), Edge Device (Docker container with nginx caching proxy + Edge SPA bundle), HQ Desktop (Admin SPA connecting directly to cloud). The unusual part: Chrome on the edge device connects to localhost:8080 only — never to the cloud. The Docker container handles SPA serving, API proxying, and content caching. This makes offline trivial and keeps the SPA code simple. Open the diagram to see the full picture.">
+      data-notes="The 3-tier topology: Cloud VM (Python FastAPI + PostgreSQL + nginx TLS), Edge Device (Docker container with nginx caching proxy + Edge SPA bundle), HQ Desktop (Admin SPA connecting directly to cloud). The unusual part: Chrome on the edge device connects to localhost:8080 only — never to the cloud. The Docker container handles SPA serving, API proxying, and content caching. This makes offline trivial and keeps the SPA code simple. Open the diagram to see the full picture.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Architecture Overview</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Three Tiers, <span class="highlight-g">One Container</span> that Does the Work</h1>
@@ -223,10 +223,10 @@
             <p class="card-title">Cloud VM (Linux)</p>
             <p class="card-body">
               nginx TLS :443<br>
-              Node.js + Express :3000<br>
+              Python FastAPI :3000<br>
               PostgreSQL :5432<br>
               File Store: <code style="color:var(--accent-green);">./data/content/</code><br>
-              <em>pm2 / systemd; Let's Encrypt</em>
+              <em>uvicorn / systemd; Let's Encrypt</em>
             </p>
           </div>
           <div class="card card-g">
@@ -262,45 +262,42 @@
          SLIDE 4 — 5 PACKAGES
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="4"
-      data-notes="The monorepo has 5 packages. packages/shared is the anchor — it contains the TypeScript DTOs that every other package imports. All API response types are defined here once; if client and server disagree, TypeScript catches it at compile time. The edge-proxy package is not a TS package but lives in the repo for co-located config. Dev A owns server + shared, Dev B owns client + edge-proxy, Dev C owns admin.">
+      data-notes="The repo has 4 directories. server/ is the Python FastAPI backend. client/ and admin/ are Vanilla JS SPAs opened directly in the browser — no build step. edge-proxy/ holds the Dockerfile and nginx config. The plain JSON API contract document defines all shared response shapes. Dev A owns server/, Dev B owns client/ + edge-proxy/, Dev C owns admin/. ">
       <div class="slide-inner">
-        <div class="label-block"><p class="label">Monorepo Structure &middot; DG-13</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">Five Packages, <span class="highlight-g">One Shared Type Layer</span></h1>
+        <div class="label-block"><p class="label">Flat Directory Structure &middot; DG-13</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">Four Directories, <span class="highlight-g">Plain JSON API Contract</span></h1>
         <div class="five-col">
           <div class="card card-g">
-            <p class="card-title" style="font-size:0.75rem;">packages/server</p>
-            <p class="card-body" style="font-size:0.78rem;">Node.js + Express API<br>Content + Admin routes<br>Service layer<br>DB migrations<br><em>Owner: Dev A</em></p>
+            <p class="card-title" style="font-size:0.75rem;">server/</p>
+            <p class="card-body" style="font-size:0.78rem;">Python FastAPI<br>Content + Admin routes<br>Service layer<br>DB migrations (Alembic)<br><em>Owner: Dev A</em></p>
           </div>
           <div class="card card-g">
-            <p class="card-title" style="font-size:0.75rem;">packages/shared</p>
-            <p class="card-body" style="font-size:0.78rem;">TypeScript DTOs<br>ContentItemDTO<br>CatalogResponse<br>CategoryDTO / InterestDTO<br><em>Owner: Dev A</em></p>
+            <p class="card-title" style="font-size:0.75rem;">plain JSON API contract</p>
+            <p class="card-body" style="font-size:0.78rem;">Shared response shapes<br>ContentItemDTO<br>CatalogResponse<br>CategoryDTO / InterestDTO<br><em>Owner: Dev A</em></p>
           </div>
           <div class="card card-b">
-            <p class="card-title" style="font-size:0.75rem;">packages/client</p>
-            <p class="card-body" style="font-size:0.78rem;">Edge SPA (HTML/TS)<br>Reels · Library · Downloads<br>IndexedDB layer<br>PDF.js + video player<br><em>Owner: Dev B</em></p>
+            <p class="card-title" style="font-size:0.75rem;">client/</p>
+            <p class="card-body" style="font-size:0.78rem;">Edge SPA (Vanilla JS)<br>Reels · Library · Downloads<br>IndexedDB layer<br>PDF.js + video player<br><em>Owner: Dev B</em></p>
           </div>
           <div class="card card-o">
-            <p class="card-title" style="font-size:0.75rem;">packages/admin</p>
-            <p class="card-body" style="font-size:0.78rem;">Admin SPA (HTML/TS)<br>Upload form + list<br>Category / interest CRUD<br>Login screen<br><em>Owner: Dev C</em></p>
+            <p class="card-title" style="font-size:0.75rem;">admin/</p>
+            <p class="card-body" style="font-size:0.78rem;">Admin SPA (Vanilla JS)<br>Upload form + list<br>Category / interest CRUD<br>Login screen<br><em>Owner: Dev C</em></p>
           </div>
           <div class="card" style="border-top:3px solid var(--text-muted);">
-            <p class="card-title" style="font-size:0.75rem;">packages/edge-proxy</p>
+            <p class="card-title" style="font-size:0.75rem;">edge-proxy/</p>
             <p class="card-body" style="font-size:0.78rem;">Dockerfile<br>nginx.conf<br>Proxy cache config<br>SPA bundle baked in<br><em>Owner: Dev B</em></p>
           </div>
         </div>
         <div style="display:flex;gap:var(--gap-sm);align-items:center;flex-wrap:wrap;">
-          <a class="diagram-link" href="https://excalidraw.com/#json=dF-Zzea7unFkk0Myx3sI6,X_cPLhE4uqGsulFEseLxUg" target="_blank" rel="noopener">DG-13 — Package Map &#8599;</a>
-          <span style="font-size:var(--sz-small);color:var(--text-muted);">Monorepo layout, ownership, shared-type dependency graph</span>
+          <a class="diagram-link" href="https://excalidraw.com/#json=dF-Zzea7unFkk0Myx3sI6,X_cPLhE4uqGsulFEseLxUg" target="_blank" rel="noopener">DG-13 — Directory Map &#8599;</a>
+          <span style="font-size:var(--sz-small);color:var(--text-muted);">Flat directory layout, ownership, API contract document</span>
         </div>
         <div class="code-block" style="font-size:0.8rem;line-height:1.5;">tactitok/
-├── packages/
-│   ├── client/        ← Edge SPA (HTML/TS, Vite)
-│   ├── admin/         ← Admin SPA (HTML/TS, Vite)
-│   ├── server/        ← API Server (Node/Express/TS)
-│   ├── shared/        ← Shared types, validation
-│   └── edge-proxy/    ← Dockerfile + nginx.conf
-├── package.json       ← pnpm workspaces root
-└── tsconfig.base.json ← Shared TS config</div>
+├── server/        ← API Server (Python FastAPI)
+├── client/        ← Edge SPA (Vanilla JS, open HTML directly)
+├── admin/         ← Admin SPA (Vanilla JS, open HTML directly)
+├── edge-proxy/    ← Dockerfile + nginx.conf
+└── docs/          ← plain JSON API contract + specs</div>
       </div>
     </section>
 
@@ -308,7 +305,7 @@
          SLIDE 5 — DEV ENVIRONMENT SETUP
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="5"
-      data-notes="Prerequisites: Node.js 20+, pnpm 8+, Docker Desktop, PostgreSQL 15+ (local or Docker). The edge proxy connects to the cloud VM so for local development you can point CLOUD_URL to localhost:3000 directly, bypassing the proxy. The seed script loads 3 categories, 3 subcategories, and 3 interests into the database — enough to develop against without manual data entry. The first run command starts all three apps concurrently. Source: product/07_delivery-plan.md §4 Sprint 1.">
+      data-notes="Prerequisites: Python 3.11+, Docker Desktop, PostgreSQL 15+ (local or Docker). The edge proxy connects to the cloud VM so for local development you can point CLOUD_URL to localhost:3000 directly, bypassing the proxy. The seed script loads 3 categories, 3 subcategories, and 3 interests into the database — enough to develop against without manual data entry. The first run command starts the server. Source: product/07_delivery-plan.md §4 Sprint 1.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Dev Environment Setup</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">From Zero to <span class="highlight-g">Running in 10 Minutes</span></h1>
@@ -317,8 +314,7 @@
             <div class="card card-g">
               <p class="card-title">Prerequisites</p>
               <ul class="bullets" style="margin-top:0.3rem;">
-                <li>Node.js 20 LTS</li>
-                <li>pnpm 8+ (<code style="color:var(--accent-green);">npm i -g pnpm</code>)</li>
+                <li>Python 3.11+</li>
                 <li>Docker Desktop (for edge proxy)</li>
                 <li>PostgreSQL 15+ running locally or via Docker</li>
               </ul>
@@ -334,26 +330,30 @@
               </p>
             </div>
           </div>
-          <div class="code-block" style="font-size:0.82rem;"># 1. Install all workspace dependencies
-pnpm install
+          <div class="code-block" style="font-size:0.82rem;"># 1. Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 2. Create the database
+# 2. Install all dependencies
+pip install -r requirements.txt
+
+# 3. Create the database
 createdb tactitok
 
-# 3. Run migrations (creates all 5 tables)
-pnpm --filter server db:migrate
+# 4. Run migrations (creates all 5 tables)
+alembic upgrade head
 
-# 4. Seed development data
-pnpm --filter server db:seed
+# 5. Seed development data
+python manage.py db:seed
 
-# 5. Start all three apps in parallel
-pnpm dev
+# 6. Start the API server
+uvicorn main:app --reload
 #   → server:  http://localhost:3000
-#   → client:  http://localhost:5173
-#   → admin:   http://localhost:5174
+#   → client:  open client/index.html directly in browser
+#   → admin:   open admin/index.html directly in browser
 
-# 6. (Optional) Build + run edge proxy
-cd packages/edge-proxy
+# 7. (Optional) Build + run edge proxy
+cd edge-proxy
 docker build -t tactitok-edge-proxy .
 docker run -p 8080:8080 \
   -e CLOUD_URL=https://your-vm.example.com \
@@ -448,7 +448,7 @@ docker run -p 8080:8080 \
                 <li>Hard delete — removes DB record + file + thumbnail</li>
                 <li><strong>version counter</strong>, not version history</li>
                 <li>UUIDs for all PKs — future multi-source sync ready</li>
-                <li>Migration-based schema from Sprint 1 (Prisma or Knex)</li>
+                <li>Migration-based schema from Sprint 1 (Alembic)</li>
               </ul>
             </div>
             <a class="diagram-link" href="https://excalidraw.com/#json=kS9zEDFbS1ZPMiobq3E8a,uGCiwysIVh8mFmOAR-wSCA" target="_blank" rel="noopener">DG-04 — Full Data Model &#8599;</a>
@@ -553,7 +553,7 @@ docker run -p 8080:8080 \
                 <li><strong>?v={version}</strong> on file URL = proxy cache-busting mechanism</li>
                 <li>Error envelope: <code style="color:var(--accent-green);">{"error":"...","code":"..."}</code></li>
                 <li><strong>?since=</strong> accepted on catalog but ignored — ready for future delta sync</li>
-                <li>All types in <code style="color:var(--accent-green);">packages/shared/src/types.ts</code></li>
+                <li>All shapes in the <code style="color:var(--accent-green);">plain JSON API contract</code> document</li>
               </ul>
             </div>
             <a class="diagram-link" href="https://excalidraw.com/#json=eGwui9XaJkvQ5b8gF7ZPS,NXds79drLkQ2PDdKnTlo3A" target="_blank" rel="noopener">DG-02 — API Surface Diagram &#8599;</a>
@@ -566,15 +566,15 @@ docker run -p 8080:8080 \
          SLIDE 10 — KEY ARCHITECTURAL DECISIONS
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="10"
-      data-notes="AD1–AD12 are all documented in product/04_system-architecture.md. The most important decisions for new developers: AD1 (monorepo with shared types — never diverge from this), AD5 (filesystem abstraction — always go through the interface, never write to disk directly), AD7 (nginx proxy cache — never add Service Worker or Cache API code), AD8 (IndexedDB for state only — never store binary file data in the browser), AD11 (full catalog sync — no delta logic in MVP), AD12 (SPA in Docker image — update = rebuild + redeploy the container).">
+      data-notes="AD1–AD12 are all documented in product/04_system-architecture.md. The most important decisions for new developers: AD1 (flat directory structure + plain JSON API contract — never diverge from this), AD5 (filesystem abstraction — always go through the interface, never write to disk directly), AD7 (nginx proxy cache — never add Service Worker or Cache API code), AD8 (IndexedDB for state only — never store binary file data in the browser), AD11 (full catalog sync — no delta logic in MVP), AD12 (SPA in Docker image — update = rebuild + redeploy the container).">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Architectural Decisions AD1–AD12</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Twelve Decisions, <span class="highlight-g">All Deliberate</span></h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:0.5rem;">
-            <div class="card card-g"><p class="card-title">AD1 — TypeScript Monorepo</p><p class="card-body">Shared types prevent API drift at compile time. Single CI pipeline.</p></div>
-            <div class="card card-g"><p class="card-title">AD2 — HTML + TypeScript for Both SPAs</p><p class="card-body">No framework dependency; simpler stack; sufficient for SPA complexity.</p></div>
-            <div class="card card-g"><p class="card-title">AD3 — Node.js + Express</p><p class="card-body">Same language as frontend; simple range-request file streaming.</p></div>
+            <div class="card card-g"><p class="card-title">AD1 — Flat Directory Structure</p><p class="card-body">Plain JSON API contract prevents response-shape drift. No shared-type compilation step.</p></div>
+            <div class="card card-g"><p class="card-title">AD2 — Vanilla JS (no TypeScript) for Both SPAs</p><p class="card-body">No framework dependency; no build step — open HTML directly; sufficient for SPA complexity.</p></div>
+            <div class="card card-g"><p class="card-title">AD3 — Python FastAPI</p><p class="card-body">Async-native; simple range-request file streaming; familiar to team.</p></div>
             <div class="card card-b"><p class="card-title">AD4 — PostgreSQL</p><p class="card-body">Production-grade; ILIKE text search; migration-based from day one.</p></div>
             <div class="card card-b"><p class="card-title">AD5 — Filesystem Storage Abstraction</p><p class="card-body"><code style="color:var(--accent-green);">store/retrieve/delete</code> interface — swap to S3/MinIO without changing service layer.</p></div>
             <div class="card card-b"><p class="card-title">AD6 — MP4 + HTTP 206 Range</p><p class="card-body">No transcoding pipeline. Chrome handles range-based streaming natively. ≤3 min clips.</p></div>
@@ -582,7 +582,7 @@ docker run -p 8080:8080 \
           <div style="display:flex;flex-direction:column;gap:0.5rem;">
             <div class="card card-g"><p class="card-title">AD7 — nginx Proxy Cache (not Service Worker)</p><p class="card-body">Zero offline code in SPA. Transparent offline for all previously accessed content.</p></div>
             <div class="card card-g"><p class="card-title">AD8 — IndexedDB for State Only</p><p class="card-body">Profile, download records, local actions. No binary file data. One SPA code path.</p></div>
-            <div class="card card-g"><p class="card-title">AD9 — Single Node.js Process</p><p class="card-body">3 developers, ~20 users. Monolith with clean service modules. pm2 cluster if needed.</p></div>
+            <div class="card card-g"><p class="card-title">AD9 — Single Python Process</p><p class="card-body">3 developers, ~20 users. Monolith with clean service modules. uvicorn workers if needed.</p></div>
             <div class="card card-b"><p class="card-title">AD10 — nginx TLS on Cloud</p><p class="card-body">Standard pattern. Let's Encrypt or self-signed for demo. proxy_pass :3000.</p></div>
             <div class="card card-b"><p class="card-title">AD11 — Full Catalog Sync</p><p class="card-body">~15 items = &lt;10 KB JSON. API accepts <code style="color:var(--accent-green);">?since=</code> for future delta sync.</p></div>
             <div class="card card-b"><p class="card-title">AD12 — SPA Baked into Docker Image</p><p class="card-body">SPA always available locally. Update = rebuild + redeploy Docker image to edge device.</p></div>
@@ -637,14 +637,14 @@ docker run -p 8080:8080 \
          SLIDE 12 — SPRINT PLAN OVERVIEW
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="12"
-      data-notes="Six sprints, six milestones, 12 weeks. M3 at end of week 6 (reels on actual device) is the highest-risk milestone — if it's not solid, trigger de-scope levers immediately. The critical path runs: monorepo setup → shared types → schema → catalog endpoint → catalog sync → interest filtering → reels feed → M3 device test. Everything else is parallel to this chain. Source: product/07_delivery-plan.md §§3–5.">
+      data-notes="Six sprints, six milestones, 12 weeks. M3 at end of week 6 (reels on actual device) is the highest-risk milestone — if it's not solid, trigger de-scope levers immediately. The critical path runs: flat directory setup → plain JSON API contract → schema → catalog endpoint → catalog sync → interest filtering → reels feed → M3 device test. Everything else is parallel to this chain. Source: product/07_delivery-plan.md §§3–5.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Sprint Plan &middot; DG-17</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">6 Sprints &middot; 6 Milestones &middot; <span class="highlight-g">12 Weeks</span></h1>
         <table class="data-table">
           <thead><tr><th>Sprint</th><th>Weeks</th><th>Goal</th><th>Milestone</th></tr></thead>
           <tbody>
-            <tr><td><strong>S1 — Foundation</strong></td><td>1–2</td><td class="muted">Monorepo, schema, skeletons, Docker, cloud VM</td><td><span class="badge badge-g">M1</span> Everything starts (wk 2)</td></tr>
+            <tr><td><strong>S1 — Foundation</strong></td><td>1–2</td><td class="muted">Flat directory structure, schema, skeletons, Docker, cloud VM</td><td><span class="badge badge-g">M1</span> Everything starts (wk 2)</td></tr>
             <tr><td><strong>S2 — Content Pipeline</strong></td><td>3–4</td><td class="muted">Upload → API → catalog sync → basic view → PDF/video player</td><td><span class="badge badge-g">M2</span> Content pipeline works (wk 4)</td></tr>
             <tr><td><strong>S3 — Reels Experience</strong></td><td>5–6</td><td class="muted">TikTok feed, auto-play, swipe, interests, prefetch, library tree</td><td><span class="badge badge-o">M3</span> Reels on device (wk 6) ⚠️ highest risk</td></tr>
             <tr><td><strong>S4 — Library + Offline</strong></td><td>7–8</td><td class="muted">Downloads tab, offline mode, "Updated" badge, network indicator</td><td><span class="badge badge-b">M4</span> Full offline loop (wk 8)</td></tr>
@@ -660,7 +660,7 @@ docker run -p 8080:8080 \
          SLIDE 13 — WHAT TO BUILD FIRST AND WHY
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="13"
-      data-notes="Sprint 1 is the most important sprint. Everything depends on shared types and the schema existing by the end of week 1. The edge proxy must be verifiable in week 1 so all later edge features have a target to test against. Sprint 1 exit is the gate for M1 — if pnpm build fails or the health check doesn't return 200, the team is blocked. The critical path to M3: shared types → schema → GET /api/catalog → catalog sync → interest filtering → reels feed → test on device by wk 6.">
+      data-notes="Sprint 1 is the most important sprint. Everything depends on the API contract and the schema existing by the end of week 1. The edge proxy must be verifiable in week 1 so all later edge features have a target to test against. Sprint 1 exit is the gate for M1 — if the server fails to start or the health check doesn't return 200, the team is blocked. The critical path to M3: API contract → schema → GET /api/catalog → catalog sync → interest filtering → reels feed → test on device by wk 6.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Sprint 1 &amp; Critical Path to M3</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">What to Build <span class="highlight-g">First and Why</span></h1>
@@ -669,15 +669,15 @@ docker run -p 8080:8080 \
             <div class="card card-g">
               <p class="card-title">Sprint 1 Deliverables (Weeks 1–2)</p>
               <ul class="bullets" style="margin-top:0.3rem;">
-                <li><strong>Dev A:</strong> monorepo + shared types + schema (migration 001) + Express skeleton + health check + admin auth</li>
-                <li><strong>Dev B:</strong> Edge SPA (HTML/TS/Vite) + 3 tabs + IndexedDB init + DeviceProfile + wire to edge proxy</li>
+                <li><strong>Dev A:</strong> flat directory structure + plain JSON API contract + schema (migration 001) + FastAPI skeleton + health check + admin auth</li>
+                <li><strong>Dev B:</strong> Edge SPA (Vanilla JS, no TypeScript) + 3 tabs + IndexedDB init + DeviceProfile + wire to edge proxy</li>
                 <li><strong>Dev C:</strong> Admin SPA skeleton + login screen + Docker nginx.conf + edge proxy container running</li>
               </ul>
             </div>
             <div class="card card-b">
               <p class="card-title">Sprint 1 Exit Criteria</p>
               <ul class="bullets" style="margin-top:0.3rem;">
-                <li><code style="color:var(--accent-green);">pnpm install &amp;&amp; pnpm build</code> succeeds in all packages</li>
+                <li><code style="color:var(--accent-green);">pip install -r requirements.txt</code> succeeds; server starts with <code style="color:var(--accent-green);">uvicorn main:app --reload</code></li>
                 <li>PostgreSQL running; migration 001 applied</li>
                 <li><code style="color:var(--accent-green);">GET /api/health → 200</code></li>
                 <li>Admin login returns a JWT token</li>
@@ -688,8 +688,8 @@ docker run -p 8080:8080 \
           </div>
           <div class="card" style="border:1px solid var(--border-subtle);background:var(--bg-tertiary);">
             <p class="card-title" style="color:var(--accent-green);">Critical Path → M3 (Wk 6)</p>
-            <div class="code-block" style="font-size:0.8rem;line-height:1.7;background:transparent;border:none;padding:0.5rem 0;">shared/types.ts (Dev A, wk 1)
-  └── schema (Dev A, wk 1)
+            <div class="code-block" style="font-size:0.8rem;line-height:1.7;background:transparent;border:none;padding:0.5rem 0;">plain JSON API contract (Dev A, wk 1)
+  └── schema + alembic migration (Dev A, wk 1)
        └── GET /api/catalog (Dev A, wk 3)
             └── catalog sync to IndexedDB (Dev B, wk 3)
                  └── interest filtering (Dev B, wk 6)
@@ -708,32 +708,31 @@ Edge proxy Docker running (Dev C, wk 1)
          SLIDE 14 — RUNNING LOCALLY
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="14"
-      data-notes="For daily development the team does not need the Docker container running — they can hit localhost:3000 directly from the Edge SPA dev server. The edge proxy is needed to test offline behavior, proxy caching, and the actual device setup. The pnpm dev command starts all three apps concurrently using the turbo or concurrently tool configured in the root package.json. The seed script inserts 3 categories, 3 sub-categories, and 3 interests so the UI is not empty. Test that the health check returns 200 before anything else.">
+      data-notes="For daily development the team does not need the Docker container running — they can hit localhost:3000 directly from the Edge SPA opened in the browser. The edge proxy is needed to test offline behavior, proxy caching, and the actual device setup. The seed script inserts 3 categories, 3 sub-categories, and 3 interests so the UI is not empty. Test that the health check returns 200 before anything else.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Running Locally</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Local Development <span class="highlight-g">Commands</span></h1>
         <div class="two-col" style="align-items:start;">
           <div class="code-block" style="font-size:0.82rem;"># Daily workflow
-pnpm install         # install / update deps
-pnpm --filter server db:migrate   # run pending migrations
-pnpm --filter server db:seed      # load dev seed data
-pnpm dev             # start all 3 apps in parallel
+source .venv/bin/activate       # activate virtual environment
+pip install -r requirements.txt # install / update deps
+alembic upgrade head            # run pending migrations
+python manage.py db:seed        # load dev seed data
+uvicorn main:app --reload       # start API server :3000
 
-# Individual apps
-pnpm --filter server dev    # API server  :3000
-pnpm --filter client dev    # Edge SPA    :5173
-pnpm --filter admin  dev    # Admin SPA   :5174
+# SPAs — no build step, open directly in browser
+#   Edge SPA:  open client/index.html in Chrome
+#   Admin SPA: open admin/index.html in Chrome
 
 # Database
-pnpm --filter server db:migrate:rollback  # undo last migration
-pnpm --filter server db:studio            # Prisma Studio (if using Prisma)
+alembic downgrade -1            # undo last migration
+# (no Prisma Studio — use psql or pgAdmin)
 
-# Lint + type-check
-pnpm build           # build all packages (type-checks too)
-pnpm lint            # ESLint across workspace</div>
+# Lint
+flake8 server/                  # lint Python code</div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="code-block" style="font-size:0.82rem;"># Edge proxy (local testing)
-cd packages/edge-proxy
+cd edge-proxy
 
 # Build Docker image
 docker build -t tactitok-edge-proxy .
@@ -755,8 +754,8 @@ curl -I http://localhost:8080/api/catalog
               <p class="card-title">Useful Dev URLs</p>
               <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.85em;line-height:1.9;">
                 localhost:3000/api/health → server health<br>
-                localhost:5173 → Edge SPA (direct, no proxy)<br>
-                localhost:5174 → Admin SPA<br>
+                client/index.html → Edge SPA (direct, no proxy)<br>
+                admin/index.html → Admin SPA<br>
                 localhost:8080 → Edge SPA via proxy
               </p>
             </div>
@@ -769,38 +768,34 @@ curl -I http://localhost:8080/api/catalog
          SLIDE 15 — DEPLOYING TO CLOUD VM
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="15"
-      data-notes="The cloud VM needs: Linux (Ubuntu 22.04 recommended), Node.js 20, PostgreSQL 15, nginx, pm2, and a domain name or IP with port 443 accessible. The recommended cert approach for demo is either Let's Encrypt (if a domain is available) or a self-signed cert (Chrome will show a warning but it can be bypassed for demo use). pm2 restarts the Node.js process on crash and on VM reboot. The Admin SPA is served as static files by the API server — no separate web server needed for it. Source: product/07_delivery-plan.md §4 Sprint 5.">
+      data-notes="The cloud VM needs: Linux (Ubuntu 22.04 recommended), Python 3.11+, PostgreSQL 15, nginx, and a domain name or IP with port 443 accessible. The recommended cert approach for demo is either Let's Encrypt (if a domain is available) or a self-signed cert (Chrome will show a warning but it can be bypassed for demo use). systemd or a process manager restarts the Python process on crash and on VM reboot. The Admin SPA is served as static files by nginx — open admin/index.html directly. Source: product/07_delivery-plan.md §4 Sprint 5.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Cloud VM Deployment</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Deploying to the <span class="highlight-g">Cloud VM</span></h1>
         <div class="two-col" style="align-items:start;">
-          <div class="code-block" style="font-size:0.8rem;"># 1. Install Node.js 20 on Ubuntu 22.04
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
+          <div class="code-block" style="font-size:0.8rem;"># 1. Install Python 3.11+ on Ubuntu 22.04
+sudo apt-get install -y python3.11 python3.11-venv python3-pip
 
-# 2. Install pnpm + pm2
-npm install -g pnpm pm2
-
-# 3. Clone repo + install deps
+# 2. Clone repo + create virtual environment
 git clone https://github.com/your-org/tactitok
-cd tactitok && pnpm install
+cd tactitok
+python3.11 -m venv .venv && source .venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
 
 # 4. Set up environment
 cp .env.example .env.production
 # edit: DATABASE_URL, ADMIN_PASSWORD, JWT_SECRET, CONTENT_DIR
 
-# 5. Build server + Admin SPA
-pnpm build
+# 5. Run migrations on the production DB
+alembic upgrade head
 
-# 6. Run migrations on the production DB
-NODE_ENV=production pnpm --filter server db:migrate
+# 6. Start with systemd (auto-restarts on crash + reboot)
+# ExecStart: uvicorn main:app --host 0.0.0.0 --port 3000
+sudo systemctl enable tactitok && sudo systemctl start tactitok
 
-# 7. Start with pm2 (auto-restarts on crash + reboot)
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup
-
-# 8. Verify
+# 7. Verify
 curl https://your-vm.example.com/api/health</div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-b">
@@ -819,7 +814,7 @@ curl https://your-vm.example.com/api/health</div>
               <p class="card-title">VM Requirements</p>
               <ul class="bullets" style="margin-top:0.3rem;">
                 <li>Linux (Ubuntu 22.04 LTS recommended)</li>
-                <li>4+ GB RAM · 50+ GB disk for content files</li>
+                <li>Python 3.11+ · 4+ GB RAM · 50+ GB disk for content files</li>
                 <li>Port 443 open; domain or static IP</li>
                 <li>PostgreSQL 15+ running on the same VM</li>
                 <li>Let's Encrypt cert or self-signed for demo</li>
@@ -841,13 +836,13 @@ curl https://your-vm.example.com/api/health</div>
         <div class="two-col" style="align-items:start;">
           <div class="code-block" style="font-size:0.8rem;"># On any machine with the repo:
 
-# 1. Build the Edge SPA bundle
-pnpm --filter client build
+# 1. No build step — SPA files are plain HTML/JS
+#    (copy client/ directory into Docker image directly)
 
-# 2. Build Docker image (SPA bundle baked in)
-cd packages/edge-proxy
+# 2. Build Docker image (SPA files baked in)
+cd edge-proxy
 docker build \
-  --build-arg SPA_DIST=../../packages/client/dist \
+  --build-arg SPA_DIR=../client \
   -t tactitok-edge-proxy:latest .
 
 # 3. Export image for transfer to edge device
@@ -892,7 +887,7 @@ curl http://localhost:8080/api/health</div>
             </div>
             <div class="card card-o">
               <p class="card-title">Update Procedure</p>
-              <p class="card-body">1. Build new SPA bundle<br>2. Rebuild Docker image (bakes new bundle)<br>3. Transfer tar.gz to edge Linux VM<br>4. <code style="color:var(--accent-green);">docker stop tactitok-edge</code><br>5. <code style="color:var(--accent-green);">docker load &lt; new.tar.gz</code><br>6. <code style="color:var(--accent-green);">docker start tactitok-edge</code></p>
+              <p class="card-body">1. Update SPA HTML/JS files (no build step)<br>2. Rebuild Docker image (bakes updated files)<br>3. Transfer tar.gz to edge Linux VM<br>4. <code style="color:var(--accent-green);">docker stop tactitok-edge</code><br>5. <code style="color:var(--accent-green);">docker load &lt; new.tar.gz</code><br>6. <code style="color:var(--accent-green);">docker start tactitok-edge</code></p>
             </div>
           </div>
         </div>
@@ -952,7 +947,7 @@ curl http://localhost:8080/api/health</div>
          SLIDE 18 — KEY RISKS TO WATCH
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="18"
-      data-notes="AR1 (Node.js bottleneck) surfaces in Sprint 5 — load test with 5 concurrent video streams; if needed switch to nginx X-Accel-Redirect which bypasses Node.js for file serving entirely. AR2 (Docker friction) surfaces in Sprint 1 — WSL2 port mapping is automatic on Windows 10/11; VirtualBox needs explicit rules. AR3 (monorepo) is front-loaded risk — if pnpm workspaces are not working in week 1 the entire build chain is blocked. AR5 (scroll-snap) must be validated hands-on on the 10-inch tablet by end of week 5 — not on a laptop. AR9 (proxy range caching) needs explicit nginx testing in Sprint 3 — if broken, pre-warm cache with a full GET before video plays.">
+      data-notes="AR1 (Python bottleneck) surfaces in Sprint 5 — load test with 5 concurrent video streams; if needed switch to nginx X-Accel-Redirect which bypasses Python for file serving entirely. AR2 (Docker friction) surfaces in Sprint 1 — WSL2 port mapping is automatic on Windows 10/11; VirtualBox needs explicit rules. AR3 (virtual environment / dependency setup) is front-loaded risk — if the virtual environment is not working in week 1 the entire setup is blocked. AR5 (scroll-snap) must be validated hands-on on the 10-inch tablet by end of week 5 — not on a laptop. AR9 (proxy range caching) needs explicit nginx testing in Sprint 3 — if broken, pre-warm cache with a full GET before video plays.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Key Risks</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Top 5 Risks, <span class="highlight-g">Mitigations Ready</span></h1>
@@ -960,11 +955,11 @@ curl http://localhost:8080/api/health</div>
           <thead><tr><th>Risk</th><th>Sprint</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
           <tbody>
             <tr>
-              <td><strong>AR1 — Node.js bottleneck serving concurrent video streams</strong></td>
+              <td><strong>AR1 — Python bottleneck serving concurrent video streams</strong></td>
               <td class="muted">S5</td>
               <td class="muted">Low</td>
               <td class="muted">Med</td>
-              <td class="muted">Load test wk 9; switch to nginx X-Accel-Redirect for file serving if needed (bypasses Node)</td>
+              <td class="muted">Load test wk 9; switch to nginx X-Accel-Redirect for file serving if needed (bypasses Python)</td>
             </tr>
             <tr>
               <td><strong>AR2 — Docker / WSL2 port mapping friction on edge device</strong></td>
@@ -974,11 +969,11 @@ curl http://localhost:8080/api/health</div>
               <td class="muted">Test in week 1; WSL2 maps ports automatically on Win 10/11; VirtualBox needs explicit forwarding rules</td>
             </tr>
             <tr>
-              <td><strong>AR3 — Monorepo pnpm workspaces setup complexity</strong></td>
+              <td><strong>AR3 — Virtual environment / dependency setup friction</strong></td>
               <td class="muted">S1</td>
               <td class="muted">Low</td>
               <td class="muted">High</td>
-              <td class="muted">Establish in week 1; shared types MUST be importable from client, server, and admin before Sprint 2 begins</td>
+              <td class="muted">Establish in week 1; plain JSON API contract MUST be agreed upon and shared before Sprint 2 begins</td>
             </tr>
             <tr>
               <td><strong>AR5 — CSS scroll-snap reels jank on 10″ tablet</strong></td>
@@ -1033,7 +1028,7 @@ curl http://localhost:8080/api/health</div>
             </div>
             <div class="card card-b">
               <p class="card-title">Monitoring + Observability</p>
-              <p class="card-body">Add structured server-side request logging (pino) and error alerting (Sentry) before going to production with real users. Structured logs enable later analytics without schema changes.</p>
+              <p class="card-body">Add structured server-side request logging (Python logging / structlog) and error alerting (Sentry) before going to production with real users. Structured logs enable later analytics without schema changes.</p>
             </div>
             <div class="card card-o">
               <p class="card-title">Edge Proxy Proactive Prefetch</p>
@@ -1041,7 +1036,7 @@ curl http://localhost:8080/api/health</div>
             </div>
             <div class="card card-o">
               <p class="card-title">Docker Compose</p>
-              <p class="card-body">When edge device setup grows (multiple containers), replace <code style="color:var(--accent-green);">docker run</code> with a <code style="color:var(--accent-green);">docker-compose.yml</code>. Template should live in <code style="color:var(--accent-green);">packages/edge-proxy/</code>.</p>
+              <p class="card-body">When edge device setup grows (multiple containers), replace <code style="color:var(--accent-green);">docker run</code> with a <code style="color:var(--accent-green);">docker-compose.yml</code>. Template should live in <code style="color:var(--accent-green);">edge-proxy/</code>.</p>
             </div>
           </div>
         </div>

@@ -235,7 +235,7 @@
          SLIDE 3 — SERVER-SIDE ENTITIES OVERVIEW
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="3"
-      data-notes="The server holds five PostgreSQL tables. ContentItem is the central entity — every piece of training content lives here. Category provides a 2-level hierarchy for library organization. Interest provides flat tags for the reels feed filter. ContentCategory and ContentInterest are junction tables for the many-to-many relationships. Binary files (MP4, PDF, thumbnails) are NOT in the database — they live on the server filesystem. The filePath and thumbnailPath columns in content_items point to them. Prisma ORM maps snake_case column names to camelCase TypeScript automatically.">
+      data-notes="The server holds five PostgreSQL tables. ContentItem is the central entity — every piece of training content lives here. Category provides a 2-level hierarchy for library organization. Interest provides flat tags for the reels feed filter. ContentCategory and ContentInterest are junction tables for the many-to-many relationships. Binary files (MP4, PDF, thumbnails) are NOT in the database — they live on the server filesystem. The filePath and thumbnailPath columns in content_items point to them. SQLAlchemy maps snake_case column names to Python model attributes automatically.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Server Side</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Server-Side <span class="highlight-g">Entities</span></h1>
@@ -270,14 +270,14 @@
                   <tbody>
                     <tr><td>DB tables</td><td class="muted">snake_case plural</td><td class="mono">content_items</td></tr>
                     <tr><td>DB columns</td><td class="muted">snake_case</td><td class="mono">file_size, parent_id</td></tr>
-                    <tr><td>TypeScript</td><td class="muted">PascalCase (types)</td><td class="mono">ContentItem</td></tr>
+                    <tr><td>Python (Pydantic)</td><td class="muted">PascalCase (models)</td><td class="mono">ContentItem</td></tr>
                     <tr><td>PK type</td><td class="muted">UUID</td><td class="mono">crypto.randomUUID()</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
             <div class="note-box">
-              <strong>ORM:</strong> Prisma maps snake_case ↔ camelCase automatically. All schema changes go through versioned migrations — no ad-hoc ALTER TABLE.
+              <strong>ORM:</strong> SQLAlchemy maps columns to Python model attributes. All schema changes go through Alembic migrations — no ad-hoc ALTER TABLE.
             </div>
           </div>
         </div>
@@ -663,7 +663,7 @@ Cardinalities:
          SLIDE 12 — CachedCatalog
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="12"
-      data-notes="CachedCatalog is the local mirror of the server catalog. It's a single record containing three arrays — items, categories, and interests — plus a lastSyncedAt timestamp. It's replaced entirely on each sync pull. The TypeScript shapes are defined in packages/shared. ContentItemDTO is the key type — note that it includes categoryIds and interestIds as arrays (not as junction tables). This denormalization is intentional: the edge does all filtering in-memory in JavaScript using these arrays. ContentItemDTO also has thumbnailUrl (a URL, not a path — the server converts filePath to a URL in the API response). All filtering for the reels feed, library, and search happens in-memory over this cached blob.">
+      data-notes="CachedCatalog is the local mirror of the server catalog. It's a single record containing three arrays — items, categories, and interests — plus a lastSyncedAt timestamp. It's replaced entirely on each sync pull. The Pydantic DTO shapes are defined in shared/schemas.py. ContentItemDTO is the key type — note that it includes category_ids and interest_ids as arrays (not as junction tables). This denormalization is intentional: the edge does all filtering in-memory in JavaScript using these arrays. ContentItemDTO also has thumbnail_url (a URL, not a path — the server converts file_path to a URL in the API response). All filtering for the reels feed, library, and search happens in-memory over this cached blob.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Edge Entity 2/4</p><div class="accent-bar-b"></div></div>
         <h1 class="title-h1"><span class="highlight-b">CachedCatalog</span> — Singleton Snapshot</h1>
@@ -685,31 +685,33 @@ Cardinalities:
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
-            <div class="code-block" style="font-size:clamp(0.6rem,0.9vw,0.74rem);">// packages/shared — TypeScript DTO shapes
+            <div class="code-block" style="font-size:clamp(0.6rem,0.9vw,0.74rem)"># shared/schemas.py — Pydantic DTO shapes
+from __future__ import annotations
+from typing import Literal, Optional
+from pydantic import BaseModel
 
-interface ContentItemDTO {
-  id: string;
-  title: string;
-  description: string;
-  type: 'video' | 'pdf';
-  filename: string;
-  fileSize: number;
-  mimeType: string;
-  duration: number | null;
-  thumbnailUrl: string | null; // URL, not path
-  version: number;
-  categoryIds: string[];   // denormalized
-  interestIds: string[];   // denormalized
-  createdAt: string;
-  updatedAt: string;
-}
+class ContentItemDTO(BaseModel):
+    id: str
+    title: str
+    description: str
+    type: Literal['video', 'pdf']
+    filename: str
+    file_size: int
+    mime_type: str
+    duration: Optional[int]      # None for PDF
+    thumbnail_url: Optional[str] # URL, not path
+    version: int
+    category_ids: list[str]      # denormalized
+    interest_ids: list[str]      # denormalized
+    created_at: str
+    updated_at: str
 
-interface CategoryDTO {
-  id: string; name: string;
-  parentId: string | null; sortOrder: number;
-}
+class CategoryDTO(BaseModel):
+    id: str; name: str
+    parent_id: Optional[str]; sort_order: int
 
-interface InterestDTO { id: string; name: string; }</div>
+class InterestDTO(BaseModel):
+    id: str; name: str</div>
           </div>
         </div>
       </div>
@@ -875,7 +877,7 @@ if (existing) {
                 <li><strong>Version counter</strong> (not hash) drives the "updated" badge on downloads.</li>
                 <li><strong>Hard delete everywhere.</strong> No soft-delete, no draft state in MVP.</li>
                 <li><strong>UUIDs as PKs.</strong> Enables future multi-source sync without collision.</li>
-                <li><strong>Shared TS types</strong> in <span class="mono highlight-g">packages/shared</span> bridge server ↔ edge.</li>
+                <li><strong>Shared Pydantic schemas</strong> in <span class="mono highlight-g">shared/schemas.py</span> bridge server ↔ edge.</li>
               </ul>
             </div>
           </div>
@@ -883,9 +885,9 @@ if (existing) {
             <div class="card card-b">
               <p class="card-title">Next Steps</p>
               <ul class="bullets bullets-b" style="gap:0.45rem;">
-                <li>Implement Prisma schema matching these 5 tables + constraints</li>
-                <li>Write migrations for all server entities before any API code</li>
-                <li>Define shared TypeScript DTO interfaces in <span class="mono">packages/shared</span></li>
+                <li>Implement SQLAlchemy models matching these 5 tables + constraints</li>
+                <li>Write Alembic migrations for all server entities before any API code</li>
+                <li>Define shared Pydantic DTO models in <span class="mono">shared/schemas.py</span></li>
                 <li>Implement IndexedDB wrapper in Edge SPA (4 stores)</li>
                 <li>Wire catalog pull: <span class="mono">GET /api/catalog</span> → CachedCatalog</li>
               </ul>

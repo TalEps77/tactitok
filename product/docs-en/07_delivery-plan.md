@@ -1,8 +1,8 @@
 # Delivery Plan — TactiTok
 
-> **Version:** 0.1
+> **Version:** 0.3
 > **Status:** Draft
-> **Last updated:** 2026-03-07
+> **Last updated:** 2026-03-25
 > **Preceding document:** `product/06_api-contract.md`
 
 ---
@@ -24,27 +24,25 @@ This is the last document in the specification set. All prior documents (Product
 
 ## 2. Team & Roles
 
-| Developer | Primary role | Secondary role |
-|-----------|-------------|----------------|
-| **Dev A** | Backend — API server, database, file handling, admin auth | Cloud deployment, nginx TLS config |
-| **Dev B** | Edge SPA — reels feed, video player, offline, IndexedDB | Edge proxy Docker setup |
-| **Dev C** | Admin SPA — upload form, content list, category/interest CRUD | Library view, PDF viewer |
+| Developer | Primary role | Stack | Secondary role |
+|-----------|-------------|-------|----------------|
+| **Dev A** | Backend — API server, database, file handling, admin auth | Python, FastAPI, SQLAlchemy, Alembic | Cloud deployment, nginx TLS config |
+| **Dev B** | Edge SPA — reels feed, video player, offline, IndexedDB | Vanilla HTML/JS | Edge proxy Docker setup |
+| **Dev C** | Admin SPA — upload form, content list, category/interest CRUD | Vanilla HTML/JS | Library view, PDF viewer |
 
 **Shared responsibility:**
-- `packages/shared` TypeScript types — owned by Dev A; reviewed by all
 - Integration testing — all three; led by whoever is least blocked
 - Demo content loading (15 items) — Dev C (week 11)
 - Demo rehearsal — all three (week 12)
 
-**Monorepo package ownership:**
+**Package ownership:**
 
 | Package | Owner |
 |---------|-------|
-| `packages/server` | Dev A |
-| `packages/shared` | Dev A |
-| `packages/client` (Edge SPA) | Dev B |
-| `packages/admin` (Admin SPA) | Dev C |
-| `packages/edge-proxy` (Dockerfile + nginx.conf) | Dev B |
+| `server/` (FastAPI app) | Dev A |
+| `client/` (Edge SPA) | Dev B |
+| `admin/` (Admin SPA) | Dev C |
+| `edge-proxy/` (Dockerfile + nginx.conf) | Dev B |
 
 ---
 
@@ -52,7 +50,7 @@ This is the last document in the specification set. All prior documents (Product
 
 | Phase | Weeks | Goal |
 |-------|-------|------|
-| **Sprint 1** | 1–2 | Foundation: monorepo, schema, skeletons, Docker, cloud VM |
+| **Sprint 1** | 1–2 | Foundation: Python env, schema, skeletons, Docker, cloud VM |
 | **Sprint 2** | 3–4 | Content pipeline: upload → API → catalog sync → basic view |
 | **Sprint 3** | 5–6 | Reels experience: TikTok feed, auto-play, swipe, interests |
 | **Sprint 4** | 7–8 | Library + Downloads + offline: PDF viewer, downloads tab, offline mode |
@@ -72,24 +70,24 @@ This is the last document in the specification set. All prior documents (Product
 #### Week 1
 
 **Dev A — Backend foundation:**
-- Set up monorepo (`pnpm workspaces`): `server`, `shared`, `client`, `admin`, `edge-proxy`
-- Define and publish shared TypeScript types (`packages/shared/src/types.ts`) — `ContentItemDTO`, `CatalogResponse`, `CategoryDTO`, `InterestDTO`, `LoginRequest`, `LoginResponse`, `ApiError`
-- Create PostgreSQL schema (migration 001): `content_items`, `categories`, `interests`, `content_categories`, `content_interests`
-- Express server skeleton: routing structure, error handler, request logging
-- Health check endpoint: `GET /api/health → 200 { status: 'ok' }`
+- Initialize Python virtual environment; install FastAPI + SQLAlchemy + Alembic
+- Create FastAPI skeleton with health endpoint: `GET /api/health → 200 { "status": "ok" }`
+- Create PostgreSQL schema (Alembic migration 001): `content_items`, `categories`, `interests`, `content_categories`, `content_interests`
+- Define SQLAlchemy models and Pydantic response schemas — `ContentItemDTO`, `CatalogResponse`, `CategoryDTO`, `InterestDTO`, `LoginRequest`, `LoginResponse`, `ApiError`
+- FastAPI routing structure, error handler, request logging
 
 **Dev B — Edge SPA skeleton:**
-- HTML + TypeScript + Vite setup in `packages/client`
+- Vanilla HTML/JS setup in `client/` — no build step required; edit files directly
 - Bottom tab bar with 3 tabs: Reels, Library, Downloads
 - Placeholder screen for each tab
 - Routing (History API — `window.history.pushState`; no routing library)
 - Global CSS baseline: full-screen layout, tablet-optimised
 
 **Dev C — Admin SPA skeleton + edge proxy:**
-- HTML + TypeScript + Vite setup in `packages/admin`
+- Vanilla HTML/JS setup in `admin/` — no build step required; edit files directly
 - Login screen with password field (wired to nothing yet)
 - Placeholder dashboard screen
-- Dockerfile + `nginx.conf` for edge proxy (`packages/edge-proxy`):
+- Dockerfile + `nginx.conf` for edge proxy (`edge-proxy/`):
   - Serve SPA static files from `/var/www/spa/`
   - Proxy `/api/*` to cloud server
   - Basic `proxy_cache` config
@@ -115,8 +113,8 @@ This is the last document in the specification set. All prior documents (Product
 - Category and interest admin screens (stubbed — CRUD logic in Sprint 5)
 
 **Sprint 1 exit criteria:**
-- [ ] `pnpm install && pnpm build` succeeds across all packages
-- [ ] Cloud VM has PostgreSQL running; migration 001 applied
+- [ ] Python venv activates; `uvicorn` starts the FastAPI server without errors
+- [ ] Cloud VM has PostgreSQL running; Alembic migration 001 applied
 - [ ] `GET /api/health` returns 200
 - [ ] Admin login returns a JWT token
 - [ ] Edge proxy Docker container starts and proxies `GET /api/health` from cloud
@@ -229,6 +227,8 @@ This is the last document in the specification set. All prior documents (Product
 - Empty state messages: "No items in this category" / "No results found"
 - Download button on content item cards in library
 
+⚠ **M3 is the highest-risk milestone.** If reels are not validated hands-on on the tablet by end of week 6, pull de-scope levers immediately. Six weeks remain.
+
 **Sprint 3 exit criteria:**
 - [ ] Reels feed scrolls smoothly on 10″ tablet (no jank; confirmed hands-on)
 - [ ] First video starts within ≤ 2s on reasonable network
@@ -265,7 +265,7 @@ This is the last document in the specification set. All prior documents (Product
   - Edge SPA loads (served from Docker image)
   - `GET /api/catalog` serves stale cache
   - `GET /api/content/:id/file` serves cached file
-- Document any nginx config changes needed for stale serving in `packages/edge-proxy/nginx.conf`
+- Document any nginx config changes needed for stale serving in `edge-proxy/nginx.conf`
 
 #### Week 8
 
@@ -282,7 +282,7 @@ This is the last document in the specification set. All prior documents (Product
 - Content detail view consistency: same player/viewer components used in reels, library, and downloads
 
 **Dev A:**
-- Load test: simulate 5 concurrent video stream requests to Node.js; confirm no bottleneck; if needed, switch to nginx `X-Accel-Redirect` for file serving
+- Load test: simulate 5 concurrent video stream requests to FastAPI; confirm no bottleneck; if needed, switch to nginx `X-Accel-Redirect` for file serving
 - Ensure `Accept-Ranges`, `Content-Length`, and `ETag` headers are correct for all content file responses
 
 **Sprint 4 exit criteria:**
@@ -359,7 +359,7 @@ This is the last document in the specification set. All prior documents (Product
 
 **Dev A:**
 - Regression testing: run all 20 API endpoints after demo content is loaded
-- Cloud VM stability: pm2 or systemd for Node.js; nginx TLS; PostgreSQL backup (manual dump)
+- Cloud VM stability: systemd for uvicorn (FastAPI); nginx TLS; PostgreSQL backup (manual dump)
 - Fix any regressions from demo content loading
 
 #### Week 12
@@ -383,7 +383,7 @@ This is the last document in the specification set. All prior documents (Product
 
 | Milestone | Week | What it proves |
 |-----------|------|---------------|
-| **M1: Everything starts** | End of week 2 | Monorepo builds; DB schema exists; all 3 apps start; edge proxy proxies successfully |
+| **M1: Everything starts** | End of week 2 | Python env + FastAPI start; DB schema exists; all 3 apps start; edge proxy proxies successfully |
 | **M2: Content pipeline works** | End of week 4 | Upload → catalog → stream/view on edge device; categories and interests exist |
 | **M3: Reels works on device** | End of week 6 | TikTok-style feed validated hands-on on 10″ tablet; auto-play, swipe, interests confirmed |
 | **M4: Full offline loop** | End of week 8 | Download video + PDF → disconnect network → play/view offline; "Updated" badge works |
@@ -399,12 +399,12 @@ This is the last document in the specification set. All prior documents (Product
 The following dependencies are hard: a downstream task cannot start until the upstream task is done.
 
 ```
-shared/types.ts (Dev A, week 1)
-    ├── packages/server routes depend on DTOs
-    ├── packages/client API calls depend on DTOs
-    └── packages/admin API calls depend on DTOs
+Pydantic schemas / SQLAlchemy models (Dev A, week 1)
+    ├── FastAPI routes depend on Pydantic DTOs
+    ├── client/ API calls depend on JSON response shape
+    └── admin/ API calls depend on JSON response shape
 
-PostgreSQL schema (Dev A, week 1)
+PostgreSQL schema / Alembic migration 001 (Dev A, week 1)
     └── All server endpoints depend on schema
 
 GET /api/catalog (Dev A, week 3)
@@ -428,7 +428,7 @@ Offline proxy testing (Dev A, week 7)
 **Critical path (longest chain):**
 
 ```
-Monorepo setup → shared types → schema → catalog endpoint → catalog sync
+Python env + FastAPI skeleton → Pydantic schemas → DB schema (Alembic) → catalog endpoint → catalog sync
     → interest filtering → reels feed → reels on device test (M3, week 6)
 ```
 
@@ -437,6 +437,8 @@ Monorepo setup → shared types → schema → catalog endpoint → catalog sync
 ---
 
 ## 7. Weekly Checkpoint Cadence
+
+**Weekly checkpoint (every Friday):** Done / Blocked / Scope changes / Next week's plan
 
 Each week ends with a short team sync (30 min):
 
@@ -515,7 +517,7 @@ The team must validate all 12 acceptance criteria from MVP Spec §7 on the actua
 | # | Assumption | Impact if wrong |
 |---|-----------|----------------|
 | PA1 | 3 developers are available full-time for 12 weeks | Reduce scope earlier; compress sprints |
-| PA2 | Developers are comfortable with HTML + TypeScript + Node.js | Add 1–2 weeks for ramp-up; reduce scope |
+| PA2 | Developers are comfortable with Python/FastAPI (backend) and vanilla HTML/JS (frontends) | Add 1–2 weeks for ramp-up; reduce scope |
 | PA3 | Developers can set up WSL2 + Docker on the edge device Windows PCs without extended IT support | Add 3–5 days for device setup |
 | PA4 | Cloud VM is provisioned and accessible by week 1 | Delay cloud deployment; use local development server as fallback |
 | PA5 | Target 10″ tablet is available for testing by week 5 (M3) | Reels validation is delayed; risk to demo quality |
@@ -533,11 +535,11 @@ The team must validate all 12 acceptance criteria from MVP Spec §7 on the actua
 | PR2 | Chrome auto-play policy blocks video playback in kiosk mode | Medium | High | Sprint 3 | Implement tap-to-start overlay for first video; subsequent videos rely on prior interaction |
 | PR3 | nginx proxy_cache range-request caching broken | Medium | High | Sprint 4 | Test in sprint 3; if broken, pre-warm cache with full GET before video plays |
 | PR4 | WSL2 / VirtualBox network port mapping is non-trivial | Medium | Medium | Sprint 1 | Test edge proxy → cloud connectivity in week 1; WSL2 maps ports automatically on most Windows versions |
-| PR5 | Node.js bottleneck serving concurrent video streams | Low | Medium | Sprint 5 | Load test in week 9; switch to nginx X-Accel-Redirect if needed |
+| PR5 | FastAPI bottleneck serving concurrent video streams | Low | Medium | Sprint 5 | Load test in week 9; switch to nginx X-Accel-Redirect if needed |
 | PR6 | PDF.js fails on complex or large demo PDFs | Low | Medium | Sprint 2 | Test with representative PDFs in week 4; set guidance: PDF ≤ 20 pages, no complex embedded forms |
 | PR7 | Demo content (15 items) is not ready by week 11 | Medium | Medium | Sprint 6 | Source placeholder content early; confirm availability in week 8 |
 | PR8 | Build falls behind by > 1 sprint | Medium | High | Any | Apply de-scope levers in priority order (§8); review at each weekly checkpoint |
-| PR9 | Cloud VM is not provisioned by week 1 | Low | Medium | Sprint 1 | Use a local development server (Node.js on localhost) until VM is available; no blocking |
+| PR9 | Cloud VM is not provisioned by week 1 | Low | Medium | Sprint 1 | Run `uvicorn` locally on localhost until VM is available; no blocking |
 
 ---
 
@@ -571,17 +573,21 @@ Ordered by priority. Cut from the top. Do not skip ahead.
 
 ## 14. Continuation Notes
 
+**Version history:**
+- v0.3 (2026-03-25): Tech stack updated per MVP Spec v3. Dev roles updated (Python/FastAPI/SQLAlchemy for backend; vanilla JS for frontends). Sprint 1 tasks updated (Python env setup replaces pnpm monorepo). Weekly Friday checkpoint cadence added. M3 risk escalation note added.
+- v0.1 (2026-03-07): Initial draft.
+
 Guidance for a follow-on team picking up after MVP:
 
 - **Week 1 priority for the next team:** read all 7 spec documents in order; `notes/decisions.md` for all locked decisions; `notes/open-questions.md` for unresolved items.
-- **Database migrations:** All schema changes must be versioned migration files (Prisma or Knex). The migration history from sprint 1 onward is the authoritative record of schema evolution.
-- **Test coverage:** MVP has no automated tests. The next team should add unit tests for the service layer (CatalogService, ContentFileService, AuthService) and integration tests for the critical API endpoints before adding new features.
-- **Monitoring:** Add structured server-side request logging (e.g., `pino`) and set up error alerting (e.g., Sentry) before going to production with real users.
+- **Database migrations:** All schema changes must be versioned Alembic migration files. The migration history from sprint 1 onward is the authoritative record of schema evolution.
+- **Test coverage:** MVP has no automated tests. The next team should add unit tests for the service layer (catalog, content file, auth) and integration tests for the critical API endpoints before adding new features.
+- **Monitoring:** Add structured server-side request logging (Python `logging` or `structlog`) and set up error alerting (e.g., Sentry) before going to production with real users.
 - **User authentication:** The edge SPA has no user identity. When auth is added, `DeviceProfile.deviceId` becomes `userId`; the API adds auth middleware to content endpoints; LocalAction records gain a `synced` flag for batch upload.
 - **Delta sync:** Replace `GET /api/catalog` full pull with a delta-based response using `?since={timestamp}`. Server returns only changed items and a `deleted` array. This is the highest-priority scalability improvement for catalog growth.
 - **Adaptive streaming:** MP4 + range requests works for ≤ 3 min clips. For longer content or very variable bandwidth, add HLS segmentation using ffmpeg on upload and an HLS player (e.g., hls.js) on the client. The `<video>` element can be swapped without changing the rest of the architecture.
 - **Edge proxy proactive prefetch:** Add a scheduled job inside the edge proxy (e.g., a cron inside the Docker container) that pulls all content from the cloud into cache on a schedule, rather than waiting for user access. This ensures all content is available offline even before the first user request.
-- **Docker Compose:** When the edge device setup grows (e.g., multiple containers), replace bare `docker run` with a `docker-compose.yml`. The `packages/edge-proxy` package should include a `docker-compose.yml` template.
+- **Docker Compose:** When the edge device setup grows (e.g., multiple containers), replace bare `docker run` with a `docker-compose.yml`. The `edge-proxy/` directory should include a `docker-compose.yml` template.
 
 ---
 

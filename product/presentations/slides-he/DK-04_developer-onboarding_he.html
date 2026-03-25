@@ -214,7 +214,7 @@
          שקופית 3 — סקירת ארכיטקטורה
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="3"
-      data-notes="טופולוגיית 3 שכבות: VM ענן (Node.js + PostgreSQL + nginx TLS), מכשיר קצה (מכיל Docker עם פרוקסי מטמון nginx + חבילת Edge SPA), שולחן עבודה HQ (Admin SPA המתחבר ישירות לענן). החלק הלא-רגיל: Chrome במכשיר הקצה לעולם לא מתחבר לענן — הוא מתחבר אך ורק ל-localhost:8080. מכיל ה-Docker מטפל בהגשת ה-SPA, ניהול פרוקסי ה-API, ומטמון התוכן. זה הופך את האופליין לטריוויאלי ומשאיר את קוד ה-SPA פשוט. פתחו את הדיאגרמה לתמונה המלאה.">
+      data-notes="טופולוגיית 3 שכבות: VM ענן (Python FastAPI + PostgreSQL + nginx TLS), מכשיר קצה (מכיל Docker עם פרוקסי מטמון nginx + חבילת Edge SPA), שולחן עבודה HQ (Admin SPA המתחבר ישירות לענן). החלק הלא-רגיל: Chrome במכשיר הקצה לעולם לא מתחבר לענן — הוא מתחבר אך ורק ל-localhost:8080. מכיל ה-Docker מטפל בהגשת ה-SPA, ניהול פרוקסי ה-API, ומטמון התוכן. זה הופך את האופליין לטריוויאלי ומשאיר את קוד ה-SPA פשוט. פתחו את הדיאגרמה לתמונה המלאה.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">סקירת ארכיטקטורה</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">שלוש שכבות, <span class="highlight-g">מיכל אחד</span> שעושה את העבודה</h1>
@@ -223,10 +223,10 @@
             <p class="card-title">VM ענן (Linux)</p>
             <p class="card-body">
               nginx TLS :443<br>
-              Node.js + Express :3000<br>
+              Python FastAPI :3000<br>
               PostgreSQL :5432<br>
               אחסון קבצים: <code style="color:var(--accent-green);">./data/content/</code><br>
-              <em>pm2 / systemd; Let's Encrypt</em>
+              <em>uvicorn / systemd; Let's Encrypt</em>
             </p>
           </div>
           <div class="card card-g">
@@ -262,45 +262,42 @@
          שקופית 4 — מבנה המונורפו
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="4"
-      data-notes="למונורפו 5 חבילות. packages/shared הוא עוגן המערכת — הוא מכיל את ה-DTO של TypeScript שכל חבילה אחרת מייבאת. כל סוגי תגובת ה-API מוגדרים כאן פעם אחת; אם לקוח ושרת לא מסכימים, TypeScript מזהה זאת בזמן קומפילציה. חבילת edge-proxy אינה חבילת TS אך נמצאת במונורפו לצורך קונפיגורציה משותפת. מפתח א — server + shared; מפתח ב — client + edge-proxy; מפתח ג — admin.">
+      data-notes="למאגר 4 תיקיות. server/ הוא שרת Python FastAPI. client/ ו-admin/ הם SPAs של Vanilla JS הנפתחים ישירות בדפדפן — ללא שלב בנייה. edge-proxy/ מחזיקה את ה-Dockerfile ותצורת nginx. מסמך חוזה API של JSON פשוט מגדיר את כל צורות התגובה המשותפות. מפתח א — server/; מפתח ב — client/ + edge-proxy/; מפתח ג — admin/.">
       <div class="slide-inner">
-        <div class="label-block"><p class="label">מבנה המונורפו &middot; DG-13</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">חמישה חבילות, <span class="highlight-g">שכבת טיפוסים משותפת אחת</span></h1>
+        <div class="label-block"><p class="label">מבנה תיקיות שטוח &middot; DG-13</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">ארבע תיקיות, <span class="highlight-g">חוזה API ב-JSON פשוט</span></h1>
         <div class="five-col">
           <div class="card card-g">
-            <p class="card-title" style="font-size:0.75rem;">packages/server</p>
-            <p class="card-body" style="font-size:0.78rem;">API Node.js + Express<br>נתיבי תוכן + מנהל<br>שכבת שירות<br>מיגרציות DB<br><em>בעלים: מפתח א</em></p>
+            <p class="card-title" style="font-size:0.75rem;">server/</p>
+            <p class="card-body" style="font-size:0.78rem;">Python FastAPI<br>נתיבי תוכן + מנהל<br>שכבת שירות<br>מיגרציות DB (Alembic)<br><em>בעלים: מפתח א</em></p>
           </div>
           <div class="card card-g">
-            <p class="card-title" style="font-size:0.75rem;">packages/shared</p>
-            <p class="card-body" style="font-size:0.78rem;">DTO של TypeScript<br>ContentItemDTO<br>CatalogResponse<br>CategoryDTO / InterestDTO<br><em>בעלים: מפתח א</em></p>
+            <p class="card-title" style="font-size:0.75rem;">חוזה API ב-JSON פשוט</p>
+            <p class="card-body" style="font-size:0.78rem;">צורות תגובה משותפות<br>ContentItemDTO<br>CatalogResponse<br>CategoryDTO / InterestDTO<br><em>בעלים: מפתח א</em></p>
           </div>
           <div class="card card-b">
-            <p class="card-title" style="font-size:0.75rem;">packages/client</p>
-            <p class="card-body" style="font-size:0.78rem;">Edge SPA (HTML/TS)<br>ריאלס · ספרייה · הורדות<br>שכבת IndexedDB<br>PDF.js + נגן וידאו<br><em>בעלים: מפתח ב</em></p>
+            <p class="card-title" style="font-size:0.75rem;">client/</p>
+            <p class="card-body" style="font-size:0.78rem;">Edge SPA (Vanilla JS)<br>ריאלס · ספרייה · הורדות<br>שכבת IndexedDB<br>PDF.js + נגן וידאו<br><em>בעלים: מפתח ב</em></p>
           </div>
           <div class="card card-o">
-            <p class="card-title" style="font-size:0.75rem;">packages/admin</p>
-            <p class="card-body" style="font-size:0.78rem;">Admin SPA (HTML/TS)<br>טופס העלאה + רשימה<br>CRUD קטגוריות / עניין<br>מסך כניסה<br><em>בעלים: מפתח ג</em></p>
+            <p class="card-title" style="font-size:0.75rem;">admin/</p>
+            <p class="card-body" style="font-size:0.78rem;">Admin SPA (Vanilla JS)<br>טופס העלאה + רשימה<br>CRUD קטגוריות / עניין<br>מסך כניסה<br><em>בעלים: מפתח ג</em></p>
           </div>
           <div class="card" style="border-top:3px solid var(--text-muted);">
-            <p class="card-title" style="font-size:0.75rem;">packages/edge-proxy</p>
+            <p class="card-title" style="font-size:0.75rem;">edge-proxy/</p>
             <p class="card-body" style="font-size:0.78rem;">Dockerfile<br>nginx.conf<br>קונפיגורציית מטמון<br>חבילת SPA מוטמעת<br><em>בעלים: מפתח ב</em></p>
           </div>
         </div>
         <div style="display:flex;gap:var(--gap-sm);align-items:center;flex-wrap:wrap;">
-          <a class="diagram-link" href="https://excalidraw.com/#json=dF-Zzea7unFkk0Myx3sI6,X_cPLhE4uqGsulFEseLxUg" target="_blank" rel="noopener">DG-13 — מפת חבילות &#8599;</a>
-          <span style="font-size:var(--sz-small);color:var(--text-muted);">פריסת מונורפו, בעלות, גרף תלות טיפוסים משותפים</span>
+          <a class="diagram-link" href="https://excalidraw.com/#json=dF-Zzea7unFkk0Myx3sI6,X_cPLhE4uqGsulFEseLxUg" target="_blank" rel="noopener">DG-13 — מפת תיקיות &#8599;</a>
+          <span style="font-size:var(--sz-small);color:var(--text-muted);">מבנה תיקיות שטוח, בעלות, מסמך חוזה API</span>
         </div>
         <div class="code-block" style="font-size:0.8rem;line-height:1.5;">tactitok/
-├── packages/
-│   ├── client/        ← Edge SPA (HTML/TS, Vite)
-│   ├── admin/         ← Admin SPA (HTML/TS, Vite)
-│   ├── server/        ← API Server (Node/Express/TS)
-│   ├── shared/        ← Shared types, validation
-│   └── edge-proxy/    ← Dockerfile + nginx.conf
-├── package.json       ← pnpm workspaces root
-└── tsconfig.base.json ← Shared TS config</div>
+├── server/        ← API Server (Python FastAPI)
+├── client/        ← Edge SPA (Vanilla JS, פתח HTML ישירות)
+├── admin/         ← Admin SPA (Vanilla JS, פתח HTML ישירות)
+├── edge-proxy/    ← Dockerfile + nginx.conf
+└── docs/          ← חוזה API ב-JSON פשוט + מפרטים</div>
       </div>
     </section>
 
@@ -308,7 +305,7 @@
          שקופית 5 — הגדרת סביבת פיתוח
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="5"
-      data-notes="דרישות מוקדמות: Node.js 20+, pnpm 8+, Docker Desktop, PostgreSQL 15+ (מקומי או ב-Docker). פרוקסי הקצה מתחבר ל-VM הענן; לפיתוח מקומי אפשר להפנות CLOUD_URL ל-localhost:3000 ישירות, ולעקוף את הפרוקסי. סקריפט הנתח טוען 3 קטגוריות, 3 תת-קטגוריות, ו-3 תחומי עניין לבסיס הנתונים — מספיק לפיתוח ללא הכנסת נתונים ידנית. הפקודה הראשונה מפעילה את שלוש האפליקציות במקביל. מקור: product/07_delivery-plan.md §4 ספרינט 1.">
+      data-notes="דרישות מוקדמות: Python 3.11+, Docker Desktop, PostgreSQL 15+ (מקומי או ב-Docker). פרוקסי הקצה מתחבר ל-VM הענן; לפיתוח מקומי אפשר להפנות CLOUD_URL ל-localhost:3000 ישירות, ולעקוף את הפרוקסי. סקריפט הנתח טוען 3 קטגוריות, 3 תת-קטגוריות, ו-3 תחומי עניין לבסיס הנתונים — מספיק לפיתוח ללא הכנסת נתונים ידנית. הפקודה הראשונה מפעילה את שרת ה-API. מקור: product/07_delivery-plan.md §4 ספרינט 1.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">הגדרת סביבת פיתוח</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">מאפס ל<span class="highlight-g">פעיל תוך 10 דקות</span></h1>
@@ -317,8 +314,7 @@
             <div class="card card-g">
               <p class="card-title">דרישות מוקדמות</p>
               <ul class="bullets" style="margin-top:0.3rem;">
-                <li>Node.js 20 LTS</li>
-                <li>pnpm 8+ (<code style="color:var(--accent-green);">npm i -g pnpm</code>)</li>
+                <li>Python 3.11+</li>
                 <li>Docker Desktop (לפרוקסי קצה)</li>
                 <li>PostgreSQL 15+ מקומי או דרך Docker</li>
               </ul>
@@ -334,26 +330,30 @@
               </p>
             </div>
           </div>
-          <div class="code-block" style="font-size:0.82rem;"># 1. התקן את כל תלויות הסביבה
-pnpm install
+          <div class="code-block" style="font-size:0.82rem;"># 1. צור והפעל סביבה וירטואלית
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 2. צור את בסיס הנתונים
+# 2. התקן את כל התלויות
+pip install -r requirements.txt
+
+# 3. צור את בסיס הנתונים
 createdb tactitok
 
-# 3. הרץ מיגרציות (יוצר את כל 5 הטבלאות)
-pnpm --filter server db:migrate
+# 4. הרץ מיגרציות (יוצר את כל 5 הטבלאות)
+alembic upgrade head
 
-# 4. טען נתוני פיתוח
-pnpm --filter server db:seed
+# 5. טען נתוני פיתוח
+python manage.py db:seed
 
-# 5. הפעל את שלוש האפליקציות במקביל
-pnpm dev
+# 6. הפעל את שרת ה-API
+uvicorn main:app --reload
 #   → server:  http://localhost:3000
-#   → client:  http://localhost:5173
-#   → admin:   http://localhost:5174
+#   → client:  פתח client/index.html ישירות בדפדפן
+#   → admin:   פתח admin/index.html ישירות בדפדפן
 
-# 6. (אופציונלי) בנה והפעל פרוקסי קצה
-cd packages/edge-proxy
+# 7. (אופציונלי) בנה והפעל פרוקסי קצה
+cd edge-proxy
 docker build -t tactitok-edge-proxy .
 docker run -p 8080:8080 \
   -e CLOUD_URL=https://your-vm.example.com \
@@ -448,7 +448,7 @@ docker run -p 8080:8080 \
                 <li>מחיקה קשה — מסירה רשומת DB + קובץ + תמונה ממוזערת</li>
                 <li><strong>מונה גרסה</strong>, לא היסטוריית גרסאות</li>
                 <li>UUIDs לכל ה-PK — מוכן לסנכרון ממקורות מרובים בעתיד</li>
-                <li>סכמה מבוססת-מיגרציה מספרינט 1 (Prisma או Knex)</li>
+                <li>סכמה מבוססת-מיגרציה מספרינט 1 (Alembic)</li>
               </ul>
             </div>
             <a class="diagram-link" href="https://excalidraw.com/#json=kS9zEDFbS1ZPMiobq3E8a,uGCiwysIVh8mFmOAR-wSCA" target="_blank" rel="noopener">DG-04 — מודל נתונים מלא &#8599;</a>
@@ -553,7 +553,7 @@ docker run -p 8080:8080 \
                 <li><strong>?v={version}</strong> בכתובת קובץ = מנגנון cache-busting של פרוקסי</li>
                 <li>מעטפת שגיאה: <code style="color:var(--accent-green);">{"error":"...","code":"..."}</code></li>
                 <li><strong>?since=</strong> מתקבל בקטלוג אך מתעלם — מוכן לסנכרון דלתא עתידי</li>
-                <li>כל הטיפוסים ב-<code style="color:var(--accent-green);">packages/shared/src/types.ts</code></li>
+                <li>כל צורות התגובה מוגדרות ב-<code style="color:var(--accent-green);">docs/api-contract.md</code></li>
               </ul>
             </div>
             <a class="diagram-link" href="https://excalidraw.com/#json=eGwui9XaJkvQ5b8gF7ZPS,NXds79drLkQ2PDdKnTlo3A" target="_blank" rel="noopener">DG-02 — דיאגרמת משטח API &#8599;</a>
@@ -566,15 +566,15 @@ docker run -p 8080:8080 \
          שקופית 10 — החלטות ארכיטקטורה מרכזיות
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="10"
-      data-notes="AD1–AD12 מתועדות כולן ב-product/04_system-architecture.md. ההחלטות החשובות ביותר למפתחים חדשים: AD1 (מונורפו עם טיפוסים משותפים — לעולם אל תסטה מזה), AD5 (הפשטת מערכת קבצים — תמיד עבור דרך הממשק, לעולם אל תכתוב לדיסק ישירות), AD7 (מטמון פרוקסי nginx — לעולם אל תוסיף קוד Service Worker או Cache API), AD8 (IndexedDB למצב בלבד — לעולם אל תאחסן נתוני קובץ בינארי בדפדפן), AD11 (סנכרון קטלוג מלא — ללא לוגיקת דלתא ב-MVP), AD12 (SPA בתוך תמונת Docker — עדכון = בנייה מחדש + פריסה מחדש של המכיל).">
+      data-notes="AD1–AD12 מתועדות כולן ב-product/04_system-architecture.md. ההחלטות החשובות ביותר למפתחים חדשים: AD1 (מבנה תיקיות שטוח + חוזה API ב-JSON פשוט — לעולם אל תסטה מזה), AD5 (הפשטת מערכת קבצים — תמיד עבור דרך הממשק, לעולם אל תכתוב לדיסק ישירות), AD7 (מטמון פרוקסי nginx — לעולם אל תוסיף קוד Service Worker או Cache API), AD8 (IndexedDB למצב בלבד — לעולם אל תאחסן נתוני קובץ בינארי בדפדפן), AD11 (סנכרון קטלוג מלא — ללא לוגיקת דלתא ב-MVP), AD12 (SPA בתוך תמונת Docker — עדכון = בנייה מחדש + פריסה מחדש של המכיל).">
       <div class="slide-inner">
         <div class="label-block"><p class="label">החלטות ארכיטקטורה AD1–AD12</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">שתים-עשרה החלטות, <span class="highlight-g">כולן מכוונות</span></h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:0.5rem;">
-            <div class="card card-g"><p class="card-title">AD1 — מונורפו TypeScript</p><p class="card-body">טיפוסים משותפים מונעים סחף API בזמן קומפילציה. צינור CI אחד.</p></div>
-            <div class="card card-g"><p class="card-title">AD2 — HTML + TypeScript לשני ה-SPAs</p><p class="card-body">ללא תלות ב-framework; מחסנית פשוטה יותר; מספיקה למורכבות SPA.</p></div>
-            <div class="card card-g"><p class="card-title">AD3 — Node.js + Express</p><p class="card-body">אותה שפה כמו הפרונטאנד; שידור קבצי range-request פשוט.</p></div>
+            <div class="card card-g"><p class="card-title">AD1 — מבנה תיקיות שטוח</p><p class="card-body">חוזה API ב-JSON פשוט מונע סחף בצורות התגובה. ללא שלב קומפילציה לסוגים משותפים.</p></div>
+            <div class="card card-g"><p class="card-title">AD2 — Vanilla JS (ללא TypeScript) לשני ה-SPAs</p><p class="card-body">ללא תלות ב-framework; ללא שלב בנייה — פתח HTML ישירות; מספיק למורכבות SPA.</p></div>
+            <div class="card card-g"><p class="card-title">AD3 — Python FastAPI</p><p class="card-body">אסינכרוני מטבע ברייתו; שידור קבצי range-request פשוט; מוכר לצוות.</p></div>
             <div class="card card-b"><p class="card-title">AD4 — PostgreSQL</p><p class="card-body">דרגת ייצור; חיפוש טקסט ILIKE; מיגרציה-מבוססת מהיום הראשון.</p></div>
             <div class="card card-b"><p class="card-title">AD5 — הפשטת אחסון מערכת קבצים</p><p class="card-body">ממשק <code style="color:var(--accent-green);">store/retrieve/delete</code> — מחליף ל-S3/MinIO מבלי לשנות שכבת השירות.</p></div>
             <div class="card card-b"><p class="card-title">AD6 — MP4 + HTTP 206 Range</p><p class="card-body">ללא צינור קידוד. Chrome מטפל בשידור range-based באופן מובנה. קליפים ≤3 דקות.</p></div>
@@ -582,7 +582,7 @@ docker run -p 8080:8080 \
           <div style="display:flex;flex-direction:column;gap:0.5rem;">
             <div class="card card-g"><p class="card-title">AD7 — מטמון פרוקסי nginx (לא Service Worker)</p><p class="card-body">אפס קוד אופליין ב-SPA. אופליין שקוף לכל תוכן שנגיש בעבר.</p></div>
             <div class="card card-g"><p class="card-title">AD8 — IndexedDB למצב בלבד</p><p class="card-body">פרופיל, רשומות הורדה, פעולות מקומיות. ללא נתוני קובץ בינארי. נתיב קוד SPA אחד.</p></div>
-            <div class="card card-g"><p class="card-title">AD9 — תהליך Node.js יחיד</p><p class="card-body">3 מפתחים, ~20 משתמשים. מונוליט עם מודולי שירות נקיים. pm2 cluster במידת הצורך.</p></div>
+            <div class="card card-g"><p class="card-title">AD9 — תהליך Python יחיד</p><p class="card-body">3 מפתחים, ~20 משתמשים. מונוליט עם מודולי שירות נקיים. worker-ים של uvicorn במידת הצורך.</p></div>
             <div class="card card-b"><p class="card-title">AD10 — nginx TLS בענן</p><p class="card-body">תבנית סטנדרטית. Let's Encrypt או חתום-עצמי לדמו. proxy_pass :3000.</p></div>
             <div class="card card-b"><p class="card-title">AD11 — סנכרון קטלוג מלא</p><p class="card-body">~15 פריטים = &lt;10 KB JSON. ה-API מקבל <code style="color:var(--accent-green);">?since=</code> לסנכרון דלתא עתידי.</p></div>
             <div class="card card-b"><p class="card-title">AD12 — SPA מוטמע בתמונת Docker</p><p class="card-body">ה-SPA תמיד זמין מקומית. עדכון = בנייה מחדש + פריסת Docker לקצה.</p></div>
@@ -637,14 +637,14 @@ docker run -p 8080:8080 \
          שקופית 12 — תכנית ספרינטים
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="12"
-      data-notes="שישה ספרינטים, שש אבני דרך, 12 שבועות. M3 בסוף שבוע 6 (ריאלס על מכשיר אמיתי) הוא אבן הדרך בסיכון הגבוה ביותר — אם אינה מוצקה, הפעל מיד מנופי צמצום. הנתיב הקריטי רץ: הקמת מונורפו → טיפוסים משותפים → סכמה → נקודת קצה קטלוג → סנכרון קטלוג → סינון תחומי עניין → פיד ריאלס → בדיקת M3 במכשיר. שאר הדברים מקביל לשרשרת זו. מקור: product/07_delivery-plan.md §§3–5.">
+      data-notes="שישה ספרינטים, שש אבני דרך, 12 שבועות. M3 בסוף שבוע 6 (ריאלס על מכשיר אמיתי) הוא אבן הדרך בסיכון הגבוה ביותר — אם אינה מוצקה, הפעל מיד מנופי צמצום. הנתיב הקריטי רץ: הגדרת מבנה תיקיות שטוח → חוזה API ב-JSON פשוט → סכמה → נקודת קצה קטלוג → סנכרון קטלוג → סינון תחומי עניין → פיד ריאלס → בדיקת M3 במכשיר. שאר הדברים מקביל לשרשרת זו. מקור: product/07_delivery-plan.md §§3–5.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">תכנית ספרינטים &middot; DG-17</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">6 ספרינטים &middot; 6 אבני דרך &middot; <span class="highlight-g">12 שבועות</span></h1>
         <table class="data-table">
           <thead><tr><th>ספרינט</th><th>שבועות</th><th>מטרה</th><th>אבן דרך</th></tr></thead>
           <tbody>
-            <tr><td><strong>S1 — תשתית</strong></td><td>1–2</td><td class="muted">מונורפו, סכמה, שלדים, Docker, VM ענן</td><td><span class="badge badge-g">M1</span> הכל מתחיל (שבוע 2)</td></tr>
+            <tr><td><strong>S1 — תשתית</strong></td><td>1–2</td><td class="muted">מבנה תיקיות שטוח, סכמה, שלדים, Docker, VM ענן</td><td><span class="badge badge-g">M1</span> הכל מתחיל (שבוע 2)</td></tr>
             <tr><td><strong>S2 — צינור תוכן</strong></td><td>3–4</td><td class="muted">העלאה → API → סנכרון קטלוג → תצוגה בסיסית → נגן PDF/וידאו</td><td><span class="badge badge-g">M2</span> צינור תוכן עובד (שבוע 4)</td></tr>
             <tr><td><strong>S3 — חוויית ריאלס</strong></td><td>5–6</td><td class="muted">פיד TikTok, ניגון אוטומטי, החלקה, תחומי עניין, טעינה מוקדמת, עץ ספרייה</td><td><span class="badge badge-o">M3</span> ריאלס במכשיר (שבוע 6) ⚠️ סיכון גבוה</td></tr>
             <tr><td><strong>S4 — ספרייה + אופליין</strong></td><td>7–8</td><td class="muted">לשונית הורדות, מצב אופליין, תג "עודכן", מחוון רשת</td><td><span class="badge badge-b">M4</span> לולאת אופליין מלאה (שבוע 8)</td></tr>
@@ -660,7 +660,7 @@ docker run -p 8080:8080 \
          שקופית 13 — מה לבנות ראשון ולמה
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="13"
-      data-notes="ספרינט 1 הוא הספרינט החשוב ביותר. הכל תלוי בכך שהטיפוסים המשותפים והסכמה יהיו קיימים עד סוף שבוע 1. פרוקסי הקצה חייב להיות ניתן לאימות בשבוע 1 כדי שלכל תכונות הקצה המאוחרות יהיה יעד לבדיקה. יציאת ספרינט 1 היא השער ל-M1 — אם pnpm build נכשל או בדיקת הבריאות אינה מחזירה 200, הצוות חסום. הנתיב הקריטי ל-M3: טיפוסים משותפים → סכמה → GET /api/catalog → סנכרון קטלוג → סינון תחומי עניין → פיד ריאלס → בדיקה במכשיר עד שבוע 6.">
+      data-notes="ספרינט 1 הוא הספרינט החשוב ביותר. הכל תלוי בכך שחוזה ה-API והסכמה יהיו קיימים עד סוף שבוע 1. פרוקסי הקצה חייב להיות ניתן לאימות בשבוע 1 כדי שלכל תכונות הקצה המאוחרות יהיה יעד לבדיקה. יציאת ספרינט 1 היא השער ל-M1 — אם השרת אינו מתחיל או בדיקת הבריאות אינה מחזירה 200, הצוות חסום. הנתיב הקריטי ל-M3: חוזה API → סכמה → GET /api/catalog → סנכרון קטלוג → סינון תחומי עניין → פיד ריאלס → בדיקה במכשיר עד שבוע 6.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">ספרינט 1 ונתיב קריטי ל-M3</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">מה לבנות <span class="highlight-g">ראשון ולמה</span></h1>
@@ -669,15 +669,15 @@ docker run -p 8080:8080 \
             <div class="card card-g">
               <p class="card-title">תוצרי ספרינט 1 (שבועות 1–2)</p>
               <ul class="bullets" style="margin-top:0.3rem;">
-                <li><strong>מפתח א:</strong> מונורפו + טיפוסים משותפים + סכמה (מיגרציה 001) + שלד Express + בדיקת בריאות + אימות מנהל</li>
-                <li><strong>מפתח ב:</strong> Edge SPA (HTML/TS/Vite) + 3 לשוניות + אתחול IndexedDB + DeviceProfile + חיבור לפרוקסי קצה</li>
+                <li><strong>מפתח א:</strong> מבנה תיקיות שטוח + חוזה API ב-JSON פשוט + סכמה (מיגרציה 001) + שלד FastAPI + בדיקת בריאות + אימות מנהל</li>
+                <li><strong>מפתח ב:</strong> Edge SPA (Vanilla JS, ללא TypeScript) + 3 לשוניות + אתחול IndexedDB + DeviceProfile + חיבור לפרוקסי קצה</li>
                 <li><strong>מפתח ג:</strong> שלד Admin SPA + מסך כניסה + Docker nginx.conf + מכיל פרוקסי קצה פועל</li>
               </ul>
             </div>
             <div class="card card-b">
               <p class="card-title">קריטריוני יציאה מספרינט 1</p>
               <ul class="bullets" style="margin-top:0.3rem;">
-                <li><code style="color:var(--accent-green);">pnpm install &amp;&amp; pnpm build</code> מצליח בכל החבילות</li>
+                <li><code style="color:var(--accent-green);">pip install -r requirements.txt</code> מצליח; השרת מתחיל עם <code style="color:var(--accent-green);">uvicorn main:app --reload</code></li>
                 <li>PostgreSQL פועל; מיגרציה 001 הוחלה</li>
                 <li><code style="color:var(--accent-green);">GET /api/health → 200</code></li>
                 <li>כניסת מנהל מחזירה טוקן JWT</li>
@@ -688,8 +688,8 @@ docker run -p 8080:8080 \
           </div>
           <div class="card" style="border:1px solid var(--border-subtle);background:var(--bg-tertiary);">
             <p class="card-title" style="color:var(--accent-green);">נתיב קריטי → M3 (שבוע 6)</p>
-            <div class="code-block" style="font-size:0.8rem;line-height:1.7;background:transparent;border:none;padding:0.5rem 0;">shared/types.ts (מפתח א, שבוע 1)
-  └── schema (מפתח א, שבוע 1)
+            <div class="code-block" style="font-size:0.8rem;line-height:1.7;background:transparent;border:none;padding:0.5rem 0;">חוזה API ב-JSON פשוט (מפתח א, שבוע 1)
+  └── schema + מיגרציית alembic (מפתח א, שבוע 1)
        └── GET /api/catalog (מפתח א, שבוע 3)
             └── catalog sync to IndexedDB (מפתח ב, שבוע 3)
                  └── interest filtering (מפתח ב, שבוע 6)
@@ -708,32 +708,31 @@ Edge proxy Docker פועל (מפתח ג, שבוע 1)
          שקופית 14 — הרצה מקומית
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="14"
-      data-notes="לפיתוח יומי הצוות אינו זקוק למכיל Docker פועל — הוא יכול לגשת ישירות ל-localhost:3000 מ-dev server של Edge SPA. פרוקסי הקצה נדרש לבדיקת התנהגות אופליין, מטמון פרוקסי, והגדרת המכשיר האמיתי. פקודת pnpm dev מפעילה את שלוש האפליקציות בו-זמנית באמצעות turbo או concurrently המוגדר ב-root package.json. סקריפט הנתח מוסיף 3 קטגוריות, 3 תת-קטגוריות, ו-3 תחומי עניין כך שממשק המשתמש אינו ריק. בדוק שבדיקת הבריאות מחזירה 200 לפני כל דבר אחר.">
+      data-notes="לפיתוח יומי הצוות אינו זקוק למכיל Docker פועל — הוא יכול לגשת ישירות ל-localhost:3000 מ-uvicorn ולפתוח client/index.html ישירות בדפדפן. פרוקסי הקצה נדרש לבדיקת התנהגות אופליין, מטמון פרוקסי, והגדרת המכשיר האמיתי. uvicorn main:app --reload מפעיל את שרת ה-API בלבד — SPAs נפתחים ישירות כקבצי HTML. סקריפט הנתח מוסיף 3 קטגוריות, 3 תת-קטגוריות, ו-3 תחומי עניין כך שממשק המשתמש אינו ריק. בדוק שבדיקת הבריאות מחזירה 200 לפני כל דבר אחר.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">הרצה מקומית</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">פקודות <span class="highlight-g">לפיתוח מקומי</span></h1>
         <div class="two-col" style="align-items:start;">
           <div class="code-block" style="font-size:0.82rem;"># זרימת עבודה יומית
-pnpm install         # התקן / עדכן תלויות
-pnpm --filter server db:migrate   # הרץ מיגרציות ממתינות
-pnpm --filter server db:seed      # טען נתוני פיתוח
-pnpm dev             # הפעל את 3 האפליקציות במקביל
+source .venv/bin/activate       # הפעל סביבה וירטואלית
+pip install -r requirements.txt # התקן / עדכן תלויות
+alembic upgrade head            # הרץ מיגרציות ממתינות
+python manage.py db:seed        # טען נתוני פיתוח
+uvicorn main:app --reload       # הפעל שרת API :3000
 
-# אפליקציות בודדות
-pnpm --filter server dev    # שרת API  :3000
-pnpm --filter client dev    # Edge SPA  :5173
-pnpm --filter admin  dev    # Admin SPA :5174
+# SPAs — ללא שלב בנייה, פתח ישירות בדפדפן
+#   Edge SPA:  פתח client/index.html ב-Chrome
+#   Admin SPA: פתח admin/index.html ב-Chrome
 
 # בסיס נתונים
-pnpm --filter server db:migrate:rollback  # בטל מיגרציה אחרונה
-pnpm --filter server db:studio            # Prisma Studio (אם משתמשים ב-Prisma)
+alembic downgrade -1            # בטל מיגרציה אחרונה
+# (ללא Prisma Studio — השתמש ב-psql או pgAdmin)
 
-# Lint + בדיקת טיפוסים
-pnpm build           # בנה את כל החבילות (כולל בדיקת טיפוסים)
-pnpm lint            # ESLint על כל הסביבה</div>
+# Lint
+flake8 server/                  # בדוק קוד Python</div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="code-block" style="font-size:0.82rem;"># פרוקסי קצה (בדיקה מקומית)
-cd packages/edge-proxy
+cd edge-proxy
 
 # בנה תמונת Docker
 docker build -t tactitok-edge-proxy .
@@ -755,8 +754,8 @@ curl -I http://localhost:8080/api/catalog
               <p class="card-title">כתובות URL שימושיות לפיתוח</p>
               <p class="card-body" style="font-family:'Courier New',monospace;font-size:0.85em;line-height:1.9;direction:ltr;text-align:left;">
                 localhost:3000/api/health → server health<br>
-                localhost:5173 → Edge SPA (direct, no proxy)<br>
-                localhost:5174 → Admin SPA<br>
+                client/index.html → Edge SPA (direct, no proxy)<br>
+                admin/index.html → Admin SPA<br>
                 localhost:8080 → Edge SPA via proxy
               </p>
             </div>
@@ -769,38 +768,34 @@ curl -I http://localhost:8080/api/catalog
          שקופית 15 — פריסה ל-VM בענן
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="15"
-      data-notes="VM הענן צריך: Linux (Ubuntu 22.04 מומלץ), Node.js 20, PostgreSQL 15, nginx, pm2, ושם דומיין או IP עם פורט 443 נגיש. גישת האישור המומלצת לדמו היא Let's Encrypt (אם יש דומיין זמין) או אישור חתום-עצמי (Chrome יציג אזהרה אך ניתן לדלג עבור שימוש בדמו). pm2 מפעיל מחדש את תהליך Node.js בהתרסקות ובאתחול VM. Admin SPA מוגש כקבצים סטטיים על ידי שרת ה-API — אין צורך בשרת ווב נפרד. מקור: product/07_delivery-plan.md §4 ספרינט 5.">
+      data-notes="VM הענן צריך: Linux (Ubuntu 22.04 מומלץ), Python 3.11+, PostgreSQL 15, nginx, ושם דומיין או IP עם פורט 443 נגיש. גישת האישור המומלצת לדמו היא Let's Encrypt (אם יש דומיין זמין) או אישור חתום-עצמי (Chrome יציג אזהרה אך ניתן לדלג עבור שימוש בדמו). systemd או מנהל תהליכים מפעיל מחדש את תהליך Python בהתרסקות ובאתחול VM. Admin SPA מוגש כקבצים סטטיים על ידי nginx — פתח admin/index.html ישירות. מקור: product/07_delivery-plan.md §4 ספרינט 5.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">פריסה ל-VM בענן</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">פריסה ל<span class="highlight-g">-VM בענן</span></h1>
         <div class="two-col" style="align-items:start;">
-          <div class="code-block" style="font-size:0.8rem;"># 1. התקן Node.js 20 על Ubuntu 22.04
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
+          <div class="code-block" style="font-size:0.8rem;"># 1. התקן Python 3.11+ על Ubuntu 22.04
+sudo apt-get install -y python3.11 python3.11-venv python3-pip
 
-# 2. התקן pnpm + pm2
-npm install -g pnpm pm2
-
-# 3. שכפל ריפו + התקן תלויות
+# 2. שכפל ריפו + צור סביבה וירטואלית
 git clone https://github.com/your-org/tactitok
-cd tactitok && pnpm install
+cd tactitok
+python3.11 -m venv .venv && source .venv/bin/activate
+
+# 3. התקן תלויות
+pip install -r requirements.txt
 
 # 4. הגדר סביבה
 cp .env.example .env.production
 # ערוך: DATABASE_URL, ADMIN_PASSWORD, JWT_SECRET, CONTENT_DIR
 
-# 5. בנה שרת + Admin SPA
-pnpm build
+# 5. הרץ מיגרציות על DB ייצור
+alembic upgrade head
 
-# 6. הרץ מיגרציות על DB ייצור
-NODE_ENV=production pnpm --filter server db:migrate
+# 6. הפעל עם systemd (הפעלה מחדש אוטומטית בהתרסקות + אתחול)
+# ExecStart: uvicorn main:app --host 0.0.0.0 --port 3000
+sudo systemctl enable tactitok && sudo systemctl start tactitok
 
-# 7. הפעל עם pm2 (הפעלה מחדש אוטומטית)
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup
-
-# 8. אמת
+# 7. אמת
 curl https://your-vm.example.com/api/health</div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-b">
@@ -819,7 +814,7 @@ curl https://your-vm.example.com/api/health</div>
               <p class="card-title">דרישות VM</p>
               <ul class="bullets" style="margin-top:0.3rem;">
                 <li>Linux (Ubuntu 22.04 LTS מומלץ)</li>
-                <li>4+ GB RAM &middot; 50+ GB דיסק לקבצי תוכן</li>
+                <li>Python 3.11+ &middot; 4+ GB RAM &middot; 50+ GB דיסק לקבצי תוכן</li>
                 <li>פורט 443 פתוח; דומיין או IP סטטי</li>
                 <li>PostgreSQL 15+ על אותו VM</li>
                 <li>אישור Let's Encrypt או חתום-עצמי לדמו</li>
@@ -834,20 +829,20 @@ curl https://your-vm.example.com/api/health</div>
          שקופית 16 — פריסת פרוקסי קצה
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="16"
-      data-notes="תמונת Docker של פרוקסי הקצה אופה פנימה את חבילת Edge SPA הבנויה. זה אומר שכאשר מעדכנים את ה-SPA, בונים מחדש את תמונת Docker ופורסים אותה מחדש לכל מכשירי הקצה. הדגל --restart=always מבטיח שהמכיל חוזר לפעולה אוטומטית לאחר אתחול מכשיר. ספריית מטמון הפרוקסי צריכה להיות על volume mount אם רוצים שהמטמון יישמר בין הפעלות מחדש של המכיל — אחרת המטמון נבנה מחדש כשמשתמשים ניגשים לתוכן. WSL2 חושף אוטומטית פורט 8080 מ-Linux VM ל-localhost של Windows. VirtualBox צריך כללי port forwarding מפורשים.">
+      data-notes="תמונת Docker של פרוקסי הקצה אופה פנימה את קבצי Edge SPA הסטטיים (HTML/JS) ישירות מספריית client/ — ללא שלב בנייה. זה אומר שכאשר מעדכנים את ה-SPA, עורכים את קבצי HTML/JS ובונים מחדש את תמונת Docker. הדגל --restart=always מבטיח שהמכיל חוזר לפעולה אוטומטית לאחר אתחול מכשיר. ספריית מטמון הפרוקסי צריכה להיות על volume mount אם רוצים שהמטמון יישמר בין הפעלות מחדש של המכיל — אחרת המטמון נבנה מחדש כשמשתמשים ניגשים לתוכן. WSL2 חושף אוטומטית פורט 8080 מ-Linux VM ל-localhost של Windows. VirtualBox צריך כללי port forwarding מפורשים.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">פריסת פרוקסי קצה</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Docker Build + Run, <span class="highlight-g">הפעלה אוטומטית בעת אתחול</span></h1>
         <div class="two-col" style="align-items:start;">
           <div class="code-block" style="font-size:0.8rem;"># על כל מכונה עם הריפו:
 
-# 1. בנה חבילת Edge SPA
-pnpm --filter client build
+# 1. ללא שלב בנייה — קבצי SPA הם HTML/JS פשוטים
+#    (ספריית client/ מועתקת ישירות לתמונת Docker)
 
-# 2. בנה תמונת Docker (חבילת SPA אפויה פנימה)
-cd packages/edge-proxy
+# 2. בנה תמונת Docker (קבצי SPA אפויים פנימה)
+cd edge-proxy
 docker build \
-  --build-arg SPA_DIST=../../packages/client/dist \
+  --build-arg SPA_DIR=../client \
   -t tactitok-edge-proxy:latest .
 
 # 3. ייצא תמונה להעברה למכשיר קצה
@@ -892,7 +887,7 @@ curl http://localhost:8080/api/health</div>
             </div>
             <div class="card card-o">
               <p class="card-title">נוהל עדכון</p>
-              <p class="card-body">1. בנה חבילת SPA חדשה<br>2. בנה מחדש תמונת Docker (אופה חבילה חדשה)<br>3. העבר tar.gz ל-Linux VM בקצה<br>4. <code style="color:var(--accent-green);">docker stop tactitok-edge</code><br>5. <code style="color:var(--accent-green);">docker load &lt; new.tar.gz</code><br>6. <code style="color:var(--accent-green);">docker start tactitok-edge</code></p>
+              <p class="card-body">1. עדכן קבצי HTML/JS של SPA (ללא שלב בנייה)<br>2. בנה מחדש תמונת Docker (אופה קבצי SPA חדשים)<br>3. העבר tar.gz ל-Linux VM בקצה<br>4. <code style="color:var(--accent-green);">docker stop tactitok-edge</code><br>5. <code style="color:var(--accent-green);">docker load &lt; new.tar.gz</code><br>6. <code style="color:var(--accent-green);">docker start tactitok-edge</code></p>
             </div>
           </div>
         </div>
@@ -952,7 +947,7 @@ curl http://localhost:8080/api/health</div>
          שקופית 18 — סיכונים מרכזיים
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="18"
-      data-notes="AR1 (צוואר בקבוק Node.js) מופיע בספרינט 5 — בדיקת עומס עם 5 זרמי וידאו במקביל; אם נדרש, עבור ל-nginx X-Accel-Redirect אשר עוקף את Node.js להגשת קבצים לחלוטין. AR2 (חיכוך Docker) מופיע בספרינט 1 — WSL2 ממפה פורטים אוטומטית ב-Windows 10/11; VirtualBox צריך כללים מפורשים. AR3 (מונורפו) הוא סיכון חזיתי — אם pnpm workspaces לא עובד בשבוע 1 כל שרשרת הבנייה חסומה. AR5 (scroll-snap) חייב להיאמת ידנית על טאבלט 10 אינץ' עד סוף שבוע 5 — לא על מחשב נייד. AR9 (מטמון range של פרוקסי) דורש בדיקת nginx מפורשת בספרינט 3 — אם שבור, חמם מטמון מראש עם GET מלא לפני ניגון וידאו.">
+      data-notes="AR1 (צוואר בקבוק Python FastAPI) מופיע בספרינט 5 — בדיקת עומס עם 5 זרמי וידאו במקביל; אם נדרש, עבור ל-nginx X-Accel-Redirect אשר עוקף את Python להגשת קבצים לחלוטין. AR2 (חיכוך Docker) מופיע בספרינט 1 — WSL2 ממפה פורטים אוטומטית ב-Windows 10/11; VirtualBox צריך כללים מפורשים. AR3 (סביבה וירטואלית) הוא סיכון חזיתי — אם pip install או הגדרת venv לא עובדים בשבוע 1 כל שרשרת הפיתוח חסומה. AR5 (scroll-snap) חייב להיאמת ידנית על טאבלט 10 אינץ' עד סוף שבוע 5 — לא על מחשב נייד. AR9 (מטמון range של פרוקסי) דורש בדיקת nginx מפורשת בספרינט 3 — אם שבור, חמם מטמון מראש עם GET מלא לפני ניגון וידאו.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">סיכונים מרכזיים</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">5 סיכונים מובילים, <span class="highlight-g">פתרונות מוכנים</span></h1>
@@ -960,11 +955,11 @@ curl http://localhost:8080/api/health</div>
           <thead><tr><th>סיכון</th><th>ספרינט</th><th>סבירות</th><th>השפעה</th><th>מיטיגציה</th></tr></thead>
           <tbody>
             <tr>
-              <td><strong>AR1 — צוואר בקבוק Node.js בהגשת זרמי וידאו במקביל</strong></td>
+              <td><strong>AR1 — צוואר בקבוק Python FastAPI בהגשת זרמי וידאו במקביל</strong></td>
               <td class="muted">S5</td>
               <td class="muted">נמוכה</td>
               <td class="muted">בינונית</td>
-              <td class="muted">בדיקת עומס שבוע 9; מעבר ל-nginx X-Accel-Redirect להגשת קבצים אם נדרש (עוקף Node)</td>
+              <td class="muted">בדיקת עומס שבוע 9; מעבר ל-nginx X-Accel-Redirect להגשת קבצים אם נדרש (עוקף Python)</td>
             </tr>
             <tr>
               <td><strong>AR2 — חיכוך Docker / WSL2 port mapping במכשיר קצה</strong></td>
@@ -974,11 +969,11 @@ curl http://localhost:8080/api/health</div>
               <td class="muted">בדיקה בשבוע 1; WSL2 ממפה פורטים אוטומטית ב-Win 10/11; VirtualBox דורש כללי forwarding מפורשים</td>
             </tr>
             <tr>
-              <td><strong>AR3 — מורכבות הגדרת pnpm workspaces במונורפו</strong></td>
+              <td><strong>AR3 — חיכוך הגדרת סביבה וירטואלית / תלויות</strong></td>
               <td class="muted">S1</td>
               <td class="muted">נמוכה</td>
               <td class="muted">גבוהה</td>
-              <td class="muted">הקמה בשבוע 1; טיפוסים משותפים חייבים להיות ניתנים לייבוא מ-client, server, ו-admin לפני תחילת ספרינט 2</td>
+              <td class="muted">הקמה בשבוע 1; venv + pip install -r requirements.txt חייבים לעבוד לפני תחילת ספרינט 2; תיעד requirements.txt בדיוק</td>
             </tr>
             <tr>
               <td><strong>AR5 — ג'אנק CSS scroll-snap ריאלס על טאבלט 10 אינץ'</strong></td>
@@ -1007,7 +1002,7 @@ curl http://localhost:8080/api/health</div>
          שקופית 19 — הערות המשך
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="19"
-      data-notes="אלו הן התחייבויות הנדסיות, לא פריטי רשימת משאלות. כל פריט מתאר הרחבה שארכיטקטורת ה-MVP תומכת בה במפורש. הפשטת האחסון מאפשרת החלפת S3/MinIO מבלי לגעת בשכבת השירות. פרמטר ?since= בקטלוג כבר מתקבל על ידי השרת — סנכרון דלתא הוא שינוי בצד השרת בלבד. HLS ניתן להחלפה על ידי שינוי handler ההעלאה והחלפת src של video בכתובת URL של manifest HLS. DeviceProfile.deviceId הופך ל-userId כשמתווסף אימות — אין צורך במיגרציית סכמה. מקור: product/07_delivery-plan.md §14.">
+      data-notes="אלו הן התחייבויות הנדסיות, לא פריטי רשימת משאלות. כל פריט מתאר הרחבה שארכיטקטורת ה-MVP תומכת בה במפורש. הפשטת האחסון מאפשרת החלפת S3/MinIO מבלי לגעת בשכבת השירות. פרמטר ?since= בקטלוג כבר מתקבל על ידי השרת — סנכרון דלתא הוא שינוי בצד השרת בלבד. HLS ניתן להחלפה על ידי שינוי handler ההעלאה והחלפת src של video בכתובת URL של manifest HLS. DeviceProfile.deviceId הופך ל-userId כשמתווסף אימות — אין צורך במיגרציית סכמה. ניטור: Python logging / structlog לרישום מובנה, Sentry להתראות שגיאה. Docker Compose ישכון ב-edge-proxy/. מקור: product/07_delivery-plan.md §14.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">מה מגיע אחר-כך</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">הערות המשך <span class="highlight-g">לצוות הבא</span></h1>
@@ -1033,7 +1028,7 @@ curl http://localhost:8080/api/health</div>
             </div>
             <div class="card card-b">
               <p class="card-title">ניטור + יכולת תצפית</p>
-              <p class="card-body">הוסף רישום בקשות מובנה בצד השרת (pino) והתראת שגיאות (Sentry) לפני מעבר לייצור עם משתמשים אמיתיים. לוגים מובנים מאפשרים אנליטיקה מאוחרת ללא שינויי סכמה.</p>
+              <p class="card-body">הוסף רישום בקשות מובנה בצד השרת (Python logging / structlog) והתראת שגיאות (Sentry) לפני מעבר לייצור עם משתמשים אמיתיים. לוגים מובנים מאפשרים אנליטיקה מאוחרת ללא שינויי סכמה.</p>
             </div>
             <div class="card card-o">
               <p class="card-title">שליפה מוקדמת יזומה בפרוקסי קצה</p>
@@ -1041,7 +1036,7 @@ curl http://localhost:8080/api/health</div>
             </div>
             <div class="card card-o">
               <p class="card-title">Docker Compose</p>
-              <p class="card-body">כאשר הגדרת מכשיר הקצה גדלה (מכילים מרובים), החלף <code style="color:var(--accent-green);">docker run</code> ב-<code style="color:var(--accent-green);">docker-compose.yml</code>. התבנית צריכה לשכון ב-<code style="color:var(--accent-green);">packages/edge-proxy/</code>.</p>
+              <p class="card-body">כאשר הגדרת מכשיר הקצה גדלה (מכילים מרובים), החלף <code style="color:var(--accent-green);">docker run</code> ב-<code style="color:var(--accent-green);">docker-compose.yml</code>. התבנית צריכה לשכון ב-<code style="color:var(--accent-green);">edge-proxy/</code>.</p>
             </div>
           </div>
         </div>

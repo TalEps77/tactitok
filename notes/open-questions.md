@@ -38,11 +38,11 @@ Use this file to track unresolved questions that may affect future documents or 
 
 | # | Question | Affects | Recommended default | Deadline |
 |---|---------|---------|-------------------|----------|
-| Q18 | ORM / query layer: Prisma vs. Knex vs. raw SQL? | Implementation | Prisma (type-safe, migrations) | Before implementation start |
+| Q18 | ~~ORM / query layer: Prisma vs. Knex vs. raw SQL?~~ **RESOLVED → SQLAlchemy + Alembic (Python ecosystem). Resolved 2026-03-25.** | Implementation | SQLAlchemy + Alembic | Resolved 2026-03-25 |
 | Q19 | Should nginx serve content files directly (bypass Node) for performance? | Deployment | Start with Node; switch to nginx X-Accel-Redirect if needed | Sprint 2 |
 | Q20 | ~~Service Worker tooling: Workbox vs. manual?~~ **RESOLVED → D43: No Service Worker in MVP** | Implementation | N/A — SW eliminated | Resolved 2026-03-07 |
 | Q21 | CSS scroll-snap vs. library (Swiper.js) for TikTok reels? | UI implementation | CSS scroll-snap first; add Swiper if janky | Sprint 1 prototype |
-| Q22 | Monorepo tool: npm workspaces vs. pnpm workspaces vs. turborepo? | Build pipeline | pnpm workspaces | Before implementation start |
+| Q22 | ~~Monorepo tool: npm workspaces vs. pnpm workspaces vs. turborepo?~~ **RESOLVED → N/A — no monorepo, no npm workspaces. Project uses simple directory structure with Python venv. Resolved 2026-03-25.** | Build pipeline | N/A — simple directory structure + Python venv | Resolved 2026-03-25 |
 
 ## From Data Model (05)
 
@@ -69,6 +69,13 @@ Use this file to track unresolved questions that may affect future documents or 
 | Q26 | ~~Linux VM type on edge devices: WSL2 vs. VirtualBox vs. other?~~ **RESOLVED → D59: WSL2 preferred** | Edge deployment | WSL2 (simplest Docker integration on Windows) | Resolved 2026-03-07 |
 | Q27 | Cloud server URL: hardcoded in nginx.conf or configurable via env var? | Edge proxy deployment | Environment variable (Docker `-e CLOUD_URL=...`) | Before implementation |
 | Q28 | Should edge proxy use HTTP or HTTPS to connect to cloud? | Security | HTTPS (TLS); proxy validates cloud cert | Before deployment |
+
+## From Architecture / Stack Decisions (2026-03-25)
+
+| # | Question | Affects | Recommended default | Deadline |
+|---|---------|---------|-------------------|----------|
+| Q38 | Python version: 3.11 vs. 3.12? | All backend services | 3.11 (LTS stability, broader library support) | Before implementation start |
+| Q39 | FastAPI deployment mode: uvicorn directly vs. gunicorn + uvicorn workers? | Production deployment | gunicorn + uvicorn workers (process management, graceful reload) | Before deployment |
 
 ## From Delivery Plan (07)
 

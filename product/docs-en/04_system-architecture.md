@@ -1,11 +1,11 @@
 # System Architecture — TactiTok
 
-> **Version:** 0.2
+> **Version:** 0.3
 > **Status:** Draft
-> **Last updated:** 2026-03-07
+> **Last updated:** 2026-03-25
 > **Preceding document:** `product/03_mvp-spec.md`
 > **Next document:** `product/05_data-model.md`
-> **Change log:** v0.2 — corrected edge device topology: local Linux VM + Docker caching proxy replaces direct-to-cloud browser model.
+> **Change log:** v0.2 — corrected edge device topology: local Linux VM + Docker caching proxy replaces direct-to-cloud browser model. v0.3 (2026-03-25): Complete tech stack update per MVP Spec v3. Backend changed from Node.js/Express/TypeScript to Python/FastAPI/SQLAlchemy. Frontend changed from TypeScript+Vite to vanilla HTML+JS. Shared types package eliminated. Admin UI served as static files by FastAPI.
 
 ---
 
@@ -31,7 +31,7 @@ Every downstream document (Data Model → API Contract → Delivery Plan) must b
 | AG1 | **Simplest viable architecture** | 3 student developers, 8–10 weeks; minimize moving parts |
 | AG2 | **End-to-end functional** | Upload → catalog → stream/browse → download → offline must all work |
 | AG3 | **Continuation-ready** | Clean layer separation so a follow-on team can extend without rewrites |
-| AG4 | **Single tech stack** | TypeScript everywhere (frontend + backend) reduces cognitive overhead |
+| AG4 | **Single tech stack** | Python (backend) + vanilla JS (frontend); minimal tooling reduces cognitive overhead |
 | AG5 | **Offline-aware from day one** | Edge proxy + local SPA bundle designed into the architecture, not bolted on |
 | AG6 | **Demo-optimized** | Fast video start, smooth scrolling, reliable offline — these drive architectural choices |
 
@@ -43,13 +43,12 @@ Carried forward from prior documents. Architecture-specific additions:
 
 | Term | Definition |
 |------|-----------|
-| **API server** | The Node.js + Express process on the cloud VM serving REST endpoints for both edge proxy and admin portal |
+| **API server** | The Python FastAPI process on the cloud VM serving REST endpoints for both edge proxy and admin portal |
 | **Storage abstraction** | An internal interface (read/write/delete by content-id) that decouples the API from the physical storage backend |
 | **Edge proxy** | An nginx caching reverse proxy running in a Docker container on the edge device's Linux VM; serves the Edge SPA locally and proxies + caches all API/content requests to the cloud server |
 | **Content proxy** | The API server's role in serving content files with proper HTTP headers (range requests, cache control, CORS) |
-| **SPA bundle** | The static HTML/JS/CSS that constitutes the client application; built at CI/deploy time and bundled into the edge proxy Docker image |
-| **Monorepo** | A single repository containing both frontend and backend code, sharing TypeScript types and build tooling |
-| **Edge Docker container** | A Docker container on the edge device's Linux VM that packages nginx + the Edge SPA bundle; provides local serving and offline capability |
+| **SPA bundle** | The static HTML/CSS/JS that constitutes the client application; no compilation required; files are copied directly into the edge proxy Docker image |
+| **Edge Docker container** | A Docker container on the edge device's Linux VM that packages nginx + the Edge SPA static files; provides local serving and offline capability |
 
 ---
 
@@ -59,7 +58,7 @@ These constraints and requirements shape every architectural choice:
 
 | Driver | Source | Architecture impact |
 |--------|--------|-------------------|
-| 3 student developers, 8–10 weeks | North Star §8 | Minimal component count; single language; no microservices |
+| 3 student developers, 8–10 weeks | North Star §8 | Minimal component count; Python backend + vanilla JS frontend; no microservices |
 | Chrome kiosk on Windows, Linux VM with Docker on same device | North Star §3 + discovery | Chrome connects to localhost; edge proxy in Docker serves SPA and caches cloud content |
 | Unstable / limited bandwidth | North Star §3 | Edge proxy caches content + metadata locally; reduces cloud dependency |
 | Hybrid offline support | North Star §6 | Edge proxy serves cached responses when cloud is unreachable; IndexedDB for device state |
@@ -80,7 +79,7 @@ These constraints and requirements shape every architectural choice:
 │                       CLOUD VM (Linux)                            │
 │                                                                   │
 │  ┌─────────────────────────────────────────────────────────────┐  │
-│  │              Node.js + Express (TypeScript)                  │  │
+│  │              Python FastAPI + SQLAlchemy                      │  │
 │  │                                                             │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐    │  │
 │  │  │  Content API  │  │  Admin API   │  │ Static Server  │    │  │
@@ -114,7 +113,7 @@ These constraints and requirements shape every architectural choice:
     │                         │                      │
     │                         │  ┌────────────────┐  │
     │                         │  │ Admin SPA      │  │
-    │                         │  │ (HTML/TS)      │  │
+    │                         │  │ (HTML/JS)      │  │
     │                         │  └────────────────┘  │
     │                         └─────────────────────┘
     │
@@ -136,7 +135,7 @@ These constraints and requirements shape every architectural choice:
 │  │  │ IndexedDB     │  │  │  │         │         │  │ │
 │  │  │ (profile,     │  │  │  │ ┌───────┴───────┐ │  │ │
 │  │  │  actions,     │  │  │  │ │ SPA bundle    │ │  │ │
-│  │  │  download     │  │  │  │ │ (HTML/TS)     │ │  │ │
+│  │  │  download     │  │  │  │ │ (HTML/JS)     │ │  │ │
 │  │  │  records)     │  │  │  │ └───────────────┘ │  │ │
 │  │  └───────────────┘  │  │  │                   │  │ │
 │  │                     │  │  │ ┌───────────────┐ │  │ │
@@ -165,31 +164,30 @@ Chrome on Windows connects to `localhost` only. It never connects directly to th
 
 | # | Component | Location | Tech | Built by team? |
 |---|-----------|----------|------|---------------|
-| C1 | **Edge SPA** | Edge device (Chrome on Windows) | HTML + TypeScript | ✅ Yes |
-| C2 | **Admin SPA** | HQ desktop (browser) | HTML + TypeScript | ✅ Yes |
-| C3 | **API Server** | Cloud VM | Node.js + Express + TypeScript | ✅ Yes |
-| C4 | **Service Layer** | Cloud VM (inside API Server) | TypeScript modules | ✅ Yes |
+| C1 | **Edge SPA** | Edge device (Chrome on Windows) | Vanilla HTML + CSS + JS (no build step) | ✅ Yes |
+| C2 | **Admin SPA** | HQ desktop (browser) | Plain HTML + vanilla JS (static files served by FastAPI) | ✅ Yes |
+| C3 | **API Server** | Cloud VM | Python FastAPI + SQLAlchemy ORM | ✅ Yes |
+| C4 | **Service Layer** | Cloud VM (inside API Server) | Python modules | ✅ Yes |
 | C5 | **PostgreSQL** | Cloud VM | PostgreSQL 15+ | ✅ Configure; not build |
 | C6 | **File Store** | Cloud VM (local filesystem) | OS filesystem behind abstraction | ✅ Yes (abstraction layer) |
 | C7 | **Edge Proxy** | Edge device (Docker on Linux VM) | nginx caching reverse proxy | ✅ Yes (Dockerfile + nginx config) |
 | C8 | **TLS Termination** | Cloud VM | nginx reverse proxy | ✅ Configure |
 
-### 6.2 Monorepo Structure (Proposed)
+### 6.2 Repository Structure
 
 ```
 tactitok/
-├── packages/
-│   ├── client/          ← Edge SPA (HTML/TS)
-│   ├── admin/           ← Admin SPA (HTML/TS)
-│   ├── server/          ← API Server (Node/Express/TS)
-│   ├── shared/          ← Shared types, constants, validation
-│   └── edge-proxy/      ← Dockerfile + nginx.conf for edge caching proxy
-├── package.json         ← Workspace root
-├── tsconfig.base.json   ← Shared TS config
+├── client/              ← Edge SPA (vanilla HTML + CSS + JS; open index.html in Chrome)
+├── admin/               ← Admin SPA (plain HTML + vanilla JS; served by FastAPI at /admin)
+├── server/              ← API Server (Python FastAPI)
+│   ├── main.py
+│   ├── requirements.txt
+│   └── alembic/         ← Database migrations
+├── edge-proxy/          ← Dockerfile + nginx.conf for edge caching proxy
 └── ...
 ```
 
-**Rationale:** A monorepo with workspace packages (npm/yarn/pnpm workspaces) lets the team share TypeScript types between client and server, run a single CI pipeline, and avoid version drift. The `shared` package contains API request/response types and validation logic used by all three packages. The `edge-proxy` package is not a TS package but lives in the monorepo for co-located deployment config.
+**Rationale:** A flat single-repo structure without workspace tooling. No build step for the frontend: HTML/CSS/JS files are opened directly in Chrome (edge) or served as static files by FastAPI (admin). No shared types package — the API contract is documented in the API spec and enforced by tests.
 
 ---
 
@@ -212,6 +210,8 @@ tactitok/
 
 **What changed (v0.2):** The Edge SPA no longer manages Cache API for media files or Service Worker for SPA shell caching. All content caching is handled by the edge proxy. The SPA makes all requests to `localhost` (the proxy), never directly to the cloud. IndexedDB is still used for device profile, local actions, download records (metadata only), and a parsed catalog snapshot for client-side filtering.
 
+**What changed (v0.3):** The Edge SPA is vanilla HTML + CSS + JS with no compilation step. There is no TypeScript, no Vite build, and no `node_modules`. The SPA files are opened directly in Chrome (edge) or copied into the Docker image as-is.
+
 ### C2 — Admin SPA
 
 | Responsibility | Details |
@@ -224,20 +224,22 @@ tactitok/
 | **Content list** | Sortable, filterable table of all content items |
 | **Upload validation** | Client-side: check file type, size (≤100MB); server validates too |
 
-*(No changes from v0.1)*
+**What changed (v0.3):** The Admin SPA is plain HTML + vanilla JS served as static files by FastAPI at `/admin`. There is no Vite build step, no TypeScript compiler, and no SPA framework.
 
-### C3 — API Server (Node.js + Express)
+### C3 — API Server (Python FastAPI)
 
 | Responsibility | Details |
 |---------------|---------|
 | **Content API** (edge-facing) | `GET` catalog metadata; `GET` content file (video/PDF) with range request support |
 | **Admin API** (admin-facing) | `POST` upload; `PUT` update metadata/file; `DELETE` content; CRUD categories; CRUD interests |
 | **Auth middleware** | Admin endpoints protected by password session; edge endpoints are public |
-| **Static file serving** | Serve Admin SPA bundle only (edge SPA is bundled in Docker) |
+| **Static file serving** | Serve Admin SPA static files at `/admin` (edge SPA files are copied into Docker image) |
 | **Content proxy** | Serve content files from File Store with proper headers (Content-Type, Accept-Ranges, Content-Length, Cache-Control) |
 | **Validation** | Reject non-MP4 video, non-PDF documents, files >100MB, videos >3 min (if duration check implemented) |
 
-**What changed (v0.2):** The API server no longer serves the Edge SPA bundle. It serves only the Admin SPA. Edge devices get the SPA from the local Docker container.
+**What changed (v0.2):** The API server no longer serves the Edge SPA. It serves only the Admin SPA. Edge devices get the SPA from the local Docker container.
+
+**What changed (v0.3):** The API server is now Python FastAPI (replacing Node.js + Express). SQLAlchemy is the ORM. Alembic manages database migrations (replaces Prisma migrate).
 
 ### C4 — Service Layer
 
@@ -257,7 +259,7 @@ tactitok/
 | Responsibility | Details |
 |---------------|---------|
 | **Metadata storage** | Content items, categories, interests, content-category/interest mappings |
-| **Schema management** | Migration-based schema (e.g., using Knex, Prisma, or raw SQL migrations) |
+| **Schema management** | Alembic migrations (versioned migration files; applied via `alembic upgrade head`) |
 | **Query support** | Text search (PostgreSQL `ILIKE` or `tsvector`); category tree queries; interest filtering |
 
 *(No changes from v0.1)*
@@ -322,8 +324,8 @@ location / {
 
 | Responsibility | Details |
 |---------------|---------|
-| **MVP approach** | nginx reverse proxy on port 443 → forwards to Node.js on localhost:3000 |
-| **Fallback** | Node.js native HTTPS (simpler setup, less production-ready) |
+| **MVP approach** | nginx reverse proxy on port 443 → forwards to uvicorn on localhost:8000 |
+| **Fallback** | uvicorn with TLS certs directly (simpler setup, less production-ready) |
 | **Certificate** | Let's Encrypt (if domain available) or self-signed for demo |
 
 *(No changes from v0.1)*
@@ -337,15 +339,24 @@ location / {
 ```
 Cloud VM (Linux, e.g., Ubuntu 22.04)
 ├── nginx (port 443, TLS termination)
-│   └── proxy_pass → localhost:3000
-├── Node.js process (port 3000)
-│   ├── Express app
-│   ├── Serves: Content API, Admin API, Admin SPA
+│   └── proxy_pass → localhost:8000
+├── uvicorn (port 8000) — runs FastAPI app
+│   ├── FastAPI app (main.py)
+│   ├── Serves: Content API, Admin API, Admin SPA static files (/admin)
 │   └── Reads/writes: ./data/content/
 ├── PostgreSQL (port 5432, localhost only)
 │   └── Database: tactitok
 └── Filesystem
     └── ./data/content/  (uploaded files)
+```
+
+**Dev environment setup:**
+```
+python -m venv .venv
+source .venv/bin/activate   # (or .venv\Scripts\activate on Windows)
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn main:app --reload
 ```
 
 ### 8.2 Edge Device Deployment
@@ -371,9 +382,9 @@ Edge Device (Windows PC with 10″ tablet display)
 ```
 
 **Docker build process:**
-1. `packages/client/` is built → produces `dist/` (static files)
-2. Dockerfile copies `dist/` into `/var/www/spa/` and `nginx.conf` into `/etc/nginx/`
-3. Result: a single Docker image (`tactitok-edge-proxy`) containing nginx + SPA
+1. `client/` contains vanilla HTML/CSS/JS files — no build step required
+2. Dockerfile copies `client/` into `/var/www/spa/` and `nginx.conf` into `/etc/nginx/`
+3. Result: a single Docker image (`tactitok-edge-proxy`) containing nginx + SPA static files
 
 ### 8.3 Process Model
 
@@ -382,7 +393,7 @@ Edge Device (Windows PC with 10″ tablet display)
 | Process | Count | Restart strategy |
 |---------|-------|-----------------|
 | nginx (TLS) | 1 | systemd service |
-| Node.js (API Server) | 1 | systemd service or pm2 |
+| uvicorn (FastAPI API Server) | 1 | systemd service |
 | PostgreSQL | 1 | systemd service |
 
 **Edge Device (per device):**
@@ -401,7 +412,7 @@ Chrome (Windows) ──HTTP──► localhost:8080 (nginx in Docker/Linux VM)
                                 │
                                 │ HTTPS (when cloud reachable)
                                 ▼
-                          Cloud Server:443 (nginx TLS → Node.js:3000)
+                          Cloud Server:443 (nginx TLS → uvicorn:8000)
 
 HQ Desktop (browser) ──HTTPS──► Cloud Server:443
 ```
@@ -589,7 +600,7 @@ Edge SPA (while current video plays)
 
 - Standard server logging (request logs, error logs) — no analytics platform
 - PostgreSQL connection pooling (default pool size sufficient for ~20 concurrent)
-- pm2 or systemd for Node.js process auto-restart
+- systemd for uvicorn process auto-restart
 - Docker restart policy `always` for edge proxy container
 - No monitoring/alerting platform in MVP
 
@@ -599,13 +610,14 @@ Edge SPA (while current video plays)
 
 | Dependency | Version/Spec | Role | Risk |
 |-----------|-------------|------|------|
-| **Node.js** | 20 LTS | API server runtime (cloud) | Low — stable LTS |
+| **Python** | 3.11+ | API server runtime (cloud) | Low — stable LTS |
+| **FastAPI** | 0.100+ | HTTP server framework | Low — actively maintained |
+| **SQLAlchemy** | 2.x | ORM (cloud) | Low — standard |
+| **Alembic** | Latest | Database migrations | Low — standard |
+| **uvicorn** | Latest | ASGI server (cloud) | Low — standard |
 | **PostgreSQL** | 15+ | Metadata storage (cloud) | Low — standard |
 | **nginx** | Latest stable | TLS termination (cloud) + caching proxy (edge) | Low — standard |
-| **TypeScript** | 5+ | Type safety across stack | Low — standard |
 | **PDF.js** | Latest | In-browser PDF rendering | Low — Mozilla-maintained |
-| **Express** | 4.x | HTTP server framework | Low — mature |
-| **npm/pnpm workspaces** | Latest | Monorepo package management | Low |
 | **Docker** | Latest stable | Edge proxy container runtime | Low — standard |
 | **Chrome** | Latest stable | Edge runtime (Windows) | External — not managed by team |
 
@@ -617,15 +629,15 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 
 | # | Decision | Rationale | Alternatives considered |
 |---|---------|-----------|----------------------|
-| AD1 | **TypeScript monorepo** (client + admin + server + shared + edge-proxy) | Single language; shared types prevent API contract drift; simple CI | Separate repos (harder to share types); JS without TS (less safe) |
-| AD2 | **HTML + TypeScript for both SPAs** | No framework dependency; simpler stack; sufficient for SPA complexity; avoids React learning curve | React (adds framework overhead); Vue (smaller ecosystem); Svelte (newer, less resources) |
-| AD3 | **Node.js + Express backend** | Same language as frontend; simple file streaming; adequate for ~20 clients | Python/FastAPI (different language); Go (overkill for MVP) |
+| AD1 | **Flat single repo** (client + admin + server + edge-proxy; no monorepo tooling) | No build tooling overhead; no shared types package; no pnpm workspaces; simpler for 3 students | Monorepo with workspaces (adds tooling complexity without benefit when no shared TS types needed) |
+| AD2 | **Vanilla HTML + CSS + JS for both SPAs** (no TypeScript, no Vite, no build step) | No compilation step; open index.html directly in Chrome; zero tooling dependency; sufficient for SPA complexity | TypeScript + Vite (adds build step and tooling overhead); React (adds framework overhead) |
+| AD3 | **Python FastAPI backend** | Familiar to team; excellent async support; automatic OpenAPI docs; SQLAlchemy ORM; Alembic migrations | Node.js/Express (TS mismatch with vanilla JS frontend); Go (overkill for MVP) |
 | AD4 | **PostgreSQL for metadata** | Production-grade; supports text search; handles concurrent reads; continuation-ready | SQLite (simpler but poor concurrency); MongoDB (less structured) |
 | AD5 | **Local filesystem for content files** behind abstraction | Simplest; no external service; abstraction allows S3/MinIO swap | S3 directly (adds cloud dependency); MinIO (extra process) |
 | AD6 | **MP4 + HTTP range requests** for video | Simplest streaming; no transcoding; Chrome handles natively | HLS/DASH (complex; needs segmenting); WebRTC (wrong use case) |
 | AD7 | **Edge proxy (nginx in Docker) for SPA serving + caching** | Eliminates Service Worker and Cache API complexity; handles offline transparently; SPA code is simpler | Service Worker + Cache API (more client complexity); custom Node.js proxy on edge (more code to maintain) |
 | AD8 | **IndexedDB for device state only** (profile, actions, download records) | Only structured local data that the SPA needs to manage directly; all content caching delegated to proxy | IndexedDB + Cache API (redundant with proxy); localStorage (size-limited) |
-| AD9 | **Single Node.js process** (no microservices) | 3 developers; 10 weeks; ~20 users; no need for distributed architecture | Microservices (too complex); serverless (wrong deployment model) |
+| AD9 | **Single uvicorn process** (no microservices) | 3 developers; 10 weeks; ~20 users; no need for distributed architecture | Microservices (too complex); serverless (wrong deployment model) |
 | AD10 | **nginx as TLS reverse proxy** (cloud) | Standard pattern; offloads TLS from Node; production-ready | Node native TLS (simpler but less robust); Caddy (less common) |
 | AD11 | **Full catalog sync** (not delta) | Catalog is ~15 items; full JSON payload is <10 KB; delta adds complexity | Delta sync (premature optimization); GraphQL subscriptions (overkill) |
 | AD12 | **SPA bundled into Docker image** (not fetched from cloud) | SPA always available locally; no dependency on cloud for app startup; simplifies offline | Serve SPA from cloud (requires SW for offline startup); pre-install SPA on Windows (harder to update) |
@@ -640,14 +652,14 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 | **Service Worker for SPA caching** | SPA is bundled locally in Docker; SW adds complexity without benefit in this topology |
 | **Cache API for media files** | Edge proxy cache handles all content caching; Cache API would be redundant |
 | **GraphQL** | REST is simpler; catalog is small; GraphQL adds learning curve |
-| **WebSocket / SSE for push sync** | Pull-based sync is sufficient for MVP; push can be added to the same Express server later |
+| **WebSocket / SSE for push sync** | Pull-based sync is sufficient for MVP; push can be added to the same FastAPI server later (FastAPI supports WebSockets natively) |
 | **Redis cache layer** | ~20 concurrent devices don't require in-memory caching; PostgreSQL handles it |
 | **CDN for content delivery** | Single server with direct file serving is sufficient; CDN can be added in front of the same API later |
 | **React Native / PWA installable** | Chrome kiosk is the target; no need for native install |
-| **ORM (Sequelize, TypeORM)** | Query builder (Knex) or lightweight ORM (Prisma) is preferred; heavy ORM adds abstraction without benefit |
+| **Heavy ORM alternatives** | SQLAlchemy (chosen) is the standard Python ORM; Tortoise ORM or raw SQL are alternatives but SQLAlchemy has the broadest support |
 | **S3 / MinIO for content storage** | Local filesystem is simplest for MVP; storage abstraction allows swap later |
 | **Microservices** | 3 developers, 10 weeks, ~20 users — monolith with clean internal modules is the right choice |
-| **Custom Node.js proxy on edge** | nginx proxy_cache is mature, zero-code caching; custom proxy means more code to maintain |
+| **Custom Python/Node proxy on edge** | nginx proxy_cache is mature, zero-code caching; custom proxy means more code to maintain |
 | **Kubernetes / Docker Compose orchestration** | Single container per edge device; `docker run` with restart policy is sufficient |
 
 ---
@@ -656,13 +668,13 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 
 | # | Assumption | Impact if wrong |
 |---|-----------|----------------|
-| AA1 | Vanilla HTML + TypeScript (no framework) is accessible to 3 student developers | May need to add a lightweight framework if DOM complexity grows; delays project start |
-| AA2 | Node.js + Express handles ~20 concurrent video streams without bottleneck | Need load testing; may need worker threads or nginx file serving |
-| AA3 | PostgreSQL runs comfortably alongside Node.js + nginx on a single VM (4+ GB RAM) | Need larger VM or optimize resource usage |
-| AA4 | npm/pnpm workspaces monorepo is manageable for 3 students | May need separate repos if workspace tooling causes friction |
+| AA1 | Vanilla HTML + JS (no framework, no TypeScript) is accessible to 3 student developers | May need to add a lightweight framework if DOM complexity grows; delays project start |
+| AA2 | Python FastAPI + uvicorn handles ~20 concurrent video streams without bottleneck | Need load testing; may need nginx file serving to bypass Python for large files |
+| AA3 | PostgreSQL runs comfortably alongside uvicorn + nginx on a single VM (4+ GB RAM) | Need larger VM or optimize resource usage |
+| AA4 | Flat single-repo structure (no workspace tooling) is manageable for 3 students | May need to add tooling if code organisation becomes an issue |
 | AA5 | Students can write a Dockerfile + nginx.conf for the edge proxy with reasonable guidance | May need a pre-built template; adds ~1–2 days if unfamiliar |
-| AA6 | Express can serve content files with range request support (206 Partial Content) adequately | May need nginx to serve files directly from disk (bypassing Node) |
-| AA7 | A single Node.js process (non-clustered) handles the MVP load | May need pm2 cluster mode or nginx upstream balancing |
+| AA6 | FastAPI can serve content files with range request support (206 Partial Content) adequately | May need nginx to serve files directly from disk (bypassing Python) |
+| AA7 | A single uvicorn process handles the MVP load | May need gunicorn multi-worker mode or nginx upstream balancing |
 | AA8 | nginx proxy_cache handles range requests correctly for cached content | Need testing; if not, may need full-file fetch for caching then separate range serving |
 | AA9 | Linux VM networking allows Docker container to bind port 8080 accessible from Windows localhost | May need port forwarding or bridge networking configuration |
 | AA10 | 10 GB proxy cache is sufficient for all demo content (~15 items) | Increase cache size or add eviction monitoring |
@@ -673,12 +685,12 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|------|-----------|--------|-----------|
-| AR1 | Node.js becomes a bottleneck serving video files to 20 concurrent clients | Medium | High | Test early with simulated load; fallback: nginx serves files directly from `./data/content/` |
+| AR1 | uvicorn/FastAPI becomes a bottleneck serving video files to 20 concurrent clients | Medium | High | Test early with simulated load; fallback: nginx serves files directly from `./data/content/` via X-Accel-Redirect |
 | AR2 | Docker / Linux VM setup is unfamiliar to students and takes too long | Medium | Medium | Provide pre-built Dockerfile template; keep config minimal; pair-program setup |
-| AR3 | Monorepo workspace tooling causes developer friction | Low | Medium | Fall back to separate repos with shared types via npm package; adds 1 day setup |
+| AR3 | Lack of shared types between Python backend and JS frontend causes API contract drift | Low | Medium | Maintain API contract in `06_api-contract.md`; add integration tests that validate response shapes |
 | AR4 | PostgreSQL text search is insufficient for demo quality | Low | Low | Use `ILIKE` for MVP; upgrade to `tsvector` if needed; or client-side filter (15 items) |
 | AR5 | CSS scroll-snap for TikTok-style reels may be janky on tablet | Medium | High | Prototype in week 1; consider Swiper.js or custom touch handler if native scroll-snap insufficient |
-| AR6 | File upload (100MB) is slow or times out over unstable admin network | Low | Medium | Chunked upload library (e.g., tus-js-client); or accept that admin uses stable HQ network |
+| AR6 | File upload (100MB) is slow or times out over unstable admin network | Low | Medium | FastAPI supports streaming multipart uploads; configure uvicorn/nginx timeouts appropriately; or accept that admin uses stable HQ network |
 | AR7 | nginx proxy_cache evicts downloaded content before user accesses offline | Low | Medium | Set generous inactive timeout (30d); monitor cache hit rate; cache size 10 GB is ample for 15 items |
 | AR8 | Port mapping between Linux VM and Windows (for localhost:8080) requires non-trivial config | Medium | Medium | Test VM networking early (WSL2 maps ports automatically; VirtualBox needs port forwarding) |
 | AR9 | nginx proxy_cache doesn't cache range request responses correctly | Low | High | Test early; if needed, configure proxy to always fetch full file and serve ranges from cache |
@@ -689,13 +701,11 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 
 | # | Question | Affects | Recommended default | Deadline |
 |---|---------|---------|-------------------|----------|
-| AQ1 | Exact ORM / query layer: Prisma vs. Knex vs. raw SQL? | Implementation | Prisma (type-safe, migration support, good DX) | Before implementation start |
-| AQ2 | Should nginx (cloud) serve content files directly (bypass Node) for performance? | Deployment | Start with Node; switch to nginx `X-Accel-Redirect` if load is an issue | Sprint 2 (after load test) |
-| AQ3 | CSS scroll-snap vs. library (e.g., Swiper.js) for TikTok-style reels? | UI implementation | CSS scroll-snap first; add Swiper if scroll is janky | Sprint 1 prototype |
-| AQ4 | Monorepo tool: npm workspaces vs. pnpm workspaces vs. turborepo? | Build pipeline | pnpm workspaces (fast, reliable, simpler than turborepo) | Before implementation start |
-| AQ5 | Linux VM type on edge devices: WSL2 vs. VirtualBox vs. other? | Edge deployment | WSL2 (simplest Docker integration on Windows) | Before edge setup |
-| AQ6 | Cloud server URL: hardcoded in nginx.conf or configurable via environment variable? | Edge proxy deployment | Environment variable (Docker `-e CLOUD_URL=...`) | Before implementation |
-| AQ7 | Should the edge proxy use HTTP or HTTPS to connect to cloud? | Security | HTTPS (TLS); proxy verifies cloud cert | Before deployment |
+| AQ1 | Should nginx (cloud) serve content files directly (bypass Python) for performance? | Deployment | Start with FastAPI; switch to nginx `X-Accel-Redirect` if load is an issue | Sprint 2 (after load test) |
+| AQ2 | CSS scroll-snap vs. library (e.g., Swiper.js) for TikTok-style reels? | UI implementation | CSS scroll-snap first; add Swiper if scroll is janky | Sprint 1 prototype |
+| AQ3 | Linux VM type on edge devices: WSL2 vs. VirtualBox vs. other? | Edge deployment | WSL2 (simplest Docker integration on Windows) | Before edge setup |
+| AQ4 | Cloud server URL: hardcoded in nginx.conf or configurable via environment variable? | Edge proxy deployment | Environment variable (Docker `-e CLOUD_URL=...`) | Before implementation |
+| AQ5 | Should the edge proxy use HTTP or HTTPS to connect to cloud? | Security | HTTPS (TLS); proxy verifies cloud cert | Before deployment |
 
 ---
 
@@ -703,12 +713,11 @@ No runtime dependencies on cloud services (AWS, GCP, etc.) — the cloud server 
 
 | Priority | Simplification | Effect |
 |----------|---------------|--------|
-| 1st | Drop nginx TLS on cloud; use Node.js native HTTPS | Simpler cloud deployment; slightly less robust TLS handling |
+| 1st | Drop nginx TLS on cloud; run uvicorn with TLS certs directly | Simpler cloud deployment; slightly less robust TLS handling |
 | 2nd | Hardcode cloud URL in nginx.conf (skip env var) | Simpler Docker setup; must rebuild image for URL changes |
-| 3rd | Drop monorepo; use separate repos for client/server | More setup friction; harder to share types; but removes workspace complexity |
-| 4th | Use SQLite instead of PostgreSQL | Simpler setup; acceptable for ~20 devices; loses text search and concurrent writes |
-| 5th | Serve content files via nginx directly on cloud (skip Node proxy) | Loses centralized access control; but removes Node bottleneck concern |
-| 6th | Skip Docker; manually install nginx + SPA files on Linux VM | Removes Docker learning curve; harder to update/reproduce |
+| 3rd | Use SQLite instead of PostgreSQL | Simpler setup; acceptable for ~20 devices; loses text search and concurrent writes |
+| 4th | Serve content files via nginx directly on cloud (skip FastAPI proxy) | Loses centralized access control; but removes Python bottleneck concern |
+| 5th | Skip Docker; manually install nginx + SPA files on Linux VM | Removes Docker learning curve; harder to update/reproduce |
 
 ---
 
@@ -718,12 +727,12 @@ Guidance for a follow-on team extending beyond MVP architecture:
 
 - **Microservices migration:** The service layer (CatalogService, ContentFileService, etc.) is modular. Each service can be extracted into a separate process with its own API if scaling requires it. Start by extracting ContentFileService if video load grows.
 - **CDN integration:** The content proxy (`/api/content/{id}/file`) can be fronted by a CDN. Add cache headers (`Cache-Control`, `ETag`) from day one so CDN integration is a configuration change, not a code change.
-- **Push sync (WebSocket/SSE):** The Express server can add a WebSocket endpoint alongside REST. The edge proxy would pass through WebSocket connections. The SPA's sync module should be designed with a `SyncProvider` interface so pull can be swapped for push.
-- **Object storage (S3/MinIO):** The storage abstraction (`ContentFileService`) has `store`, `retrieve`, `delete` methods. Replace the filesystem implementation with an S3 client while keeping the same interface.
-- **User authentication:** Add passport.js or similar auth middleware. The API already separates public (edge) from protected (admin) routes. Future: add auth to edge routes, swap device-id for user-id.
-- **Clustering / load balancing:** pm2 cluster mode or multiple Node instances behind nginx upstream. PostgreSQL handles concurrent connections natively. File store is shared via filesystem (or object store for multi-VM).
-- **CI/CD:** The monorepo supports a single pipeline: lint → typecheck → test → build → build Docker image → deploy. Add GitHub Actions or similar when the team is ready.
-- **Database migration strategy:** Use Prisma migrations (or Knex migrations). Every schema change is a versioned migration file. This is continuation-critical — must be established from sprint 1.
+- **Push sync (WebSocket/SSE):** FastAPI supports WebSockets natively. The edge proxy would pass through WebSocket connections. The SPA's sync module should be designed with a `SyncProvider` pattern so pull can be swapped for push.
+- **Object storage (S3/MinIO):** The storage abstraction (`ContentFileService`) has `store`, `retrieve`, `delete` methods. Replace the filesystem implementation with a boto3/S3 client while keeping the same interface.
+- **User authentication:** Add FastAPI dependency-based auth middleware (e.g., python-jose for JWT). The API already separates public (edge) from protected (admin) routes. Future: add auth to edge routes, swap device-id for user-id.
+- **Clustering / load balancing:** gunicorn multi-worker mode or multiple uvicorn instances behind nginx upstream. PostgreSQL handles concurrent connections natively. File store is shared via filesystem (or object store for multi-VM).
+- **CI/CD:** Single pipeline per repo: lint (ruff) → test (pytest) → build Docker image → deploy. Add GitHub Actions or similar when the team is ready.
+- **Database migration strategy:** Use Alembic migrations (already in place). Every schema change is a versioned migration file. This is continuation-critical — must be established from sprint 1.
 - **Edge proxy enhancement:** Add proxy-side content prefetching (background job that pulls all new content from cloud into cache). Currently the proxy caches on first access; proactive prefetch ensures everything is available offline before the user requests it.
 - **Service Worker (future):** If edge requirements grow beyond what the proxy handles (e.g., push notifications, background sync of local actions), a Service Worker can be added to the SPA alongside the proxy. The proxy provides the caching foundation; SW would add browser-level features.
 

@@ -231,15 +231,15 @@
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
               <p class="card-title">Dev A — Backend &amp; Cloud</p>
-              <p class="card-body"><strong>Primary:</strong> API server (Node.js + Express), PostgreSQL schema &amp; migrations, file handling, admin authentication<br><strong>Secondary:</strong> Cloud deployment, nginx TLS config, load testing</p>
+              <p class="card-body"><strong>Primary:</strong> API server (Python + FastAPI), PostgreSQL schema &amp; migrations, file handling, admin authentication<br><strong>Secondary:</strong> Cloud deployment, nginx TLS config, load testing</p>
             </div>
             <div class="card card-b">
               <p class="card-title">Dev B — Edge SPA &amp; Proxy</p>
-              <p class="card-body"><strong>Primary:</strong> Edge SPA (HTML + TypeScript + Vite), reels feed, video player, IndexedDB offline layer, download flow<br><strong>Secondary:</strong> Edge proxy Docker setup</p>
+              <p class="card-body"><strong>Primary:</strong> Edge SPA (HTML + vanilla JS), reels feed, video player, IndexedDB offline layer, download flow<br><strong>Secondary:</strong> Edge proxy Docker setup</p>
             </div>
             <div class="card card-o">
               <p class="card-title">Dev C — Admin SPA &amp; Library</p>
-              <p class="card-body"><strong>Primary:</strong> Admin SPA (HTML + TypeScript + Vite), upload form, content list, category/interest CRUD<br><strong>Secondary:</strong> Library view, PDF viewer, demo content loading</p>
+              <p class="card-body"><strong>Primary:</strong> Admin SPA (HTML + vanilla JS), upload form, content list, category/interest CRUD<br><strong>Secondary:</strong> Library view, PDF viewer, demo content loading</p>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
@@ -322,6 +322,9 @@
         <div class="card card-rl" style="margin-top:0.25rem;">
           <p class="card-body"><strong>Hard constraint:</strong> All 12 acceptance criteria (AC-1 through AC-12) must pass on the actual demo device by end of week 12.</p>
         </div>
+        <div class="card card-gl" style="margin-top:0.25rem;">
+          <p class="card-body"><strong>Weekly Friday checkpoint:</strong> Done / Blocked / Scope / Next</p>
+        </div>
       </div>
     </section>
 
@@ -337,21 +340,21 @@
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
               <p class="card-title">Dev A — Backend Foundation</p>
-              <p class="card-body">Monorepo setup (pnpm workspaces) &middot; shared TypeScript types &middot; PostgreSQL schema (migration 001) &middot; Express server skeleton &middot; admin auth (JWT) &middot; upload &amp; list endpoints</p>
+              <p class="card-body">Monorepo setup &middot; shared Pydantic schemas &middot; PostgreSQL schema (migration 001) &middot; FastAPI server skeleton &middot; admin auth (JWT) &middot; upload &amp; list endpoints</p>
             </div>
             <div class="card card-b">
               <p class="card-title">Dev B — Edge SPA Skeleton</p>
-              <p class="card-body">HTML + TypeScript + Vite in packages/client &middot; 3-tab bar (Reels / Library / Downloads) &middot; routing (History API) &middot; global CSS baseline &middot; IndexedDB setup &middot; DeviceProfile init</p>
+              <p class="card-body">HTML + vanilla JS in packages/client &middot; 3-tab bar (Reels / Library / Downloads) &middot; routing (History API) &middot; global CSS baseline &middot; IndexedDB setup &middot; DeviceProfile init</p>
             </div>
             <div class="card card-o">
               <p class="card-title">Dev C — Admin SPA + Edge Proxy</p>
-              <p class="card-body">HTML + TypeScript + Vite in packages/admin &middot; login screen wired to JWT endpoint &middot; Dockerfile + nginx.conf for edge proxy &middot; proxy starts and serves on localhost:8080</p>
+              <p class="card-body">HTML + vanilla JS in packages/admin &middot; login screen wired to JWT endpoint &middot; Dockerfile + nginx.conf for edge proxy &middot; proxy starts and serves on localhost:8080</p>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <p class="label" style="margin-bottom:0.25rem;">Sprint 1 Exit Criteria</p>
             <ul class="bullets" style="gap:0.45rem;">
-              <li><code style="color:var(--accent-green);font-size:0.85em;">pnpm install &amp;&amp; pnpm build</code> succeeds across all packages</li>
+              <li><code style="color:var(--accent-green);font-size:0.85em;">pip install -r requirements.txt</code> succeeds; server starts cleanly</li>
               <li>Cloud VM has PostgreSQL running; migration 001 applied</li>
               <li><code style="color:var(--accent-green);font-size:0.85em;">GET /api/health</code> returns 200</li>
               <li>Admin login returns a JWT token</li>
@@ -446,6 +449,9 @@
             </ul>
             <div class="card card-rl" style="margin-top:0.25rem;">
               <p class="card-body"><strong>Milestone M3:</strong> End of week 6 — TikTok-style feed validated hands-on on 10″ tablet. <strong>If M3 is at risk → pull de-scope levers immediately.</strong></p>
+            </div>
+            <div class="card card-rl" style="margin-top:0.25rem;">
+              <p class="card-body">⚠ <strong>Highest-risk milestone</strong> — validate reels hands-on on tablet by end of week 6. If at risk → pull de-scope levers immediately.</p>
             </div>
           </div>
         </div>
@@ -556,7 +562,7 @@
             </div>
             <div class="card card-g">
               <p class="card-title">Dev A — Regression &amp; Stability (Week 11)</p>
-              <p class="card-body">Regression test: all API endpoints after demo content loaded &middot; cloud VM: pm2/systemd for Node.js; nginx TLS; PostgreSQL backup &middot; fix regressions</p>
+              <p class="card-body">Regression test: all API endpoints after demo content loaded &middot; cloud VM: systemd/gunicorn for Python FastAPI; nginx TLS; PostgreSQL backup &middot; fix regressions</p>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
@@ -749,28 +755,28 @@
               </tr>
               <tr>
                 <td><span class="badge badge-b">4th</span></td>
-                <td>Seed categories; drop admin category CRUD</td>
+                <td>Category tree management in admin (seed statically)</td>
                 <td>CAP-6.8</td>
                 <td>~3–4 days</td>
                 <td>Sprint 5 behind</td>
               </tr>
               <tr>
                 <td><span class="badge badge-b">5th</span></td>
-                <td>Seed interests; drop admin interest CRUD</td>
+                <td>Interest management in admin (seed statically)</td>
                 <td>CAP-6.9</td>
                 <td>~1–2 days</td>
                 <td>Sprint 5 behind</td>
               </tr>
               <tr>
                 <td><span class="badge badge-o">6th</span></td>
-                <td>Drop PDF support; video-only MVP</td>
+                <td>Drop PDF support (video-only)</td>
                 <td>CAP-3.5, CAP-4.3, CAP-4.4, CAP-6.4</td>
                 <td>~5–7 days</td>
                 <td>Sprint 5 or 6 severely behind</td>
               </tr>
               <tr>
                 <td><span class="badge badge-r">7th (last resort)</span></td>
-                <td>Drop Download / offline viewing</td>
+                <td>Drop downloads and offline viewing</td>
                 <td>CAP-5.x</td>
                 <td>~7–10 days</td>
                 <td>Last resort only</td>

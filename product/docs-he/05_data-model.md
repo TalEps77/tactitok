@@ -1,12 +1,12 @@
 <!-- RTL -->
 # מודל נתונים — TactiTok
 
-> **גרסה:** 0.2
+> **גרסה:** 0.3
 > **סטטוס:** טיוטה
-> **עדכון אחרון:** 2026-03-07
+> **עדכון אחרון:** 2026-03-25
 > **מסמך קודם:** `product/04_system-architecture.md`
 > **מסמך הבא:** `product/06_api-contract.md`
-> **יומן שינויים:** v0.2 — יושר עם ארכיטקטורה v0.2 (טופולוגיית פרוקסי קצה): הוסרו התייחסויות Cache API / Service Worker; DownloadRecord פושט; שמירת תוכן במטמון מטופלת כעת על ידי פרוקסי קצה.
+> **יומן שינויים:** v0.2 — יושר עם ארכיטקטורה v0.2 (טופולוגיית פרוקסי קצה): הוסרו התייחסויות Cache API / Service Worker; DownloadRecord פושט; שמירת תוכן במטמון מטופלת כעת על ידי פרוקסי קצה. v0.3 (2026-03-25): ORM שונה מ-Prisma ל-SQLAlchemy. כלי migration שונה מ-Prisma migrate ל-Alembic. דוגמאות טיפוסי TypeScript הוחלפו בשווי-ערך Python/Pydantic.
 
 ---
 
@@ -30,10 +30,10 @@
 | # | יעד | נימוק |
 |---|-----|-------|
 | DG1 | **מספר ישויות מינימלי** | 3 מפתחים, 10 שבועות; כל טבלה חייבת להרוויח את מקומה |
-| DG2 | **טיפוסים משותפים** | שרת ולקוח משתפים טיפוסי TypeScript מ-`packages/shared` |
+| DG2 | **טיפוסים משותפים** | השרת מגדיר מודלי Pydantic; הלקוח מקבל שווי-ערך מסורייל-JSON |
 | DG3 | **מוכן-להמשך** | שדות לתכונות עתידיות (user-id, view-count) כלולים אך nullable/לא-בשימוש ב-MVP |
 | DG4 | **הפרדה נקייה** | מתמידות בצד-שרת (PostgreSQL) לעומת מטמון פרוקסי קצה (nginx) לעומת מצב מקומי-דפדפן (IndexedDB) מוגדרת בבירור |
-| DG5 | **schema מבוסס-migration** | כל שינוי הוא migration בגרסה; ללא ALTER TABLE אד-הוק |
+| DG5 | **schema מבוסס-migration** | כל שינוי הוא Alembic migration בגרסה; ללא ALTER TABLE אד-הוק |
 
 ---
 
@@ -275,37 +275,42 @@
 
 **אחסון:** רשומה יחידה ב-IndexedDB object store (`catalogCache`). מוחלפת לחלוטין בכל סנכרון.
 
-**צורות DTO** (טיפוסי TypeScript משותפים ב-`packages/shared`):
+**צורות DTO** (מודלי Pydantic, מסורייל ל-JSON עבור לקוח הקצה):
 
-```typescript
-interface ContentItemDTO {
-  id: string;
-  title: string;
-  description: string;
-  type: 'video' | 'pdf';
-  filename: string;
-  fileSize: number;
-  mimeType: string;
-  duration: number | null;
-  thumbnailUrl: string | null;
-  version: number;
-  categoryIds: string[];
-  interestIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+```python
+from enum import Enum
+from typing import Optional
+from pydantic import BaseModel
 
-interface CategoryDTO {
-  id: string;
-  name: string;
-  parentId: string | null;
-  sortOrder: number;
-}
+class ContentType(str, Enum):
+    video = 'video'
+    pdf = 'pdf'
 
-interface InterestDTO {
-  id: string;
-  name: string;
-}
+class ContentItemDTO(BaseModel):
+    id: str
+    title: str
+    description: str
+    type: ContentType
+    filename: str
+    file_size: int
+    mime_type: str
+    duration: Optional[int] = None
+    thumbnail_url: Optional[str] = None
+    version: int
+    category_ids: list[str]
+    interest_ids: list[str]
+    created_at: str
+    updated_at: str
+
+class CategoryDTO(BaseModel):
+    id: str
+    name: str
+    parent_id: Optional[str] = None
+    sort_order: int
+
+class InterestDTO(BaseModel):
+    id: str
+    name: str
 ```
 
 ---
@@ -437,8 +442,8 @@ interface InterestDTO {
 
 - שמות טבלאות: `snake_case`, רבים (`content_items`, `categories`)
 - שמות עמודות: `snake_case` (`file_size`, `parent_id`, `created_at`)
-- טיפוסי TypeScript: `PascalCase` (`ContentItem`, `Category`)
-- Prisma/ORM ממפה בין מוסכמות אוטומטית
+- שמות מודל Python: `PascalCase` (`ContentItem`, `Category`)
+- SQLAlchemy ממפה בין מוסכמות אוטומטית דרך הצהרות `Column`
 
 ### 10.3 אחסון תוכן בינארי
 
@@ -626,6 +631,14 @@ interface InterestDTO {
 - **סנכרון דלתא:** הוסף `syncVersion` (מונה מונוטוני) לטבלת `sync_state`. כל מוטציה מגדילה את המונה. הקצה שולח גרסה ידועה אחרונה; השרת מחזיר רק שינויים מאז.
 - **ריבוי-שוכרים:** הוסף `tenantId` UUID ל-`content_items`, `categories`, `interests`. ה-MVP מגדיר לקבוע. עתידי: פרטציה של כל ה-queries לפי שוכר.
 - **חיפוש טקסט מלא:** צור עמודת PostgreSQL `tsvector` על `content_items` עם אינדקס GIN. עדכן בהכנסה/עדכון דרך trigger. החלף queries `ILIKE`.
+
+---
+
+### היסטוריית גרסאות
+
+- גרסה 0.3 (2026-03-25): ORM שונה מ-Prisma ל-SQLAlchemy. כלי migration שונה מ-Prisma migrate ל-Alembic. דוגמאות TypeScript הוחלפו במודלי Python/Pydantic. כל הפניה ל-Prisma עודכנה.
+- גרסה 0.2 (2026-03-07): יושר עם ארכיטקטורה v0.2 (טופולוגיית פרוקסי קצה).
+- גרסה 0.1: טיוטה ראשונית.
 
 ---
 

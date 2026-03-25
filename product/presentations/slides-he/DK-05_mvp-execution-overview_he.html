@@ -237,7 +237,7 @@
          שקופית 3 — הצוות
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="3"
-      data-notes="שלושה מפתחים סטודנטים, כל אחד אחראי על פרוסה ברורה של המחסנית. Dev A אחראי על הצד השרת: שרת ה-API, מסד הנתונים PostgreSQL, טיפול בקבצים, ופריסת ענן. Dev B אחראי על ה-SPA של הקצה — אפליקציית הטאבלט שמול המשתמש, נגן הוידאו, לוגיקת אופליין, ו-IndexedDB. Dev C אחראי על פורטל הניהול ותצוגת הספרייה. ה-monorepo מחולק לחמישה חבילות, כל אחת עם בעלים ברור. סוגי TypeScript משותפים ב-packages/shared בבעלות Dev A ובסקירת כולם — הם החוזה בין החבילות.">
+      data-notes="שלושה מפתחים סטודנטים, כל אחד אחראי על פרוסה ברורה של המחסנית. Dev A אחראי על הצד השרת: שרת ה-API (Python + FastAPI), מסד הנתונים PostgreSQL, טיפול בקבצים, ופריסת ענן. Dev B אחראי על ה-SPA של הקצה — אפליקציית הטאבלט שמול המשתמש (HTML + vanilla JS), נגן הוידאו, לוגיקת אופליין, ו-IndexedDB. Dev C אחראי על פורטל הניהול ותצוגת הספרייה (HTML + vanilla JS). ה-monorepo מחולק לחמישה חבילות, כל אחת עם בעלים ברור. סכמות Pydantic משותפות ב-shared/schemas.py בבעלות Dev A ובסקירת כולם — הן החוזה בין החבילות.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">צוות</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">ה<span class="highlight-g">צוות</span></h1>
@@ -245,15 +245,15 @@
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
               <p class="card-title">Dev A — שרת ענן</p>
-              <p class="card-body"><strong>ראשי:</strong> שרת API (Node.js + Express), סכמת PostgreSQL ומיגרציות, טיפול בקבצים, אימות מנהל<br><strong>משני:</strong> פריסת ענן, תצורת nginx TLS, בדיקות עומס</p>
+              <p class="card-body"><strong>ראשי:</strong> שרת API (Python + FastAPI), סכמת PostgreSQL ומיגרציות (SQLAlchemy / Alembic), טיפול בקבצים, אימות מנהל<br><strong>משני:</strong> פריסת ענן, תצורת nginx TLS, בדיקות עומס</p>
             </div>
             <div class="card card-b">
               <p class="card-title">Dev B — Edge SPA ופרוקסי</p>
-              <p class="card-body"><strong>ראשי:</strong> Edge SPA (HTML + TypeScript + Vite), פיד ריילס, נגן וידאו, שכבת אופליין IndexedDB, זרימת הורדה<br><strong>משני:</strong> הגדרת Docker לפרוקסי הקצה</p>
+              <p class="card-body"><strong>ראשי:</strong> Edge SPA (HTML + vanilla JS), פיד ריילס, נגן וידאו, שכבת אופליין IndexedDB, זרימת הורדה<br><strong>משני:</strong> הגדרת Docker לפרוקסי הקצה</p>
             </div>
             <div class="card card-o">
               <p class="card-title">Dev C — Admin SPA וספרייה</p>
-              <p class="card-body"><strong>ראשי:</strong> Admin SPA (HTML + TypeScript + Vite), טופס העלאה, רשימת תוכן, CRUD קטגוריה/עניין<br><strong>משני:</strong> תצוגת ספרייה, מציג PDF, טעינת תוכן הדגמה</p>
+              <p class="card-body"><strong>ראשי:</strong> Admin SPA (HTML + vanilla JS), טופס העלאה, רשימת תוכן, CRUD קטגוריה/עניין<br><strong>משני:</strong> תצוגת ספרייה, מציג PDF, טעינת תוכן הדגמה</p>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
@@ -343,7 +343,7 @@
          שקופית 5 — Sprint 1: תשתית
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="5"
-      data-notes="Sprint 1 הוא לפתוח חסימות לכולם. עד סוף שבוע 2, לכל שלושת המפתחים חייבת להיות סביבת עבודה פועלת, קובץ סוגי TypeScript משותף, סכמת מסד נתונים פועלת, ופרוקסי קצה עובד. הפלט המשותף המרכזי הוא packages/shared/src/types.ts — Dev A אחראי עליו, אך קוד כל מפתח אחר תלוי בו. קריטריוני היציאה הם המבחנים הסוגרים: איננו מתחילים Sprint 2 עד שכל אחד מהם עובר.">
+      data-notes="Sprint 1 הוא לפתוח חסימות לכולם. עד סוף שבוע 2, לכל שלושת המפתחים חייבת להיות סביבת עבודה פועלת, סכמות Pydantic משותפות, סכמת מסד נתונים פועלת, ופרוקסי קצה עובד. הפלט המשותף המרכזי הוא shared/schemas.py — Dev A אחראי עליו, אך קוד כל מפתח אחר תלוי בו. קריטריוני היציאה הם המבחנים הסוגרים: איננו מתחילים Sprint 2 עד שכל אחד מהם עובר.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Sprint 1 · שבועות 1–2</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">תשתית — <span class="highlight-g">כולם לא חסומים</span></h1>
@@ -351,21 +351,21 @@
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
               <p class="card-title">Dev A — תשתית שרת</p>
-              <p class="card-body">הגדרת Monorepo (pnpm workspaces) &middot; סוגי TypeScript משותפים &middot; סכמת PostgreSQL (מיגרציה 001) &middot; שלד שרת Express &middot; אימות מנהל (JWT) &middot; נקודות קצה של העלאה ורשימה</p>
+              <p class="card-body">הגדרת Monorepo &middot; Python venv + requirements.txt &middot; סכמות Pydantic משותפות &middot; סכמת PostgreSQL (מיגרציה 001 עם Alembic) &middot; שלד שרת FastAPI &middot; אימות מנהל (JWT) &middot; נקודות קצה של העלאה ורשימה</p>
             </div>
             <div class="card card-b">
               <p class="card-title">Dev B — שלד Edge SPA</p>
-              <p class="card-body">HTML + TypeScript + Vite ב-packages/client &middot; פס לשוניות 3 (Reels / ספרייה / הורדות) &middot; ניתוב (History API) &middot; CSS בסיסי גלובלי &middot; הגדרת IndexedDB &middot; אתחול DeviceProfile</p>
+              <p class="card-body">HTML + vanilla JS ב-packages/client &middot; פס לשוניות 3 (Reels / ספרייה / הורדות) &middot; ניתוב (History API) &middot; CSS בסיסי גלובלי &middot; הגדרת IndexedDB &middot; אתחול DeviceProfile</p>
             </div>
             <div class="card card-o">
               <p class="card-title">Dev C — Admin SPA + Edge Proxy</p>
-              <p class="card-body">HTML + TypeScript + Vite ב-packages/admin &middot; מסך כניסה מחובר לנקודת קצה JWT &middot; Dockerfile + nginx.conf לפרוקסי קצה &middot; פרוקסי מתחיל ומגיש על localhost:8080</p>
+              <p class="card-body">HTML + vanilla JS ב-packages/admin &middot; מסך כניסה מחובר לנקודת קצה JWT &middot; Dockerfile + nginx.conf לפרוקסי קצה &middot; פרוקסי מתחיל ומגיש על localhost:8080</p>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <p class="label" style="margin-bottom:0.25rem;">קריטריוני יציאה Sprint 1</p>
             <ul class="bullets" style="gap:0.45rem;">
-              <li><code style="color:var(--accent-green);font-size:0.85em;direction:ltr;display:inline-block;">pnpm install &amp;&amp; pnpm build</code> מצליח בכל החבילות</li>
+              <li><code style="color:var(--accent-green);font-size:0.85em;direction:ltr;display:inline-block;">pip install -r requirements.txt</code> מצליח; השרת עולה בהצלחה</li>
               <li>VM הענן כולל PostgreSQL פועל; מיגרציה 001 הוחלה</li>
               <li><code style="color:var(--accent-green);font-size:0.85em;direction:ltr;display:inline-block;">GET /api/health</code> מחזיר 200</li>
               <li>כניסת מנהל מחזירה אסימון JWT</li>
@@ -570,7 +570,7 @@
             </div>
             <div class="card card-g">
               <p class="card-title">Dev A — רגרסיה ויציבות (שבוע 11)</p>
-              <p class="card-body">בדיקת רגרסיה: כל נקודות קצה API לאחר טעינת תוכן הדגמה &middot; VM ענן: pm2/systemd ל-Node.js; nginx TLS; גיבוי PostgreSQL &middot; תיקון רגרסיות</p>
+              <p class="card-body">בדיקת רגרסיה: כל נקודות קצה API לאחר טעינת תוכן הדגמה &middot; VM ענן: systemd/gunicorn ל-Python FastAPI; nginx TLS; גיבוי PostgreSQL &middot; תיקון רגרסיות</p>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
@@ -647,7 +647,7 @@
          שקופית 12 — מסלול קריטי
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="12"
-      data-notes="המסלול הקריטי עובר דרך סוגי TypeScript המשותפים, לסכמת PostgreSQL, לנקודת קצה API של הקטלוג, לסנכרון קטלוג במכשיר הקצה, לסינון לפי תחומי עניין, לפיד ריילס מלא, ולאחר מכן לאימות בפועל על המכשיר ב-M3. כל שלב בשרשרת זו תלוי בשלב הקודם שהושלם. השרשרת הארוכה ביותר מסתיימת ב-M3 — שבוע 6. עיכוב בכל מקום בשרשרת זו מעכב את M3. תלויות נוספות ראויות לציון: הגדרת Docker של פרוקסי הקצה בשבוע 1 היא תנאי מוקדם לכל תכונות הקצה. בדיקת פרוקסי אופליין בשבוע 7 היא תנאי מוקדם קשה לאישור הפעלה אופליין בשבוע 8.">
+      data-notes="המסלול הקריטי עובר דרך סכמות Pydantic המשותפות, לסכמת PostgreSQL, לנקודת קצה API של הקטלוג, לסנכרון קטלוג במכשיר הקצה, לסינון לפי תחומי עניין, לפיד ריילס מלא, ולאחר מכן לאימות בפועל על המכשיר ב-M3. כל שלב בשרשרת זו תלוי בשלב הקודם שהושלם. השרשרת הארוכה ביותר מסתיימת ב-M3 — שבוע 6. עיכוב בכל מקום בשרשרת זו מעכב את M3. תלויות נוספות ראויות לציון: הגדרת Docker של פרוקסי הקצה בשבוע 1 היא תנאי מוקדם לכל תכונות הקצה. בדיקת פרוקסי אופליין בשבוע 7 היא תנאי מוקדם קשה לאישור הפעלה אופליין בשבוע 8.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">מסלול קריטי</p><div class="accent-bar-r"></div></div>
         <h1 class="title-h1">תלויות &amp; <span class="highlight-r">שרשרת הסיכון הגבוה ביותר</span></h1>

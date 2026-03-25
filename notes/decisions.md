@@ -99,6 +99,16 @@ Use this file to track explicit project decisions and why they were made.
 | D62 | Content file URL includes `?v={version}` query param for nginx proxy cache-busting: `/api/content/{id}/file?v={version}` | nginx `proxy_cache` uses the full request URI as the cache key. A version bump changes the URL → cache miss → fresh fetch from cloud. Server ignores `?v` param. Old entries expire after 30-day TTL. Resolves N2. | 2026-03-07 |
 | D63 | `GET /api/health` is a public, unauthenticated endpoint with `proxy_cache off` at the edge proxy | Health endpoint must return a live response to be a valid cloud-reachability signal. If the proxy cached a stale `200 OK`, offline detection would fail. `proxy_cache off` ensures every poll hits the cloud or fails. Resolves N1. | 2026-03-07 |
 
+## Stack Revision (2026-03-25)
+
+| # | Decision | Rationale | Date |
+|---|---------|-----------|------|
+| D64 | Backend language: Python + FastAPI (replaces Node.js + TypeScript from D25) | Team knows Python; no build step for API server; simpler stack; SQLAlchemy + Alembic for ORM and migrations | 2026-03-25 |
+| D65 | Frontend language: Vanilla HTML + CSS + JS (replaces React + TypeScript from D24) | No build step; files editable directly; debuggable in Chrome DevTools without source maps; no npm dependency | 2026-03-25 |
+| D66 | Admin UI delivery: plain HTML static files served by FastAPI at `/admin` (replaces admin SPA from D24) | Eliminates separate admin build process; consistent with frontend approach | 2026-03-25 |
+| D67 | No shared types package (replaces TypeScript monorepo from D31) | No `packages/shared` or TypeScript interfaces package; plain JSON API contract; each side (client/server) defines its own types locally; reduces toolchain complexity | 2026-03-25 |
+| D68 | ORM and migrations: SQLAlchemy + Alembic (replaces Prisma recommendation from Q18) | Python ecosystem consistency; standard pairing for FastAPI projects | 2026-03-25 |
+
 ## From Delivery Plan (07)
 
 | # | Decision | Rationale | Date |

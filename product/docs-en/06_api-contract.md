@@ -1,9 +1,9 @@
 # API Contract — TactiTok
 
-> **Version:** 0.2
+> **Version:** 0.3
 > **Status:** Draft
-> **Last updated:** 2026-03-07
-> **Change log:** v0.2 — added `GET /api/health` endpoint (N1 fix); changed content file URL to include `?v={version}` for proxy cache-busting (N2 fix); corrected ETag note (ETag handles browser cache only, not proxy cache); updated endpoint count to 21.
+> **Last updated:** 2026-03-25
+> **Change log:** v0.3 (2026-03-25): Removed TypeScript DTO section (packages/shared eliminated). Replaced with plain JSON response shape examples. All 21 endpoints unchanged. | v0.2 — added `GET /api/health` endpoint (N1 fix); changed content file URL to include `?v={version}` for proxy cache-busting (N2 fix); corrected ETag note (ETag handles browser cache only, not proxy cache); updated endpoint count to 21.
 > **Preceding document:** `product/05_data-model.md`
 > **Next document:** `product/07_delivery-plan.md`
 
@@ -19,7 +19,7 @@ This document defines the HTTP API contract for the TactiTok MVP. It specifies:
 - HTTP caching and streaming behaviour
 - What is intentionally excluded from the MVP API
 
-This document is the binding reference for server implementation and client integration. Shared TypeScript types in `packages/shared` must match every DTO defined here. If a conflict arises between this document and the Data Model, resolve by raising an open question — do not silently deviate.
+This document is the binding reference for server implementation and client integration. All response shapes are defined by the JSON examples in Section 8. If a conflict arises between this document and the Data Model, resolve by raising an open question — do not silently deviate.
 
 ---
 
@@ -374,7 +374,7 @@ Returns all content items. Sorted `createdAt` descending.
 }
 ```
 
-*(Same `ContentItemDTO` shape as catalog items.)*
+*(Same ContentItem shape as catalog items — see Section 8.)*
 
 ---
 
@@ -392,7 +392,7 @@ Upload a new content item. File and metadata submitted together as `multipart/fo
 | `categoryIds` | string (JSON array) | No | Array of category UUIDs; default `[]` |
 | `interestIds` | string (JSON array) | No | Array of interest UUIDs; default `[]` |
 
-**Response: 201 Created** — full `ContentItemDTO` for the created item.
+**Response: 201 Created** — full ContentItem shape for the created item (see Section 8).
 
 **Validation errors (400):**
 - `file` missing
@@ -411,7 +411,7 @@ Upload a new content item. File and metadata submitted together as `multipart/fo
 
 Returns a single content item by ID.
 
-**Response: 200 OK** — `ContentItemDTO`.
+**Response: 200 OK** — ContentItem shape (see Section 8).
 
 **Response: 404 Not Found**
 
@@ -432,7 +432,7 @@ Update content metadata only. Does not replace the file. All fields are optional
 }
 ```
 
-**Response: 200 OK** — updated `ContentItemDTO`.
+**Response: 200 OK** — updated ContentItem shape (see Section 8).
 
 **Validation errors (400):**
 - `title` is empty string (if provided)
@@ -550,7 +550,7 @@ Create a new category.
 }
 ```
 
-**Response: 201 Created** — full `CategoryAdminDTO`.
+**Response: 201 Created** — full Category shape (with `createdAt` / `updatedAt`; see Section 8).
 
 **Validation errors (400):**
 - `name` missing or empty
@@ -574,7 +574,7 @@ Update a category. All fields optional.
 }
 ```
 
-**Response: 200 OK** — updated `CategoryAdminDTO`.
+**Response: 200 OK** — updated Category shape (with `createdAt` / `updatedAt`; see Section 8).
 
 **Validation errors (400):**
 - Reparenting would exceed 2-level max depth
@@ -628,7 +628,7 @@ Create a new interest.
 }
 ```
 
-**Response: 201 Created** — full `InterestAdminDTO`.
+**Response: 201 Created** — full Interest shape (with `createdAt`; see Section 8).
 
 **Validation errors (400):** `name` missing or empty.
 
@@ -648,7 +648,7 @@ Rename an interest.
 }
 ```
 
-**Response: 200 OK** — updated `InterestAdminDTO`.
+**Response: 200 OK** — updated Interest shape (with `createdAt`; see Section 8).
 
 **Response: 404 Not Found**
 
@@ -666,94 +666,78 @@ Delete an interest. Removes all `content_interests` junction rows. Edge device p
 
 ---
 
-## 8. Shared TypeScript Types
+## 8. Response Shape Reference
 
-Defined in `packages/shared/src/types.ts`. Used by all packages. Server and client must import from here — no local re-definitions.
+No shared types package. All shapes are defined by the JSON examples below.
 
-```typescript
-// ---- Domain types ----
+### ContentItem (in catalog response)
 
-export type ContentType = 'video' | 'pdf';
-
-export interface ContentItemDTO {
-  id: string;
-  title: string;
-  description: string;
-  type: ContentType;
-  filename: string;
-  fileSize: number;              // bytes
-  mimeType: string;
-  duration: number | null;       // seconds; null for PDF
-  thumbnailUrl: string | null;   // relative URL or null
-  version: number;
-  categoryIds: string[];
-  interestIds: string[];
-  createdAt: string;             // ISO 8601
-  updatedAt: string;             // ISO 8601
+```json
+{
+  "id": "uuid-string",
+  "title": "string",
+  "description": "string",
+  "type": "video | pdf",
+  "filename": "string",
+  "fileSize": 12345678,
+  "mimeType": "video/mp4 | application/pdf",
+  "duration": 90,
+  "thumbnailUrl": "/api/content/{id}/thumbnail",
+  "version": 1,
+  "categoryIds": ["uuid", "uuid"],
+  "interestIds": ["uuid"],
+  "createdAt": "2026-01-01T00:00:00Z",
+  "updatedAt": "2026-01-01T00:00:00Z"
 }
+```
 
-export interface CategoryDTO {
-  id: string;
-  name: string;
-  parentId: string | null;
-  sortOrder: number;
+### Category
+
+```json
+{
+  "id": "uuid-string",
+  "name": "string",
+  "parentId": "uuid-string | null",
+  "sortOrder": 0
 }
+```
 
-export interface CategoryAdminDTO extends CategoryDTO {
-  createdAt: string;
-  updatedAt: string;
+### Interest
+
+```json
+{
+  "id": "uuid-string",
+  "name": "string"
 }
+```
 
-export interface InterestDTO {
-  id: string;
-  name: string;
+### Catalog Response
+
+```json
+{
+  "syncedAt": "2026-01-01T00:00:00Z",
+  "items": [ /* array of ContentItem */ ],
+  "categories": [ /* array of Category */ ],
+  "interests": [ /* array of Interest */ ]
 }
+```
 
-export interface InterestAdminDTO extends InterestDTO {
-  createdAt: string;
-}
+### Auth
 
-// ---- Catalog ----
+**Login request:**
+```json
+{ "password": "string" }
+```
 
-export interface CatalogResponse {
-  syncedAt: string;
-  items: ContentItemDTO[];
-  categories: CategoryDTO[];
-  interests: InterestDTO[];
-}
+**Login response:**
+```json
+{ "token": "string", "expiresAt": "2026-01-01T08:00:00Z" }
+```
 
-// ---- Auth ----
+### Error Envelope
 
-export interface LoginRequest {
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  expiresAt: string;             // ISO 8601
-}
-
-// ---- File update responses ----
-
-export interface FileUpdateResponse {
-  id: string;
-  version: number;
-  fileSize: number;
-  updatedAt: string;
-}
-
-export interface ThumbnailUpdateResponse {
-  id: string;
-  thumbnailUrl: string;
-  updatedAt: string;
-}
-
-// ---- Errors ----
-
-export interface ApiError {
-  error: string;
-  code?: string;
-}
+```json
+{ "error": "human-readable message", "code": "ERROR_CODE" }
 ```
 
 ---
@@ -911,6 +895,7 @@ After a successful catalog sync, the Edge SPA must:
 
 ## 17. Continuation Notes
 
+- **v0.3 (2026-03-25):** Removed TypeScript DTO section (packages/shared eliminated). Replaced with plain JSON response shape examples. All 21 endpoints unchanged.
 - **Delta sync:** Add server support for `GET /api/catalog?since={ISO_timestamp}` returning only items where `updatedAt > since`, plus a `deleted: string[]` array of hard-deleted IDs. Edge SPA merges changes into IndexedDB rather than replacing the full snapshot.
 - **Pagination:** Add `?page={n}&limit={n}` to `GET /api/admin/content` when catalog grows beyond ~50 items.
 - **Chunked upload:** Replace `multipart/form-data` with the `tus` resumable upload protocol at the same endpoint URL. Swap the server-side handler without changing the client API contract.

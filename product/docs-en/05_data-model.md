@@ -1,11 +1,11 @@
 # Data Model — TactiTok
 
-> **Version:** 0.2
+> **Version:** 0.3
 > **Status:** Draft
-> **Last updated:** 2026-03-07
+> **Last updated:** 2026-03-25
 > **Preceding document:** `product/04_system-architecture.md`
 > **Next document:** `product/06_api-contract.md`
-> **Change log:** v0.2 — aligned with Architecture v0.2 (edge proxy topology): removed Cache API / Service Worker references; simplified DownloadRecord; content caching is now handled by edge proxy.
+> **Change log:** v0.2 — aligned with Architecture v0.2 (edge proxy topology): removed Cache API / Service Worker references; simplified DownloadRecord; content caching is now handled by edge proxy. v0.3 (2026-03-25): ORM changed from Prisma to SQLAlchemy. Migration tooling changed from Prisma migrate to Alembic. Any TypeScript type examples replaced with Python/Pydantic equivalents.
 
 ---
 
@@ -29,10 +29,10 @@ Every downstream document (API Contract → Delivery Plan) must be consistent wi
 | # | Goal | Rationale |
 |---|------|-----------|
 | DG1 | **Minimal entity count** | 3 developers, 10 weeks; every table must earn its place |
-| DG2 | **Shared types** | Server and client share TypeScript types from `packages/shared` |
+| DG2 | **Shared types** | Server defines Pydantic models; client receives JSON-serialized equivalents |
 | DG3 | **Continuation-ready** | Fields for future features (user-id, view-count) included but nullable/unused in MVP |
 | DG4 | **Clean separation** | Server-side persistence (PostgreSQL) vs. edge proxy cache (nginx) vs. browser-local state (IndexedDB) clearly delineated |
-| DG5 | **Migration-based schema** | Every change is a versioned migration; no ad-hoc ALTER TABLE |
+| DG5 | **Migration-based schema** | Every change is a versioned Alembic migration; no ad-hoc ALTER TABLE |
 
 ---
 
@@ -274,37 +274,42 @@ A snapshot of the server catalog, stored locally for offline browsing.
 
 **Storage:** Single record in an IndexedDB object store (`catalogCache`). Replaced entirely on each sync.
 
-**DTO shapes** (shared TypeScript types in `packages/shared`):
+**DTO shapes** (Pydantic models, serialized to JSON for the edge client):
 
-```typescript
-interface ContentItemDTO {
-  id: string;
-  title: string;
-  description: string;
-  type: 'video' | 'pdf';
-  filename: string;
-  fileSize: number;
-  mimeType: string;
-  duration: number | null;
-  thumbnailUrl: string | null;
-  version: number;
-  categoryIds: string[];
-  interestIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+```python
+from enum import Enum
+from typing import Optional
+from pydantic import BaseModel
 
-interface CategoryDTO {
-  id: string;
-  name: string;
-  parentId: string | null;
-  sortOrder: number;
-}
+class ContentType(str, Enum):
+    video = 'video'
+    pdf = 'pdf'
 
-interface InterestDTO {
-  id: string;
-  name: string;
-}
+class ContentItemDTO(BaseModel):
+    id: str
+    title: str
+    description: str
+    type: ContentType
+    filename: str
+    file_size: int
+    mime_type: str
+    duration: Optional[int] = None
+    thumbnail_url: Optional[str] = None
+    version: int
+    category_ids: list[str]
+    interest_ids: list[str]
+    created_at: str
+    updated_at: str
+
+class CategoryDTO(BaseModel):
+    id: str
+    name: str
+    parent_id: Optional[str] = None
+    sort_order: int
+
+class InterestDTO(BaseModel):
+    id: str
+    name: str
 ```
 
 ---
@@ -436,8 +441,8 @@ The edge client compares `DownloadRecord.version` with `CachedCatalog.items[].ve
 
 - Table names: `snake_case`, plural (`content_items`, `categories`)
 - Column names: `snake_case` (`file_size`, `parent_id`, `created_at`)
-- TypeScript types: `PascalCase` (`ContentItem`, `Category`)
-- Prisma/ORM maps between conventions automatically
+- Python model names: `PascalCase` (`ContentItem`, `Category`)
+- SQLAlchemy maps between conventions automatically via `Column` declarations
 
 ### 10.3 Binary Content Storage
 
@@ -617,6 +622,7 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 
 ## 19. Continuation Notes
 
+- **v0.3 (2026-03-25):** ORM changed from Prisma to SQLAlchemy. Migration tooling changed from Prisma migrate to Alembic. Any TypeScript type examples replaced with Python/Pydantic equivalents.
 - **User entity:** When auth is added, create a `users` table with `id (UUID)`, `email`, `passwordHash`, `role`. Link to content via `createdBy` FK on `content_items`. Replace `deviceId` in DeviceProfile with `userId`.
 - **View/like counts (server):** Add `viewCount` and `likeCount` columns to `content_items`. Populate via batch sync from LocalAction records. Use for future recommendation engine.
 - **Content versions table:** Add `content_versions` (id, contentId, version, filePath, createdAt) to keep old file references. Content update inserts a new version row instead of overwriting.

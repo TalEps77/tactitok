@@ -1,8 +1,8 @@
 # MVP Spec — TactiTok
 
-> **Version:** 0.1
+> **Version:** 0.3
 > **Status:** Draft
-> **Last updated:** 2026-03-06
+> **Last updated:** 2026-03-25
 > **Preceding document:** `product/02_system-boundaries.md`
 > **Next document:** `product/04_system-architecture.md`
 
@@ -373,6 +373,8 @@ Carried forward from Product Brief section 10, with additions:
 | MR4 | PDF.js fails on complex or large PDFs | Low | Medium | Test with representative docs in week 1; set soft guidance on PDF complexity |
 | MR5 | TikTok-style full-screen experience is hard to achieve with standard HTML/CSS | Medium | Medium | Use established patterns (CSS `scroll-snap`); prototype in week 1 |
 | MR6 | Total build exceeds 10-week window | Medium | High | Use de-scope levers aggressively; prioritize Must items; weekly scope review |
+
+> ⚠ **M3 is the highest-risk milestone.** CSS scroll-snap + IntersectionObserver + touch gestures + Chrome auto-play policy must all work together on the real tablet. Must be validated hands-on by end of week 6. **If M3 is at risk → pull de-scope levers immediately.** Six weeks remain.
 | MR7 | Metadata sync design becomes complex (conflict handling, partial updates) | Low | Medium | Server is authoritative; edge does full catalog replace on sync |
 
 ---
@@ -398,11 +400,14 @@ Ordered by priority — cut from the top first:
 | 1st | "Updated" badge | CAP-3.7 | Minor UX; users still get latest content after sync | ~2–3 days |
 | 2nd | Like/Save buttons | CAP-2.7, CAP-2.8 | No bookmarking; users rely on Downloads only | ~2–3 days |
 | 3rd | Interest-based filtering + selection screen | CAP-1.4, CAP-1.5, CAP-2.5 | Feed shows all videos; library shows all items; simpler but less "TikTok" | ~4–5 days |
-| 4th | Category tree management in admin (use seed data) | CAP-6.8 | Categories are pre-seeded; admin cannot modify | ~3–4 days |
-| 5th | Text search in library | CAP-3.2 | Users browse by category only | ~3–4 days |
-| 6th | Change interests (settings area) | CAP-1.6 | Interests set once on first open; reset only by clearing browser data | ~1–2 days |
-| 7th | PDF support (video-only MVP) | CAP-3.5, CAP-4.3, CAP-4.4, CAP-6.4 | Major capability loss; demo shows video only | ~5–7 days |
-| 8th | Download / offline viewing | CAP-5.x | Requires network always; core capability loss — last resort | ~7–10 days |
+| 4th | Category tree management in admin (seed statically) | CAP-6.8 | Categories are pre-seeded; admin cannot modify | ~3–4 days |
+| 5th | Interest management in admin (seed statically) | CAP-6.9 | Interests are pre-seeded; admin cannot modify | ~1–2 days |
+| 6th | PDF support (video-only MVP) | CAP-3.5, CAP-4.3, CAP-4.4, CAP-6.4 | Major capability loss; demo shows video only | ~5–7 days |
+| 7th | Download / offline viewing | CAP-5.x | Requires network always; core capability loss — last resort | ~7–10 days |
+
+Note: Text search in the library is **not** a de-scope lever — it remains mandatory in v3.
+
+> **De-scope Rule:** Cut from the top. Do not skip ahead. Do not pull any lever without confirming with the full team and the stakeholder.
 
 ---
 
@@ -418,6 +423,13 @@ Guidance for extending the MVP into a production-ready system:
 - **Auto-play policy:** If Chrome blocks auto-play, the architecture should support a "tap to start" first-video fallback that enables auto-play for subsequent videos. This is a known browser pattern.
 - **Content thumbnails:** MVP relies on admin-uploaded metadata. A future enhancement can auto-generate video thumbnails on upload via ffmpeg.
 - **Deeper category tree:** MVP supports 2 levels. The data model should use a parent-id pattern (not hardcoded depth) so deeper trees work without schema changes.
+
+---
+
+### Version history
+
+- v0.3 (2026-03-25): Updated de-scope levers to match MVP Spec v3 (7 levers; text search removed as lever; interest management added as lever 5; PDF moved to lever 6). M3 risk escalation note added.
+- v0.1 (2026-03-06): Initial draft.
 
 ---
 

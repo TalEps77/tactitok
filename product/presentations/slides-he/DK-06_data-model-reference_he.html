@@ -245,7 +245,7 @@
          שקופית 3 — ישויות צד-שרת — סקירה
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="3"
-      data-notes="השרת מחזיק חמש טבלאות PostgreSQL. ContentItem היא הישות המרכזית — כל פריט תוכן הדרכה שוכן כאן. Category מספקת היררכיה דו-רמתית לארגון הספרייה. Interest מספקת תגיות שטוחות למסנן פיד הריאלס. ContentCategory ו-ContentInterest הן טבלאות צומת לקשרי רבים-לרבים. קבצים בינאריים (MP4, PDF, תמונות ממוזערות) אינם במסד הנתונים — הם שוכנים במערכת הקבצים של השרת. העמודות filePath ו-thumbnailPath ב-content_items מצביעות עליהם. Prisma ORM ממפה שמות עמודות בssnake_case לTypeScript בcamelCase אוטומטית.">
+      data-notes="השרת מחזיק חמש טבלאות PostgreSQL. ContentItem היא הישות המרכזית — כל פריט תוכן הדרכה שוכן כאן. Category מספקת היררכיה דו-רמתית לארגון הספרייה. Interest מספקת תגיות שטוחות למסנן פיד הריאלס. ContentCategory ו-ContentInterest הן טבלאות צומת לקשרי רבים-לרבים. קבצים בינאריים (MP4, PDF, תמונות ממוזערות) אינם במסד הנתונים — הם שוכנים במערכת הקבצים של השרת. העמודות file_path ו-thumbnail_path ב-content_items מצביעות עליהם. SQLAlchemy ממפה עמודות snake_case למאפייני מודל Python; כל שינוי סכמה עובר דרך מיגרציות Alembic.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">צד שרת</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">ישויות <span class="highlight-g">צד-שרת</span></h1>
@@ -280,14 +280,14 @@
                   <tbody>
                     <tr><td>טבלאות DB</td><td class="muted">snake_case רבים</td><td class="mono">content_items</td></tr>
                     <tr><td>עמודות DB</td><td class="muted">snake_case</td><td class="mono">file_size, parent_id</td></tr>
-                    <tr><td>TypeScript</td><td class="muted">PascalCase (טיפוסים)</td><td class="mono">ContentItem</td></tr>
+                    <tr><td>Python (Pydantic)</td><td class="muted">PascalCase (מודלים)</td><td class="mono">ContentItem</td></tr>
                     <tr><td>סוג PK</td><td class="muted">UUID</td><td class="mono">crypto.randomUUID()</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
             <div class="note-box">
-              <strong>ORM:</strong> Prisma ממפה snake_case ↔ camelCase אוטומטית. כל שינוי סכמה עובר דרך מיגרציות עם גרסאות — אין ALTER TABLE ספונטני.
+              <strong>ORM:</strong> SQLAlchemy ממפה עמודות למאפייני מודל Python. כל שינוי סכמה עובר דרך מיגרציות Alembic — אין ALTER TABLE ספונטני.
             </div>
           </div>
         </div>
@@ -673,7 +673,7 @@ ContentItem ---- M:N ---- Category
          שקופית 12 — CachedCatalog
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="12"
-      data-notes="CachedCatalog היא המראה המקומית של קטלוג השרת. זוהי רשומה יחידה המכילה שלושה מערכים — items, categories, ו-interests — בתוספת חותמת זמן lastSyncedAt. היא מוחלפת לחלוטין בכל משיכת סנכרון. צורות TypeScript מוגדרות ב-packages/shared. ContentItemDTO הוא הטיפוס המרכזי — שימו לב שהוא כולל categoryIds ו-interestIds כמערכים (לא כטבלאות צומת). דה-נורמליזציה זו מכוונת: הקצה מבצע את כל הסינון בזיכרון ב-JavaScript באמצעות מערכים אלו. ContentItemDTO גם מכיל thumbnailUrl (URL, לא נתיב — השרת ממיר filePath ל-URL בתגובת ה-API). כל הסינון לפיד ריאלס, ספרייה וחיפוש מתרחש בזיכרון על blob מאוחסן זה.">
+      data-notes="CachedCatalog היא המראה המקומית של קטלוג השרת. זוהי רשומה יחידה המכילה שלושה מערכים — items, categories, ו-interests — בתוספת חותמת זמן lastSyncedAt. היא מוחלפת לחלוטין בכל משיכת סנכרון. מודלי Pydantic מוגדרים ב-shared/schemas.py. ContentItemDTO הוא המודל המרכזי — שימו לב שהוא כולל category_ids ו-interest_ids כמערכים (לא כטבלאות צומת). דה-נורמליזציה זו מכוונת: הקצה מבצע את כל הסינון בזיכרון ב-JavaScript באמצעות מערכים אלו. ContentItemDTO גם מכיל thumbnail_url (URL, לא נתיב — השרת ממיר file_path ל-URL בתגובת ה-API). כל הסינון לפיד ריאלס, ספרייה וחיפוש מתרחש בזיכרון על blob מאוחסן זה.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">ישות קצה 2/4</p><div class="accent-bar-b"></div></div>
         <h1 class="title-h1"><span class="highlight-b">CachedCatalog</span> — תמונת מצב יחידה</h1>
@@ -695,31 +695,33 @@ ContentItem ---- M:N ---- Category
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
-            <div class="code-block" style="font-size:clamp(0.6rem,0.9vw,0.74rem);">// packages/shared — TypeScript DTO shapes
+            <div class="code-block" style="font-size:clamp(0.6rem,0.9vw,0.74rem);"># shared/schemas.py — Pydantic DTO shapes
+from __future__ import annotations
+from typing import Literal, Optional
+from pydantic import BaseModel
 
-interface ContentItemDTO {
-  id: string;
-  title: string;
-  description: string;
-  type: 'video' | 'pdf';
-  filename: string;
-  fileSize: number;
-  mimeType: string;
-  duration: number | null;
-  thumbnailUrl: string | null; // URL, not path
-  version: number;
-  categoryIds: string[];   // denormalized
-  interestIds: string[];   // denormalized
-  createdAt: string;
-  updatedAt: string;
-}
+class ContentItemDTO(BaseModel):
+    id: str
+    title: str
+    description: str
+    type: Literal['video', 'pdf']
+    filename: str
+    file_size: int
+    mime_type: str
+    duration: Optional[int]      # None for PDF
+    thumbnail_url: Optional[str] # URL, not path
+    version: int
+    category_ids: list[str]      # denormalized
+    interest_ids: list[str]      # denormalized
+    created_at: str
+    updated_at: str
 
-interface CategoryDTO {
-  id: string; name: string;
-  parentId: string | null; sortOrder: number;
-}
+class CategoryDTO(BaseModel):
+    id: str; name: str
+    parent_id: Optional[str]; sort_order: int
 
-interface InterestDTO { id: string; name: string; }</div>
+class InterestDTO(BaseModel):
+    id: str; name: str</div>
           </div>
         </div>
       </div>
@@ -885,7 +887,7 @@ if (existing) {
                 <li><strong>מונה גרסה</strong> (לא גיבוב) מניע תג "עודכן" על הורדות.</li>
                 <li><strong>מחיקה קשיחה בכל מקום.</strong> ללא מחיקה רכה, ללא מצב טיוטה ב-MVP.</li>
                 <li><strong>UUID כ-PK.</strong> מאפשר סנכרון ממקורות מרובים עתידי ללא התנגשות.</li>
-                <li><strong>טיפוסי TS משותפים</strong> ב-<span class="mono highlight-g">packages/shared</span> גושרים שרת ↔ קצה.</li>
+                <li><strong>סכמות Pydantic משותפות</strong> ב-<span class="mono highlight-g">shared/schemas.py</span> גושרים שרת ↔ קצה.</li>
               </ul>
             </div>
           </div>
@@ -893,9 +895,9 @@ if (existing) {
             <div class="card card-b">
               <p class="card-title">צעדים הבאים</p>
               <ul class="bullets bullets-b" style="gap:0.45rem;">
-                <li>מימוש סכמת Prisma התואמת 5 טבלאות + אילוצים אלו</li>
-                <li>כתיבת מיגרציות לכל ישויות השרת לפני כל קוד API</li>
-                <li>הגדרת ממשקי TypeScript DTO משותפים ב-<span class="mono">packages/shared</span></li>
+                <li>מימוש מודלי SQLAlchemy התואמים 5 טבלאות + אילוצים אלו</li>
+                <li>כתיבת מיגרציות Alembic לכל ישויות השרת לפני כל קוד API</li>
+                <li>הגדרת מודלי Pydantic DTO משותפים ב-<span class="mono">shared/schemas.py</span></li>
                 <li>מימוש עטיפת IndexedDB ב-Edge SPA (4 מאגרים)</li>
                 <li>חיבור משיכת קטלוג: <span class="mono">GET /api/catalog</span> → CachedCatalog</li>
               </ul>

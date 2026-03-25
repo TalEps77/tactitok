@@ -286,7 +286,7 @@
          שקופית 4 — אזור 1 — שרת (מהימן)
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="4"
-      data-notes="אזור 1 הוא שרת הענן. כל מה שהצוות בונה ופורס ל-VM הענן נמצא כאן. הוא מקור האמת הסמכותי לכל נתוני הקטלוג וקבצי התוכן. השרת מסיים TLS — כל התעבורה המגיעה לפורט 443 מפוענחת על-ידי nginx, שמעביר לשרת ה-Node.js ב-localhost:3000. מסד PostgreSQL ומאגר הקבצים נגישים רק מ-localhost ב-VM — הם לא נחשפים לרשת ישירות. הגבלת גישת השרת לרשת ידועה (VPN או רשימת IP) מצמצמת משטח התקיפה, אם כי זו החלטת תשתית.">
+      data-notes="אזור 1 הוא שרת הענן. כל מה שהצוות בונה ופורס ל-VM הענן נמצא כאן. הוא מקור האמת הסמכותי לכל נתוני הקטלוג וקבצי התוכן. השרת מסיים TLS — כל התעבורה המגיעה לפורט 443 מפוענחת על-ידי nginx, שמעביר ל-Python FastAPI (uvicorn) ב-localhost:8000. מסד PostgreSQL ומאגר הקבצים נגישים רק מ-localhost ב-VM — הם לא נחשפים לרשת ישירות. הגבלת גישת השרת לרשת ידועה (VPN או רשימת IP) מצמצמת משטח התקיפה, אם כי זו החלטת תשתית.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">אזור 1 — מהימן</p><div class="accent-bar"></div></div>
         <h1 class="title-h1"><span class="highlight-g">אזור 1</span> — שרת</h1>
@@ -438,7 +438,7 @@
               <tr>
                 <td class="highlight-g">ענן: nginx פורט 443</td>
                 <td><span class="badge badge-g">סיום TLS</span></td>
-                <td class="muted">nginx מסיים TLS; מעביר ל-Node.js על localhost:3000</td>
+                <td class="muted">nginx מסיים TLS; מעביר ל-Python FastAPI (uvicorn) על localhost:8000</td>
               </tr>
             </tbody>
           </table>

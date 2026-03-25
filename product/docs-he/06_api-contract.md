@@ -1,10 +1,10 @@
 <!-- RTL -->
 # חוזה API — TactiTok
 
-> **גרסה:** 0.2
+> **גרסה:** 0.3
 > **סטטוס:** טיוטה
-> **עדכון אחרון:** 2026-03-07
-> **יומן שינויים:** v0.2 — נוסף endpoint ‏`GET /api/health` (תיקון N1); שונה URL קובץ תוכן לכלול `?v={version}` לביטול מטמון ה-proxy (תיקון N2); תוקנה הערת ETag (ETag מטפל במטמון הדפדפן בלבד, לא במטמון ה-proxy); עודכן מספר ה-endpoints ל-21.
+> **עדכון אחרון:** 2026-03-25
+> **יומן שינויים:** v0.3 (2026-03-25): הוסרה סעיף ה-TypeScript DTOs. הוחלף בדוגמאות JSON פשוטות. כל 21 נקודות הקצה ללא שינוי. | v0.2 — נוסף endpoint ‏`GET /api/health` (תיקון N1); שונה URL קובץ תוכן לכלול `?v={version}` לביטול מטמון ה-proxy (תיקון N2); תוקנה הערת ETag (ETag מטפל במטמון הדפדפן בלבד, לא במטמון ה-proxy); עודכן מספר ה-endpoints ל-21.
 > **מסמך קודם:** `product/05_data-model.md`
 > **מסמך הבא:** `product/07_delivery-plan.md`
 
@@ -20,7 +20,7 @@
 - את התנהגות ה-HTTP caching וה-streaming
 - את מה שמוחרג בכוונה מה-API של ה-MVP
 
-מסמך זה הוא ההתייחסות המחייבת לצורך מימוש השרת ואינטגרציית הלקוח. סוגי TypeScript משותפים ב-`packages/shared` חייבים להתאים לכל DTO המוגדר כאן. אם קיימת סתירה בין מסמך זה לבין מסמך מודל הנתונים — יש להעלות שאלה פתוחה ולא לסטות בשקט.
+מסמך זה הוא ההתייחסות המחייבת לצורך מימוש השרת ואינטגרציית הלקוח. כל צורות התגובה מוגדרות על ידי דוגמאות ה-JSON בסעיף 8. אם קיימת סתירה בין מסמך זה לבין מסמך מודל הנתונים — יש להעלות שאלה פתוחה ולא לסטות בשקט.
 
 ---
 
@@ -375,7 +375,7 @@ Authorization: Bearer {token}
 }
 ```
 
-*(אותה צורת `ContentItemDTO` כמו פריטי קטלוג.)*
+*(אותה צורת ContentItem כמו פריטי קטלוג — ראה סעיף 8.)*
 
 ---
 
@@ -393,7 +393,7 @@ Authorization: Bearer {token}
 | `categoryIds` | מחרוזת (מערך JSON) | לא | מערך של category UUIDs; ברירת מחדל `[]` |
 | `interestIds` | מחרוזת (מערך JSON) | לא | מערך של interest UUIDs; ברירת מחדל `[]` |
 
-**תגובה: 201 Created** — `ContentItemDTO` מלא עבור הפריט שנוצר.
+**תגובה: 201 Created** — צורת ContentItem המלאה של הפריט שנוצר (ראה סעיף 8).
 
 **שגיאות אימות (400):**
 - ‏`file` חסר
@@ -412,7 +412,7 @@ Authorization: Bearer {token}
 
 מחזיר פריט תוכן יחיד לפי ID.
 
-**תגובה: 200 OK** — `ContentItemDTO`.
+**תגובה: 200 OK** — צורת ContentItem (ראה סעיף 8).
 
 **תגובה: 404 Not Found**
 
@@ -433,7 +433,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**תגובה: 200 OK** — `ContentItemDTO` מעודכן.
+**תגובה: 200 OK** — צורת ContentItem מעודכנת (ראה סעיף 8).
 
 **שגיאות אימות (400):**
 - ‏`title` הוא מחרוזת ריקה (אם סופק)
@@ -551,7 +551,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**תגובה: 201 Created** — `CategoryAdminDTO` מלא.
+**תגובה: 201 Created** — צורת Category המלאה (עם `createdAt` / `updatedAt`; ראה סעיף 8).
 
 **שגיאות אימות (400):**
 - ‏`name` חסר או ריק
@@ -575,7 +575,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**תגובה: 200 OK** — `CategoryAdminDTO` מעודכן.
+**תגובה: 200 OK** — צורת Category מעודכנת (עם `createdAt` / `updatedAt`; ראה סעיף 8).
 
 **שגיאות אימות (400):**
 - שינוי הורה יחרוג מעומק מקסימלי של 2 רמות
@@ -629,7 +629,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**תגובה: 201 Created** — `InterestAdminDTO` מלא.
+**תגובה: 201 Created** — צורת Interest המלאה (עם `createdAt`; ראה סעיף 8).
 
 **שגיאות אימות (400):** ‏`name` חסר או ריק.
 
@@ -649,7 +649,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**תגובה: 200 OK** — `InterestAdminDTO` מעודכן.
+**תגובה: 200 OK** — צורת Interest מעודכנת (עם `createdAt`; ראה סעיף 8).
 
 **תגובה: 404 Not Found**
 
@@ -667,94 +667,78 @@ Authorization: Bearer {token}
 
 ---
 
-## 8. סוגי TypeScript משותפים
+## 8. עיון בצורות תגובה
 
-מוגדרים ב-`packages/shared/src/types.ts`. משמשים את כל החבילות. שרת ולקוח חייבים לייבא מכאן — אין הגדרות מחדש מקומיות.
+אין חבילת סוגים משותפת. כל הצורות מוגדרות על ידי דוגמאות ה-JSON שלהלן.
 
-```typescript
-// ---- סוגי דומיין ----
+### ContentItem (בתגובת קטלוג)
 
-export type ContentType = 'video' | 'pdf';
-
-export interface ContentItemDTO {
-  id: string;
-  title: string;
-  description: string;
-  type: ContentType;
-  filename: string;
-  fileSize: number;              // bytes
-  mimeType: string;
-  duration: number | null;       // seconds; null for PDF
-  thumbnailUrl: string | null;   // relative URL or null
-  version: number;
-  categoryIds: string[];
-  interestIds: string[];
-  createdAt: string;             // ISO 8601
-  updatedAt: string;             // ISO 8601
+```json
+{
+  "id": "uuid-string",
+  "title": "string",
+  "description": "string",
+  "type": "video | pdf",
+  "filename": "string",
+  "fileSize": 12345678,
+  "mimeType": "video/mp4 | application/pdf",
+  "duration": 90,
+  "thumbnailUrl": "/api/content/{id}/thumbnail",
+  "version": 1,
+  "categoryIds": ["uuid", "uuid"],
+  "interestIds": ["uuid"],
+  "createdAt": "2026-01-01T00:00:00Z",
+  "updatedAt": "2026-01-01T00:00:00Z"
 }
+```
 
-export interface CategoryDTO {
-  id: string;
-  name: string;
-  parentId: string | null;
-  sortOrder: number;
+### Category
+
+```json
+{
+  "id": "uuid-string",
+  "name": "string",
+  "parentId": "uuid-string | null",
+  "sortOrder": 0
 }
+```
 
-export interface CategoryAdminDTO extends CategoryDTO {
-  createdAt: string;
-  updatedAt: string;
+### Interest
+
+```json
+{
+  "id": "uuid-string",
+  "name": "string"
 }
+```
 
-export interface InterestDTO {
-  id: string;
-  name: string;
+### תגובת קטלוג
+
+```json
+{
+  "syncedAt": "2026-01-01T00:00:00Z",
+  "items": [ /* מערך של ContentItem */ ],
+  "categories": [ /* מערך של Category */ ],
+  "interests": [ /* מערך של Interest */ ]
 }
+```
 
-export interface InterestAdminDTO extends InterestDTO {
-  createdAt: string;
-}
+### אימות
 
-// ---- קטלוג ----
+**בקשת כניסה:**
+```json
+{ "password": "string" }
+```
 
-export interface CatalogResponse {
-  syncedAt: string;
-  items: ContentItemDTO[];
-  categories: CategoryDTO[];
-  interests: InterestDTO[];
-}
+**תגובת כניסה:**
+```json
+{ "token": "string", "expiresAt": "2026-01-01T08:00:00Z" }
+```
 
-// ---- אימות ----
+### מעטפת שגיאה
 
-export interface LoginRequest {
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  expiresAt: string;             // ISO 8601
-}
-
-// ---- תגובות עדכון קובץ ----
-
-export interface FileUpdateResponse {
-  id: string;
-  version: number;
-  fileSize: number;
-  updatedAt: string;
-}
-
-export interface ThumbnailUpdateResponse {
-  id: string;
-  thumbnailUrl: string;
-  updatedAt: string;
-}
-
-// ---- שגיאות ----
-
-export interface ApiError {
-  error: string;
-  code?: string;
-}
+```json
+{ "error": "הודעה קריאה לאדם", "code": "ERROR_CODE" }
 ```
 
 ---
@@ -912,6 +896,7 @@ Edge SPA מקבל CatalogResponse:
 
 ## 17. הערות להמשך
 
+- **v0.3: הוסרה סעיף ה-TypeScript DTOs. הוחלף בדוגמאות JSON פשוטות. כל 21 נקודות הקצה ללא שינוי.**
 - **סנכרון דלתא:** להוסיף תמיכת שרת עבור `GET /api/catalog?since={ISO_timestamp}` המחזיר רק פריטים שבהם `updatedAt > since`, בתוספת מערך `deleted: string[]` של IDs שנמחקו לצמיתות. ה-Edge SPA ממזג שינויים ל-IndexedDB במקום להחליף את התמונה המלאה.
 - **Pagination:** להוסיף `?page={n}&limit={n}` ל-`GET /api/admin/content` כאשר הקטלוג גדל מעבר לכ-50 פריטים.
 - **העלאה מקוטעת:** להחליף `multipart/form-data` בפרוטוקול העלאה ניתן-לחידוש `tus` באותו URL endpoint. מחלפים את ה-handler בצד השרת מבלי לשנות את חוזה ה-API של הלקוח.
