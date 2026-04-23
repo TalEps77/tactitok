@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TactiTok Admin Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>העלאת תוכן חדש</h1>
+
+    <form id="uploadForm">
+        
+        <div class="input-group">
+            <label for="contentFile">בחירת קובץ (MP4 או PDF):</label>
+            <input type="file" id="contentFile" name="contentFile" accept="video/mp4, application/pdf" required>
+            
+            <div id="filePreview" class="hidden">
+                <span id="fileNameDisplay"></span>
+                <button type="button" id="removeFileBtn" title="הסר קובץ">✖</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="title">כותרת הסרטון/מסמך:</label>
+            <input type="text" id="title" name="title" placeholder="כתבו כותרת כאן..." required>
+        </div>
+
+        <button type="submit" id="submitBtn">העלה תוכן</button>
+
+    </form>
+
+    <p id="statusMessage"></p>
+
+    <script src="admin.js"></script>
+
+</body>
+</html>

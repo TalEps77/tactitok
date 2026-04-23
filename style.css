@@ -1,0 +1,119 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fafafa;
+    margin: 0;
+    
+    display: flex;
+    flex-direction: column; 
+    align-items: center;    
+    justify-content: space-between; 
+    
+    min-height: 100vh; 
+    padding: 20px 0;   
+    box-sizing: border-box;
+}
+
+/* הכותרת למעלה */
+h1 {
+    font-size: 28px;
+    color: #262626;
+    margin: 0; 
+}
+
+/*  הטופס באמצע */
+#uploadForm {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    width: 90%;
+    max-width: 400px;
+    border: 1px solid #dbdbdb;
+}
+
+/* עיצוב שדות ורכיבים בתוך הטופס */
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+input[type="text"], input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #dbdbdb;
+    border-radius: 6px;
+    background-color: #fafafa;
+    box-sizing: border-box;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #0095f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* הודעת הסטטוס למטה */
+#statusMessage {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    min-height: 24px; /* שומר מקום גם כשאין טקסט */
+}
+
+/*  עזר להסתרת אלמנטים */
+.hidden {
+    display: none !important;
+}
+
+/* אזור התצוגה של הקובץ הנבחר */
+#filePreview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #efefef;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #dbdbdb;
+    margin-bottom: 20px;
+}
+
+/* שם הקובץ */
+#fileNameDisplay {
+    font-size: 14px;
+    color: #262626;
+    overflow: hidden;
+    text-overflow: ellipsis; /* מוסיף 3 נקודות אם השם ארוך מדי */
+    white-space: nowrap;
+    max-width: 85%;
+}
+
+/* כפתור האיקס */
+#removeFileBtn {
+    background: none;
+    border: none;
+    color: #ed4956; 
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    width: auto; 
+}
+
+#removeFileBtn:hover {
+    color: #c9303d;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+input[type="text"]::placeholder {
+    color: #999;
+}

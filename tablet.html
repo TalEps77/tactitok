@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TactiTok Tablet - Library</title>
+    <link rel="stylesheet" href="tablet.css">
+</head>
+<body>
+
+<div class="tt-wrap">
+  <div class="tt-device">
+    
+    <div class="tt-tabs">
+      <div class="tt-tab" onclick="ttTab('reels',this)">Reels</div>
+      <div class="tt-tab active" id="library-tab" onclick="ttTab('library',this)">Library</div>
+      <div class="tt-tab" onclick="ttTab('downloads',this)">Downloads</div>
+    </div>
+
+    <div class="tt-panel" id="tt-reels">
+        <div class="tt-reel" style="display: flex; align-items: center; justify-content: center; color: white;">
+            תצוגת Reels (ספרינט 3)
+        </div>
+    </div>
+
+    <div class="tt-panel active" id="tt-library">
+      <div class="tt-lib">
+        
+        <div class="tt-actions">
+            <input class="tt-search" type="text" placeholder="חיפוש תכנים..." oninput="ttSearch(this.value)">
+            <button class="tt-refresh-btn" onclick="handleRefresh()" title="רענן קטלוג">
+                ↻
+            </button>
+        </div>
+        
+        <div id="tt-cats"></div>
+      </div>
+    </div>
+
+    <div class="tt-panel" id="tt-downloads">
+      <div class="tt-dls">
+        <div class="tt-offline-bar">אין חיבור לענן - מציג קבצים מהמטמון</div>
+        <div id="download-list"></div>
+      </div>
+    </div>
+    
+  </div> <div id="contentModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <div id="playerContainer"></div>
+        <h2 id="modalTitle"></h2>
+    </div>
+  </div>
+
+</div>
+
+<script src="tablet.js"></script>
+
+<script>
+function ttTab(name, el) {
+  document.querySelectorAll('.tt-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tt-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tt-' + name).classList.add('active');
+}
+</script>
+
+</body>
+</html>
