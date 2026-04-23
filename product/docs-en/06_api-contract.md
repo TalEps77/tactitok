@@ -1,9 +1,9 @@
 # API Contract — TactiTok
 
-> **Version:** 0.3
+> **Version:** 0.4
 > **Status:** Draft
-> **Last updated:** 2026-03-25
-> **Change log:** v0.3 (2026-03-25): Removed TypeScript DTO section (packages/shared eliminated). Replaced with plain JSON response shape examples. All 21 endpoints unchanged. | v0.2 — added `GET /api/health` endpoint (N1 fix); changed content file URL to include `?v={version}` for proxy cache-busting (N2 fix); corrected ETag note (ETag handles browser cache only, not proxy cache); updated endpoint count to 21.
+> **Last updated:** 2026-04-23
+> **Change log:** v0.4 (2026-04-23): aligned with Data Model v0.4. Content item JSON shape now uses `categoryId` (single nullable value) and `interestIds` (multi-value array). Delete semantics updated for the 3-table schema: category delete sets `categoryId` to `null`; interest delete requires service-layer cleanup of `interestIds`. | v0.3 (2026-03-25): Removed TypeScript DTO section (packages/shared eliminated). Replaced with plain JSON response shape examples. All 21 endpoints unchanged. | v0.2 — added `GET /api/health` endpoint (N1 fix); changed content file URL to include `?v={version}` for proxy cache-busting (N2 fix); corrected ETag note (ETag handles browser cache only, not proxy cache); updated endpoint count to 21.
 > **Preceding document:** `product/05_data-model.md`
 > **Next document:** `product/07_delivery-plan.md`
 
@@ -160,7 +160,7 @@ GET /api/catalog?since=2026-03-01T00:00:00.000Z   (accepted; returns full catalo
       "duration": 120,
       "thumbnailUrl": "/api/content/{id}/thumbnail",
       "version": 1,
-      "categoryIds": ["uuid", "uuid"],
+      "categoryId": "uuid",
       "interestIds": ["uuid"],
       "createdAt": "2026-03-07T09:00:00.000Z",
       "updatedAt": "2026-03-07T09:00:00.000Z"
@@ -194,7 +194,8 @@ GET /api/catalog?since=2026-03-01T00:00:00.000Z   (accepted; returns full catalo
 - `thumbnailUrl` is a relative path; Edge SPA prepends proxy base URL. `null` if no thumbnail was uploaded.
 - `duration` is in seconds; `null` for PDFs.
 - Items are returned `updatedAt` descending (newest first).
-- All arrays may be empty.
+- `categoryId` may be `null` for uncategorized items.
+- `interestIds`, `categories`, and `interests` arrays may be empty.
 
 **Response: 500** — database or server error.
 
@@ -365,7 +366,7 @@ Returns all content items. Sorted `createdAt` descending.
       "duration": 120,
       "thumbnailUrl": "/api/content/{id}/thumbnail",
       "version": 1,
-      "categoryIds": ["uuid"],
+      "categoryId": "uuid",
       "interestIds": ["uuid"],
       "createdAt": "2026-03-07T09:00:00.000Z",
       "updatedAt": "2026-03-07T09:00:00.000Z"
@@ -389,7 +390,7 @@ Upload a new content item. File and metadata submitted together as `multipart/fo
 | `file` | binary | Yes | MP4 or PDF; ≤ 100 MB |
 | `title` | string | Yes | Max 255 chars; non-empty |
 | `description` | string | No | Default: `""` |
-| `categoryIds` | string (JSON array) | No | Array of category UUIDs; default `[]` |
+| `categoryId` | string | No | Single category UUID; omit or send empty string for uncategorized |
 | `interestIds` | string (JSON array) | No | Array of interest UUIDs; default `[]` |
 
 **Response: 201 Created** — full ContentItem shape for the created item (see Section 8).
@@ -400,7 +401,12 @@ Upload a new content item. File and metadata submitted together as `multipart/fo
 - File extension does not match MIME type
 - File size > 100 MB
 - `title` missing or empty
-- `categoryIds` / `interestIds` contain non-existent UUIDs
+- `categoryId` references a non-existent category
+- `interestIds` contain non-existent UUIDs
+
+**Normalization:**
+- Duplicate values in `interestIds` are removed server-side.
+- `interestIds` are normalized into ascending UUID order before persistence.
 
 **Video-specific validation:**
 - Duration > 180 seconds → `400` (if duration parsing is implemented; treat as soft constraint if not ready in sprint)
@@ -427,7 +433,7 @@ Update content metadata only. Does not replace the file. All fields are optional
 {
   "title": "string",
   "description": "string",
-  "categoryIds": ["uuid"],
+  "categoryId": "uuid",
   "interestIds": ["uuid"]
 }
 ```
@@ -436,7 +442,8 @@ Update content metadata only. Does not replace the file. All fields are optional
 
 **Validation errors (400):**
 - `title` is empty string (if provided)
-- `categoryIds` / `interestIds` contain non-existent UUIDs
+- `categoryId` references a non-existent category
+- `interestIds` contain non-existent UUIDs
 
 **Response: 404 Not Found**
 
@@ -503,7 +510,7 @@ Upload or replace the thumbnail image for a content item.
 
 #### DELETE /api/admin/content/:id
 
-Delete a content item. Hard delete — removes the database record, the content file from the filesystem, and the thumbnail (if any). Junction rows (`content_categories`, `content_interests`) are cascade-deleted by the database.
+Delete a content item. Hard delete — removes the database record, the content file from the filesystem, and the thumbnail (if any). Category and interest assignment disappear with the deleted row.
 
 **Response: 204 No Content**
 
@@ -586,7 +593,7 @@ Update a category. All fields optional.
 
 #### DELETE /api/admin/categories/:id
 
-Delete a category. **Cascade-deletes** all child categories and removes all `content_categories` junction rows for the deleted category and its children. Content items themselves are not deleted — they become uncategorized.
+Delete a category. **Cascade-deletes** all child categories. Any `content_items.category_id` that references the deleted category (or a deleted child) is set to `NULL` by the database. Content items themselves are not deleted — they become uncategorized.
 
 **Response: 204 No Content**
 
@@ -658,7 +665,7 @@ Rename an interest.
 
 #### DELETE /api/admin/interests/:id
 
-Delete an interest. Removes all `content_interests` junction rows. Edge device profiles with stale `selectedInterestIds` references are cleaned up by the SPA on next sync (filter absent IDs from catalog).
+Delete an interest. The service layer first removes the deleted UUID from every `content_items.interest_ids` array, then deletes the `interests` row. Edge device profiles with stale `selectedInterestIds` references are cleaned up by the SPA on next sync (filter absent IDs from catalog).
 
 **Response: 204 No Content**
 
@@ -684,7 +691,7 @@ No shared types package. All shapes are defined by the JSON examples below.
   "duration": 90,
   "thumbnailUrl": "/api/content/{id}/thumbnail",
   "version": 1,
-  "categoryIds": ["uuid", "uuid"],
+  "categoryId": "uuid-string | null",
   "interestIds": ["uuid"],
   "createdAt": "2026-01-01T00:00:00Z",
   "updatedAt": "2026-01-01T00:00:00Z"
@@ -801,11 +808,11 @@ After a successful catalog sync, the Edge SPA must:
 
 | Constraint | Value | Enforcement |
 |-----------|-------|-------------|
-| Max content file size | 100 MB | Multer server config + client-side pre-check |
+| Max content file size | 100 MB | FastAPI upload validation + client-side pre-check |
 | Allowed video MIME | `video/mp4` | Server: MIME type + magic-byte check |
 | Allowed document MIME | `application/pdf` | Server: MIME type + magic-byte check |
 | Max video duration | 180 s (3 min) | Server: soft constraint (validate if feasible in sprint) |
-| Max thumbnail size | 5 MB | Server: Multer config + client-side pre-check |
+| Max thumbnail size | 5 MB | FastAPI upload validation + client-side pre-check |
 | Allowed thumbnail MIMEs | `image/jpeg`, `image/png`, `image/webp` | Server: MIME type + extension check |
 
 **MIME validation approach:** Check both the `Content-Type` header from the client and the file's magic bytes using a library such as `file-type`. Magic bytes are the authoritative check — the client-provided MIME type alone is insufficient.
@@ -851,8 +858,9 @@ After a successful catalog sync, the Edge SPA must:
 | AC3 | MIME type + magic-byte validation is sufficient for file security in a controlled demo environment | Structured content attack still possible; acceptable for MVP |
 | AC4 | JWT is stateless; admin logout is client-side token discard only | If revocation is needed, add a server-side blocklist |
 | AC5 | Admin always operates on a stable network; multipart upload without chunking is acceptable | Large file uploads may time out; add chunked upload if needed |
-| AC6 | 8-hour token expiry suits a typical admin session | Adjust if longer sessions are needed; add refresh endpoint later |
-| AC7 | `proxy_ignore_headers Cache-Control` on the catalog route works without side effects | Test nginx behaviour; alternative: server sets `Cache-Control: public, max-age=0` |
+| AC6 | One category per content item is acceptable for MVP library organization | Multi-placement would require schema change later |
+| AC7 | PostgreSQL `UUID[]` is acceptable for interest assignment in MVP | If interest queries or metadata become more complex, reintroduce a normalized junction table |
+| AC8 | `proxy_ignore_headers Cache-Control` on the catalog route works without side effects | Test nginx behaviour; alternative: server sets `Cache-Control: public, max-age=0` |
 
 ---
 
@@ -862,10 +870,10 @@ After a successful catalog sync, the Edge SPA must:
 |---|------|-----------|--------|-----------|
 | CR1 | nginx `proxy_cache` does not cache content when Chrome's first request includes a `Range` header | Medium | High | Test in sprint 1; configure `proxy_cache_key` to ignore the `Range` header; or force a full-file pre-fetch to warm the cache |
 | CR2 | Old `?v={version}` cache entries accumulate in proxy cache disk (one entry per version per file) | Low | Low | Entries expire after 30 days `inactive` timeout; acceptable for MVP with ≤15 items and infrequent updates |
-| CR3 | 100 MB multipart upload times out under default Express/Multer config | Low | Medium | Set generous upload timeout (e.g., 10 min) on upload routes; test with a 100 MB file |
+| CR3 | 100 MB multipart upload times out under default FastAPI / reverse-proxy config | Low | Medium | Set generous upload timeout (e.g., 10 min) on upload routes; test with a 100 MB file |
 | CR4 | MIME type validation bypass (rename `.exe` to `.mp4`) | Medium | Medium | Use magic-byte check (`file-type` library) in addition to MIME header |
 | CR5 | Catalog JSON grows unexpectedly large as content count increases | Low (MVP) | Low | `?since` param accepted from day one; add pagination as needed |
-| CR6 | Deleting an interest leaves stale `selectedInterestIds` in edge DeviceProfile | Medium | Low | Edge SPA filters selected interests against catalog on every sync |
+| CR6 | Deleting an interest leaves stale IDs in both `content_items.interest_ids` and edge `selectedInterestIds` | Medium | Medium | Interest deletion runs array cleanup in one DB transaction; edge SPA filters selected interests against catalog on every sync |
 
 ---
 

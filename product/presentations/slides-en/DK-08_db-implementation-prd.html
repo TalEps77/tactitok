@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DK-08 - DB Implementation PRD</title>
+  <style>
+    :root {
+      --bg: #09111f;
+      --panel: #101c31;
+      --panel-soft: #12233e;
+      --text: #e9f1ff;
+      --muted: #9db0cc;
+      --green: #6ee7b7;
+      --blue: #8ec5ff;
+      --amber: #f8c56c;
+      --line: rgba(157, 176, 204, 0.22);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-snap-type: y mandatory; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(110, 231, 183, 0.12), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(142, 197, 255, 0.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+    main { width: 100%; }
+    .slide {
+      min-height: 100vh;
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+      scroll-snap-align: start;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 12px;
+      color: var(--green);
+      margin: 0;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(36px, 6vw, 62px); line-height: 1.05; }
+    h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; }
+    p, li { color: var(--muted); font-size: 18px; line-height: 1.55; }
+    .lede { max-width: 920px; font-size: 22px; color: var(--text); }
+    .badge-row, .list-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(16, 28, 49, 0.96), rgba(12, 22, 38, 0.92));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px;
+    }
+    .card h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    .table th, .table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    .table th {
+      color: var(--green);
+      font-weight: 700;
+    }
+    .mono {
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .code {
+      background: rgba(0, 0, 0, 0.24);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      color: var(--blue);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    ul { margin: 0; padding-left: 20px; }
+    .accent { color: var(--green); }
+    .accent-2 { color: var(--blue); }
+    .accent-3 { color: var(--amber); }
+    @media (max-width: 900px) {
+      .slide { padding: 32px 20px; }
+      .grid { grid-template-columns: 1fr; }
+      p, li { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="slide">
+      <p class="eyebrow">DK-08 · DB Implementation PRD</p>
+      <h1>Implementing the <span class="accent">3-table</span> server schema</h1>
+      <p class="lede">This deck translates the revised DB PRD into build-ready implementation guidance: 3 PostgreSQL tables, direct <span class="mono">category_id</span> assignment, array-based <span class="mono">interest_ids</span>, and clear service-layer cleanup rules.</p>
+      <div class="badge-row">
+        <span class="badge">Source: <span class="mono">05_data-model.md</span></span>
+        <span class="badge">Source: <span class="mono">08_db-implementation-prd.md</span></span>
+        <span class="badge">Version 1.1</span>
+        <span class="badge">April 23, 2026</span>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Architecture</p>
+      <h2>What changed in the implementation model</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Old normalized shape</h3>
+          <ul>
+            <li>5 server tables</li>
+            <li>Two assignment tables for category and interest links</li>
+            <li>DB-level integrity for both dimensions</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>New MVP shape</h3>
+          <ul>
+            <li><span class="mono">content_items</span>, <span class="mono">categories</span>, <span class="mono">interests</span></li>
+            <li><span class="mono">content_items.category_id</span> is a nullable FK</li>
+            <li><span class="mono">content_items.interest_ids</span> is a PostgreSQL <span class="mono">UUID[]</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Integrity split</h3>
+          <ul>
+            <li>Category validity stays in the database</li>
+            <li>Interest validity moves to application services</li>
+            <li>Delete-interest cleanup becomes explicit service behavior</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Why this is acceptable for MVP</h3>
+          <ul>
+            <li>Fewer tables and fewer ORM relationships</li>
+            <li>Simpler migration story for a 3-person team</li>
+            <li>Still continuation-friendly if normalization is needed later</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Repo Layout</p>
+      <h2>Files and ownership</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Models</h3>
+          <div class="code">server/app/models/
+  content_item.py
+  category.py
+  interest.py</div>
+        </div>
+        <div class="card">
+          <h3>Services</h3>
+          <div class="code">server/app/services/
+  catalog_service.py
+  category_service.py
+  interest_service.py</div>
+        </div>
+        <div class="card">
+          <h3>Migrations</h3>
+          <div class="code">server/alembic/versions/
+  0001_enable_uuid_extension.py
+  0002_create_core_tables.py
+  0003_add_indexes.py</div>
+        </div>
+        <div class="card">
+          <h3>Shared DTO contract</h3>
+          <ul>
+            <li><span class="mono">categoryId</span> is singular in API and DTOs</li>
+            <li><span class="mono">interestIds</span> remains an array</li>
+            <li><span class="mono">DeviceProfile.selectedInterestIds</span> stays unchanged on the edge</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Models</p>
+      <h2>What the SQLAlchemy layer must express</h2>
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr><th>Model</th><th>Key fields</th><th>Implementation note</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">ContentItem</td>
+              <td><span class="mono">category_id</span>, <span class="mono">interest_ids</span>, file metadata, <span class="mono">version</span>, timestamps</td>
+              <td>Use <span class="mono">MutableList.as_mutable(ARRAY(UUID))</span> so in-place list edits are tracked.</td>
+            </tr>
+            <tr>
+              <td class="mono">Category</td>
+              <td><span class="mono">parent_id</span>, <span class="mono">sort_order</span>, timestamps</td>
+              <td>Self-referential FK with cascade on child categories; depth limit remains app logic.</td>
+            </tr>
+            <tr>
+              <td class="mono">Interest</td>
+              <td><span class="mono">name</span>, <span class="mono">created_at</span></td>
+              <td>No ORM link table. Service code owns cleanup of array references.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code">category_id = mapped_column(
+    UUID(as_uuid=True),
+    ForeignKey("categories.id", ondelete="SET NULL"),
+    nullable=True,
+)
+
+interest_ids = mapped_column(
+    MutableList.as_mutable(ARRAY(UUID(as_uuid=True))),
+    nullable=False,
+    server_default="{}",
+)</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Migrations</p>
+      <h2>Migration and indexing plan</h2>
+      <div class="grid">
+        <div class="card">
+          <h3><span class="accent-2">0001</span> Enable UUID extension</h3>
+          <p>Prepare PostgreSQL UUID generation support used by all 3 tables.</p>
+        </div>
+        <div class="card">
+          <h3><span class="accent-2">0002</span> Create core tables</h3>
+          <p>Create <span class="mono">content_items</span>, <span class="mono">categories</span>, and <span class="mono">interests</span> with FK and array columns.</p>
+        </div>
+        <div class="card">
+          <h3><span class="accent-2">0003</span> Add indexes</h3>
+          <ul>
+            <li><span class="mono">idx_content_type</span></li>
+            <li><span class="mono">idx_content_updated</span></li>
+            <li><span class="mono">idx_content_category</span></li>
+            <li><span class="mono">gin_content_interest_ids</span></li>
+            <li>Keep category tree/search indexes from the PRD</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Query guidance</h3>
+          <div class="code"># category filter
+WHERE category_id = :category_id
+
+# interest filter
+WHERE interest_ids && :interest_ids</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Services</p>
+      <h2>Where the application layer now matters most</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Catalog writes</h3>
+          <ul>
+            <li>Validate every UUID in <span class="mono">interestIds</span></li>
+            <li>Reject unknown interests before save</li>
+            <li>Dedupe and sort array values for stable writes</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Category delete</h3>
+          <ul>
+            <li>Child categories still cascade through <span class="mono">categories.parent_id</span></li>
+            <li>Affected content becomes uncategorized automatically</li>
+            <li>No content rows are deleted by category removal</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Interest delete</h3>
+          <ul>
+            <li>Run array cleanup before deleting the interest row</li>
+            <li>Use PostgreSQL <span class="mono">array_remove</span> in a bulk update</li>
+            <li>Edge-selected IDs are cleaned on next sync</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Tests that must exist</h3>
+          <ul>
+            <li>Model defaults and index presence</li>
+            <li>Interest array validation and normalization</li>
+            <li>Category delete sets <span class="mono">category_id</span> to null</li>
+            <li>Interest delete removes UUIDs from all arrays</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Definition of Done</p>
+      <h2>Implementation checklist</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Must be true</h3>
+          <ul>
+            <li>3-table schema matches the PRD and API contract</li>
+            <li>No DTO still exposes a plural category array field</li>
+            <li>No code assumes separate assignment tables still exist</li>
+            <li>Delete semantics are tested end to end</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Still out of scope</h3>
+          <ul>
+            <li>User accounts</li>
+            <li>Soft delete</li>
+            <li>Richer metadata on interest assignment</li>
+            <li>Normalization beyond what MVP needs</li>
+          </ul>
+        </div>
+      </div>
+      <p class="lede">If future analytics or richer assignment metadata demand it, <span class="accent-3">normalize later</span>. The MVP implementation now optimizes for delivery speed and clarity.</p>
+    </section>
+  </main>
+</body>
+</html>

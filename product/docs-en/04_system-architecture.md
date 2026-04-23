@@ -245,9 +245,9 @@ tactitok/
 
 | Service | Responsibility |
 |---------|---------------|
-| **CatalogService** | CRUD for content metadata; search (title + description); filter by category/interest |
+| **CatalogService** | CRUD for content metadata; search (title + description); filter by single category and multi-value interests; normalize `interestIds` before save |
 | **CategoryService** | CRUD for category tree; enforce 2-level max; reorder |
-| **InterestService** | CRUD for flat interest tags |
+| **InterestService** | CRUD for flat interest tags; remove deleted interest IDs from `content_items.interest_ids` before delete |
 | **ContentFileService** | Store/retrieve/delete files via storage abstraction; generate content-id |
 | **AuthService** | Validate admin password; issue/validate session tokens |
 | **SyncService** | Serve full catalog snapshot for edge sync requests |
@@ -258,9 +258,9 @@ tactitok/
 
 | Responsibility | Details |
 |---------------|---------|
-| **Metadata storage** | Content items, categories, interests, content-category/interest mappings |
+| **Metadata storage** | Content items, categories, interests; `content_items` stores `category_id` and `interest_ids UUID[]` directly |
 | **Schema management** | Alembic migrations (versioned migration files; applied via `alembic upgrade head`) |
-| **Query support** | Text search (PostgreSQL `ILIKE` or `tsvector`); category tree queries; interest filtering |
+| **Query support** | Text search (PostgreSQL `ILIKE` or `tsvector`); category tree queries; `category_id` lookup; `interest_ids` array-overlap filtering |
 
 *(No changes from v0.1)*
 

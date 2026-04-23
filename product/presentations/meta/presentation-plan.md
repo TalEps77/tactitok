@@ -110,9 +110,9 @@ These decks are mandatory — without them the project cannot be properly evalua
 7. The edge proxy — why nginx caching instead of Service Worker
 8. How content reaches the edge (DG-05 simplified flow)
 9. How offline works (DG-08 or DG-09 — cache states)
-10. The data model — 9 entities, 2 storage locations (DG-04 ERD)
+10. The data model — 7 modeled entities/stores, 2 storage locations (DG-04 ERD)
 11. API surface overview (from doc 06 when available)
-12. Technology stack choices (TypeScript monorepo, HTML/TS, Node, PostgreSQL — AD1–AD12)
+12. Technology stack choices (vanilla HTML/CSS/JS, Python/FastAPI, PostgreSQL, nginx — AD1–AD12)
 13. What was explicitly deferred and why (from §14 of Architecture)
 14. Continuation architecture: how to extend without rewrites
 15. Key risks and mitigations
@@ -205,7 +205,7 @@ These decks serve specific audiences or purposes but are not needed for the MVP 
 
 | Field | Value |
 |-------|-------|
-| **Purpose** | Detailed walkthrough of all 9 entities, their fields, constraints, and relationships — for developers during implementation |
+| **Purpose** | Detailed walkthrough of all 7 modeled entities/stores, their fields, constraints, and relationships — for developers during implementation |
 | **Primary audience** | The 3 student developers |
 | **Format** | Reference slides; ~15 slides |
 | **Source basis** | `05_data-model.md` §5–12, diagram DG-04 |

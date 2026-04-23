@@ -340,7 +340,7 @@ pip install -r requirements.txt
 # 3. Create the database
 createdb tactitok
 
-# 4. Run migrations (creates all 5 tables)
+# 4. Run migrations (creates all 3 tables)
 alembic upgrade head
 
 # 5. Seed development data
@@ -410,17 +410,17 @@ docker run -p 8080:8080 \
          SLIDE 7 — DATA MODEL: SERVER
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="7"
-      data-notes="Five server entities in PostgreSQL. ContentItem is the central entity — everything else links to it. Category has a self-referential FK for 2-level hierarchy (parentId is null for roots). ContentCategory and ContentInterest are junction tables — cascade-deleted when a content item is deleted. All PKs are UUIDs. Version is a counter that increments on file replacement — this drives cache-busting on the edge proxy via the ?v= query param. Source: product/05_data-model.md.">
+      data-notes="Three server tables in PostgreSQL. ContentItem is the central table and stores both category assignment and interest assignment directly. Category has a self-referential FK for 2-level hierarchy (parentId is null for roots). Interest is a flat admin-managed list. categoryId is enforced by a DB foreign key; interestIds is a UUID array validated and normalized in the service layer. All PKs are UUIDs. Version is a counter that increments on file replacement — this drives cache-busting on the edge proxy via the ?v= query param. Source: product/05_data-model.md.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Data Model — Server &middot; DG-04</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">Five PostgreSQL Entities, <span class="highlight-g">Content-Item Central</span></h1>
+        <h1 class="title-h1">Three PostgreSQL Tables, <span class="highlight-g">Content-Item Central</span></h1>
         <div class="two-col" style="align-items:start;">
           <table class="data-table">
             <thead><tr><th>Entity</th><th>Key Fields</th></tr></thead>
             <tbody>
               <tr>
                 <td><strong>ContentItem</strong></td>
-                <td class="muted">id (UUID PK), title, description, type (video|pdf), filename, fileSize, mimeType, duration (null for PDF), thumbnailPath, <strong>version</strong>, createdAt, updatedAt</td>
+                <td class="muted">id (UUID PK), title, description, type (video|pdf), filename, fileSize, mimeType, duration (null for PDF), thumbnailPath, <strong>categoryId</strong> (nullable FK), <strong>interestIds</strong> (UUID[]), <strong>version</strong>, createdAt, updatedAt</td>
               </tr>
               <tr>
                 <td><strong>Category</strong></td>
@@ -430,14 +430,6 @@ docker run -p 8080:8080 \
                 <td><strong>Interest</strong></td>
                 <td class="muted">id, name (UNIQUE), createdAt — flat list, no hierarchy</td>
               </tr>
-              <tr>
-                <td><strong>ContentCategory</strong></td>
-                <td class="muted">contentId (FK), categoryId (FK) — M:N junction; cascade delete on content delete</td>
-              </tr>
-              <tr>
-                <td><strong>ContentInterest</strong></td>
-                <td class="muted">contentId (FK), interestId (FK) — M:N junction; cascade delete on content delete</td>
-              </tr>
             </tbody>
           </table>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
@@ -445,6 +437,8 @@ docker run -p 8080:8080 \
               <p class="card-title">Modeling Principles</p>
               <ul class="bullets" style="margin-top:0.3rem;">
                 <li>One binary file per content item (no multi-file)</li>
+                <li>Exactly zero or one category per content item</li>
+                <li>Many interests per content item via UUID array</li>
                 <li>Hard delete — removes DB record + file + thumbnail</li>
                 <li><strong>version counter</strong>, not version history</li>
                 <li>UUIDs for all PKs — future multi-source sync ready</li>
@@ -1059,7 +1053,7 @@ curl http://localhost:8080/api/health</div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/02_system-boundaries.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">What is in and out of system</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/03_mvp-spec.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Feature list, demo script, acceptance criteria</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/04_system-architecture.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">AD1–AD12, component map, continuation notes</span></div>
-            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">9 entities, field types, constraints</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">7 modeled entities/stores, field types, constraints</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/06_api-contract.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">21 endpoints, DTOs, auth model</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/07_delivery-plan.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">Sprint plan, risks, de-scope levers</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/visuals/diagram-index.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-left:auto;">All 17 diagrams with Excalidraw links</span></div>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DK-08b - טבלאות סכמת DB</title>
+  <style>
+    :root {
+      --bg: #0a1220;
+      --panel: #0f1a30;
+      --text: #eef4ff;
+      --muted: #9caec9;
+      --green: #6ee7b7;
+      --line: rgba(156, 174, 201, 0.22);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-snap-type: y mandatory; }
+    body {
+      margin: 0;
+      font-family: "Heebo", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 85% 15%, rgba(110,231,183,0.12), transparent 28%),
+        radial-gradient(circle at 15% 85%, rgba(156,201,255,0.12), transparent 25%),
+        var(--bg);
+      color: var(--text);
+    }
+    .slide {
+      min-height: 100vh;
+      padding: 52px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      scroll-snap-align: start;
+    }
+    h1, h2, h3, p { margin: 0; }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-size: 12px;
+      color: var(--green);
+    }
+    h1 { font-size: clamp(36px, 6vw, 60px); }
+    h2 { font-size: clamp(28px, 4vw, 40px); }
+    p, li { font-size: 18px; line-height: 1.55; color: var(--muted); }
+    .lede { color: var(--text); max-width: 900px; font-size: 22px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .card {
+      background: rgba(15, 26, 48, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+    }
+    .card h3 { margin-bottom: 10px; color: var(--text); }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .badge {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      font-size: 14px;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    .table th, .table td {
+      text-align: right;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    .table th { color: var(--green); }
+    .mono {
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      color: var(--text);
+      font-size: 15px;
+      direction: ltr;
+      display: inline-block;
+    }
+    ul { margin: 0; padding-right: 20px; }
+    @media (max-width: 900px) {
+      .slide { padding: 32px 20px; }
+      .grid { grid-template-columns: 1fr; }
+      p, li { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <p class="eyebrow">DK-08b · טבלאות סכמת DB</p>
+    <h1>3 טבלאות <span style="color:var(--green)">PostgreSQL</span></h1>
+    <p class="lede">זהו מסמך העזר הקצר הנלווה ל-DK-08: איך כל טבלה נראית, למה כל עמודה קיימת, ואילו אילוצים חשוב לזכור בזמן המימוש.</p>
+    <div class="badge-row">
+      <span class="badge">3 טבלאות שרת</span>
+      <span class="badge">מודל שיוך ישיר</span>
+      <span class="badge">מסמך נלווה ל-DK-08</span>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">סקירה</p>
+    <h2>מבט מהיר על הסכמה</h2>
+    <div class="grid">
+      <div class="card">
+        <h3><span class="mono">content_items</span></h3>
+        <p>מטאדטת התוכן הראשית יחד עם שדות שיוך ישירים:</p>
+        <ul>
+          <li><span class="mono">category_id</span> = קטגוריה אחת אופציונלית</li>
+          <li><span class="mono">interest_ids</span> = מערך UUID של תחומי עניין</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="mono">categories</span></h3>
+        <p>היררכיית ספרייה דו-רמתית באמצעות <span class="mono">parent_id</span>.</p>
+      </div>
+      <div class="card">
+        <h3><span class="mono">interests</span></h3>
+        <p>רשימת lookup שטוחה שמנוהלת בידי אדמין ומשמשת להתאמה אישית.</p>
+      </div>
+      <div class="card">
+        <h3>סמנטיקת מחיקה</h3>
+        <ul>
+          <li>מחיקת קטגוריה → התוכן הופך ל"לא מסווג"</li>
+          <li>מחיקת עניין → השירות מסיר קודם את ה-UUID מהמערכים</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">טבלה 1</p>
+    <h2><span class="mono">content_items</span></h2>
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr><th>עמודה</th><th>סוג</th><th>למה היא קיימת</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>מזהה תוכן יציב</td></tr>
+          <tr><td class="mono">title, description</td><td>text</td><td>מטאדטה לפיד, ספרייה וחיפוש</td></tr>
+          <tr><td class="mono">type</td><td class="mono">ENUM(video,pdf)</td><td>שולט בהתנהגות ובאימות</td></tr>
+          <tr><td class="mono">filename, file_path, file_size, mime_type</td><td>text / bigint</td><td>מטאדטת מערכת קבצים בלבד; הבינארי נשאר מחוץ ל-DB</td></tr>
+          <tr><td class="mono">duration, thumbnail_path</td><td>nullable int / text</td><td>משך וידאו ותמונה ממוזערת אופציונלית</td></tr>
+          <tr><td class="mono">category_id</td><td class="mono">UUID NULL</td><td>FK לקטגוריה אחת אופציונלית</td></tr>
+          <tr><td class="mono">interest_ids</td><td class="mono">UUID[]</td><td>שיוך מרובה לתחומי עניין; מאומת בשכבת השירות</td></tr>
+          <tr><td class="mono">version</td><td class="mono">int</td><td>מעקב אחרי עדכונים לצורכי סנכרון והורדות</td></tr>
+          <tr><td class="mono">created_at, updated_at</td><td class="mono">timestamptz</td><td>שדות audit וסדר</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">טבלה 2</p>
+    <h2><span class="mono">categories</span></h2>
+    <div class="grid">
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr><th>עמודה</th><th>סוג</th><th>תפקיד</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>מזהה קטגוריה יציב</td></tr>
+            <tr><td class="mono">name</td><td>text</td><td>שם הקטגוריה בממשק הניהול</td></tr>
+            <tr><td class="mono">parent_id</td><td class="mono">UUID NULL</td><td>הפניה עצמית לעץ דו-רמתי</td></tr>
+            <tr><td class="mono">sort_order</td><td class="mono">int</td><td>סדר תצוגה בספרייה</td></tr>
+            <tr><td class="mono">created_at, updated_at</td><td class="mono">timestamptz</td><td>מעקב שינויים</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>אילוצים מרכזיים</h3>
+        <ul>
+          <li><span class="mono">UNIQUE(parent_id, name)</span> למניעת כפילויות בין אחים</li>
+          <li><span class="mono">parent_id</span> מבצע cascade לקטגוריות ילד</li>
+          <li>מגבלת עומק 2 נשארת לוגיקת אפליקציה</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">טבלה 3</p>
+    <h2><span class="mono">interests</span></h2>
+    <div class="grid">
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr><th>עמודה</th><th>סוג</th><th>תפקיד</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>מזהה עניין יציב</td></tr>
+            <tr><td class="mono">name</td><td>text</td><td>תווית עניין שטוחה וייחודית גלובלית</td></tr>
+            <tr><td class="mono">created_at</td><td class="mono">timestamptz</td><td>שדה עזר לניהול/מעקב</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>הבדל חשוב</h3>
+        <p>קטגוריות מארגנות את הספרייה. תחומי עניין מתאימים את הגילוי והפיד. הסכמה הפשוטה עדיין שומרת על ההבדל המושגי הזה גם כששני השיוכים נשמרים ישירות ב-<span class="mono">content_items</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">אינדקסים וכללים</p>
+    <h2>מה חשוב תפעולית</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>אינדקסים</h3>
+        <ul>
+          <li><span class="mono">idx_content_type</span></li>
+          <li><span class="mono">idx_content_updated</span></li>
+          <li><span class="mono">idx_content_category</span></li>
+          <li><span class="mono">gin_content_interest_ids</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>כללי שירות</h3>
+        <ul>
+          <li>אימות, הסרת כפילויות ומיון של <span class="mono">interest_ids</span></li>
+          <li>הסרת מזהי עניין ממערכים לפני מחיקה</li>
+          <li>חשיפת שמות DTO כ-<span class="mono">categoryId</span> ו-<span class="mono">interestIds</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="lede">העסקה המרכזית ברמת המימוש פשוטה: פחות טבלאות, בתמורה למשמעת חזקה יותר בשכבת השירות סביב מערכי תחומי העניין.</p>
+  </section>
+</body>
+</html>

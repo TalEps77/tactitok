@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DK-08b - DB Schema Tables</title>
+  <style>
+    :root {
+      --bg: #0a1220;
+      --panel: #0f1a30;
+      --text: #eef4ff;
+      --muted: #9caec9;
+      --green: #6ee7b7;
+      --blue: #9cc9ff;
+      --line: rgba(156, 174, 201, 0.22);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-snap-type: y mandatory; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(110,231,183,0.12), transparent 28%),
+        radial-gradient(circle at 85% 85%, rgba(156,201,255,0.12), transparent 25%),
+        var(--bg);
+      color: var(--text);
+    }
+    .slide {
+      min-height: 100vh;
+      padding: 52px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      scroll-snap-align: start;
+    }
+    h1, h2, h3, p { margin: 0; }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-size: 12px;
+      color: var(--green);
+    }
+    h1 { font-size: clamp(36px, 6vw, 60px); }
+    h2 { font-size: clamp(28px, 4vw, 40px); }
+    p, li { font-size: 18px; line-height: 1.55; color: var(--muted); }
+    .lede { color: var(--text); max-width: 900px; font-size: 22px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .card {
+      background: rgba(15, 26, 48, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+    }
+    .card h3 { margin-bottom: 10px; color: var(--text); }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .badge {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      font-size: 14px;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    .table th, .table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    .table th { color: var(--green); }
+    .mono {
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      color: var(--text);
+      font-size: 15px;
+    }
+    ul { margin: 0; padding-left: 20px; }
+    @media (max-width: 900px) {
+      .slide { padding: 32px 20px; }
+      .grid { grid-template-columns: 1fr; }
+      p, li { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <p class="eyebrow">DK-08b · DB Schema Tables</p>
+    <h1>The <span style="color:var(--green)">3 PostgreSQL tables</span></h1>
+    <p class="lede">This is the quick-reference companion to DK-08: what each table looks like, what each column is for, and which constraints matter during implementation.</p>
+    <div class="badge-row">
+      <span class="badge">3 server tables</span>
+      <span class="badge">Direct assignment model</span>
+      <span class="badge">Companion to DK-08</span>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">Overview</p>
+    <h2>Schema at a glance</h2>
+    <div class="grid">
+      <div class="card">
+        <h3><span class="mono">content_items</span></h3>
+        <p>Core content metadata plus direct assignment fields:</p>
+        <ul>
+          <li><span class="mono">category_id</span> = single optional category</li>
+          <li><span class="mono">interest_ids</span> = UUID array of interests</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="mono">categories</span></h3>
+        <p>2-level library hierarchy with self-reference via <span class="mono">parent_id</span>.</p>
+      </div>
+      <div class="card">
+        <h3><span class="mono">interests</span></h3>
+        <p>Flat admin-managed lookup list used for personalization and reels filtering.</p>
+      </div>
+      <div class="card">
+        <h3>Delete semantics</h3>
+        <ul>
+          <li>Delete category → content becomes uncategorized</li>
+          <li>Delete interest → service strips UUID from arrays first</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">Table 1</p>
+    <h2><span class="mono">content_items</span></h2>
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Why it exists</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>Stable content identifier</td></tr>
+          <tr><td class="mono">title, description</td><td>text</td><td>Feed, library, and search metadata</td></tr>
+          <tr><td class="mono">type</td><td class="mono">ENUM(video,pdf)</td><td>Controls playback and validation</td></tr>
+          <tr><td class="mono">filename, file_path, file_size, mime_type</td><td>text / bigint</td><td>File-system metadata only; binaries stay outside DB</td></tr>
+          <tr><td class="mono">duration, thumbnail_path</td><td>nullable int / text</td><td>Video-only duration and optional thumbnail</td></tr>
+          <tr><td class="mono">category_id</td><td class="mono">UUID NULL</td><td>Single optional category FK to <span class="mono">categories.id</span></td></tr>
+          <tr><td class="mono">interest_ids</td><td class="mono">UUID[]</td><td>Multi-interest assignment; validated in service layer</td></tr>
+          <tr><td class="mono">version</td><td class="mono">int</td><td>Tracks content updates for sync/download freshness</td></tr>
+          <tr><td class="mono">created_at, updated_at</td><td class="mono">timestamptz</td><td>Audit and ordering fields</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">Table 2</p>
+    <h2><span class="mono">categories</span></h2>
+    <div class="grid">
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr><th>Column</th><th>Type</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>Stable category ID</td></tr>
+            <tr><td class="mono">name</td><td>text</td><td>Admin-visible category name</td></tr>
+            <tr><td class="mono">parent_id</td><td class="mono">UUID NULL</td><td>Self-reference for 2-level tree</td></tr>
+            <tr><td class="mono">sort_order</td><td class="mono">int</td><td>Library display order</td></tr>
+            <tr><td class="mono">created_at, updated_at</td><td class="mono">timestamptz</td><td>Change tracking</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Key constraints</h3>
+        <ul>
+          <li><span class="mono">UNIQUE(parent_id, name)</span> for sibling uniqueness</li>
+          <li><span class="mono">parent_id</span> cascades to child categories</li>
+          <li>Depth limit of 2 is app logic, not a DB check</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">Table 3</p>
+    <h2><span class="mono">interests</span></h2>
+    <div class="grid">
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr><th>Column</th><th>Type</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">id</td><td class="mono">UUID PK</td><td>Stable interest ID</td></tr>
+            <tr><td class="mono">name</td><td>text</td><td>Flat interest label; globally unique</td></tr>
+            <tr><td class="mono">created_at</td><td class="mono">timestamptz</td><td>Admin timeline/reference field</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Important difference</h3>
+        <p>Categories organize the library. Interests personalize discovery. The simplified schema keeps them conceptually separate even though both are now assigned directly from <span class="mono">content_items</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">Indexes and Rules</p>
+    <h2>What matters operationally</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Indexes</h3>
+        <ul>
+          <li><span class="mono">idx_content_type</span></li>
+          <li><span class="mono">idx_content_updated</span></li>
+          <li><span class="mono">idx_content_category</span></li>
+          <li><span class="mono">gin_content_interest_ids</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Service rules</h3>
+        <ul>
+          <li>Validate, dedupe, and sort <span class="mono">interest_ids</span></li>
+          <li>Remove deleted interest IDs from arrays before delete</li>
+          <li>Expose DTO field names as <span class="mono">categoryId</span> and <span class="mono">interestIds</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="lede">The important implementation tradeoff is simple: fewer tables in exchange for stricter service-layer discipline around interest arrays.</p>
+  </section>
+</body>
+</html>

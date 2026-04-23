@@ -1,10 +1,10 @@
 # Presentation Index — TactiTok
 
-> **Version:** 1.8
-> **Status:** DK-01 (EN ✅ HE ✅ EN-PPTX ✅ HE-PPTX 🔴) · DK-02 (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴) · DK-03 (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴) · DK-04 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-05 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-06 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-07 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠)
-> **Date:** 2026-03-21
-> **Source:** File system review 2026-03-19; RTL bug fix 2026-03-20; DK-03 HE HTML generated 2026-03-21; DK-04 HE HTML generated 2026-03-21; DK-05 HE HTML generated 2026-03-21; DK-06 HE HTML generated 2026-03-21; DK-07 HE HTML generated 2026-03-21
-> **Change from v1.7:** Generated DK-07 HE HTML (10 slides). All RTL rules applied (Heebo font, inverted translateX, left-positioned controls, border-right on zone-box/note-box/info-box, 270deg gradient, text-align:right on table headers, ◂ bullets, RTL keyboard/swipe logic). Updated DK-07-HE status 🟠 → ✅.
+> **Version:** 1.9
+> **Status:** DK-01 (EN ✅ HE ✅ EN-PPTX ✅ HE-PPTX 🔴) · DK-02 (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴) · DK-03 (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴) · DK-04 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-05 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-06 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-07 (EN ✅ HE ✅ EN-PPTX 🟠 HE-PPTX 🟠) · DK-08 (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴) · DK-08b (EN ✅ HE ✅ EN-PPTX 🔴 HE-PPTX 🔴)
+> **Date:** 2026-04-23
+> **Source:** File system review 2026-03-19; RTL bug fix 2026-03-20; DK-03–DK-07 HE HTML generated 2026-03-21; DK-08 / DK-08b EN+HE HTML refreshed 2026-04-23
+> **Change from v1.8:** Added and aligned DK-08 DB Implementation PRD and DK-08b DB Schema Tables with the 3-table server model. EN and HE HTML now both exist. Source: 08_db-implementation-prd.md. Audience: student developers (Sprint 1).
 
 This is the registry of all planned and generated presentation artifacts for the TactiTok project.
 For detail on each deck (sections, sources, blockers), see `product/presentations/meta/presentation-plan.md`.
@@ -119,6 +119,28 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 
 ---
 
+### DK-08 — DB Implementation PRD
+
+| ID | Format | Audience | Slides | Status | File |
+|----|--------|----------|--------|--------|------|
+| DK-08 | EN HTML | Student developers, mentor/reviewer | 7 | ✅ Generated | `product/presentations/slides-en/DK-08_db-implementation-prd.html` |
+| DK-08-HE | HE HTML | — Hebrew | 7 | ✅ Generated | `product/presentations/slides-he/DK-08_db-implementation-prd_he.html` |
+| DK-08-EN-PPTX | EN PPTX | — editable EN | 7 | 🔴 Not started | — |
+| DK-08-HE-PPTX | HE PPTX | — editable HE | 7 | 🔴 Not started | — |
+
+---
+
+### DK-08b — DB Schema Tables
+
+| ID | Format | Audience | Slides | Status | File |
+|----|--------|----------|--------|--------|------|
+| DK-08b | EN HTML | Student developers (Dev A — DB builder) | 6 | ✅ Generated | `product/presentations/slides-en/DK-08b_db-schema-tables.html` |
+| DK-08b-HE | HE HTML | — Hebrew | 6 | ✅ Generated | `product/presentations/slides-he/DK-08b_db-schema-tables_he.html` |
+| DK-08b-EN-PPTX | EN PPTX | — editable EN | 6 | 🔴 Not started | — |
+| DK-08b-HE-PPTX | HE PPTX | — editable HE | 6 | 🔴 Not started | — |
+
+---
+
 ## Deck Descriptions (Quick Reference)
 
 | ID | What it covers |
@@ -128,8 +150,10 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | DK-03 | Architecture goals, three-tier topology, edge proxy rationale, data model, API surface, tech stack decisions, continuation architecture |
 | DK-04 | Product overview, 5 packages, dev setup, data model, API, sprint plan, build order, deployment, demo script, risks, continuation |
 | DK-05 | Sprint overview, per-sprint goals/deliverables, de-scope levers, risks, acceptance criteria, demo milestone, post-MVP roadmap |
-| DK-06 | All 9 entities (fields, types, constraints), relationships, server vs. edge storage, lifecycle rules |
+| DK-06 | All 7 modeled entities/stores (fields, types, constraints), relationships, server vs. edge storage, lifecycle rules |
 | DK-07 | Three trust zones, transport security, admin auth, content sensitivity, what team does not secure |
+| DK-08 | Stack decisions, repo layout, connection config, SQLAlchemy models (3 tables), Pydantic schemas, Alembic workflow, 3-migration plan, seed data, constraint split, query patterns, test fixtures, DoD checklist, OOS + open questions |
+| DK-08b | The 3 PostgreSQL tables — columns, types, constraints, indexes — quick reference for the dev creating the DB (companion to DK-08) |
 
 ---
 
@@ -140,9 +164,9 @@ Do not begin a phase until the previous one is reviewed. See `notes/presentation
 | **Military evaluators / stakeholders** | DK-01, DK-02 | DK-07 | DK-03 |
 | **Academic supervisors** | DK-01, DK-03 | DK-05 | DK-02 |
 | **Project sponsors** | DK-01, DK-05 | DK-02 | — |
-| **Student developers** | DK-04 | DK-03, DK-06 | DK-05 |
+| **Student developers** | DK-04, DK-08b | DK-03, DK-06, DK-08 | DK-05 |
 | **Security reviewers** | DK-07 | DK-03 | DK-01 |
-| **Follow-on development team** | DK-04, DK-03 | DK-06 | DK-05 |
+| **Follow-on development team** | DK-04, DK-03 | DK-06, DK-08, DK-08b | DK-05 |
 
 ---
 
@@ -159,6 +183,8 @@ Each deck's EN HTML phase requires diagrams to be generated first:
 | DK-05 | None | DG-01 (one reference slide) |
 | DK-06 | DG-04 | DG-14, DG-15 |
 | DK-07 | DG-16 | DG-03 (deployment section) |
+| DK-08 | None (source: `08_db-implementation-prd.md`, `05_data-model.md §5.1`) | — |
+| DK-08b | None (source: `08_db-implementation-prd.md`, `05_data-model.md §5.1`) | — |
 
 ---
 
@@ -183,7 +209,9 @@ product/presentations/
 │   ├── DK-05_mvp-execution-overview_en.pptx        🟠 Blocked
 │   ├── DK-06_data-model-reference.html             ✅ EN HTML
 │   ├── DK-06_data-model-reference_en.pptx          🟠 Blocked
-│   └── DK-07_security-deployment-posture.html      ✅ EN HTML
+│   ├── DK-07_security-deployment-posture.html      ✅ EN HTML
+│   ├── DK-08_db-implementation-prd.html            ✅ EN HTML
+│   └── DK-08b_db-schema-tables.html                ✅ EN HTML
 │
 └── slides-he/
     ├── DK-01_stakeholder-overview_he.html          ✅ HE HTML
@@ -198,7 +226,9 @@ product/presentations/
     ├── DK-05_mvp-execution-overview_he.pptx        🟠 Blocked
     ├── DK-06_data-model-reference_he.html          ✅ HE HTML
     ├── DK-06_data-model-reference_he.pptx          🟠 Blocked
-    └── DK-07_security-deployment-posture_he.html   ✅ HE HTML
+    ├── DK-07_security-deployment-posture_he.html   ✅ HE HTML
+    ├── DK-08_db-implementation-prd_he.html         ✅ HE HTML
+    └── DK-08b_db-schema-tables_he.html             ✅ HE HTML
 ```
 
 ---

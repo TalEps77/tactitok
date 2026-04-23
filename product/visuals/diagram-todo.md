@@ -83,14 +83,14 @@ These diagrams are **mandatory** for the project to be comprehensible to both ev
 
 | Field | Value |
 |-------|-------|
-| **Purpose** | Show all 9 entities, their fields, and relationships |
+| **Purpose** | Show all 7 modeled entities/stores, their fields, and relationships |
 | **Audience** | Developers |
 | **Source basis** | `05_data-model.md` §5–7 |
 | **Priority** | Required |
 | **Status** | ✅ Complete (Excalidraw) |
 | **Blockers** | None |
 | **Output** | `product/visuals/DG-04_data-model-erd.mmd` + PNG/SVG |
-| **Notes** | Two regions: Server (PostgreSQL: ContentItem, Category, Interest, ContentCategory, ContentInterest) and Edge Browser (IndexedDB: DeviceProfile, CachedCatalog, DownloadRecord, LocalAction). Show key fields and relationship cardinalities. |
+| **Notes** | Two regions: Server (PostgreSQL: ContentItem, Category, Interest) and Edge Browser (IndexedDB: DeviceProfile, CachedCatalog, DownloadRecord, LocalAction). Show key fields, direct `category_id` / `interest_ids` assignment on `content_items`, and relationship cardinalities. |
 
 ---
 

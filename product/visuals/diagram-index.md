@@ -84,7 +84,7 @@ For backlog detail, priority order, and blocker tracking, see `product/visuals/d
 | DG-01 | All actors (fighter, HQ staff), surfaces (Edge SPA, Admin portal), network zones, and relationships at the highest abstraction |
 | DG-02 | The 8 software containers (Edge SPA, Edge proxy, API server, Admin SPA, PostgreSQL, File store, TLS proxy, shared types) and their interfaces |
 | DG-03 | Physical/virtual runtime: Cloud VM processes + ports; Edge device (Windows/Chrome, Linux VM/Docker) processes + ports |
-| DG-04 | All 9 entities (5 server, 4 edge) with fields, types, and relationship cardinalities |
+| DG-04 | All 7 modeled entities/stores (3 server tables, 4 edge stores) with fields, types, and relationship cardinalities |
 | DG-05 | Admin upload (`POST /api/admin/content`) → server validate + store + DB insert → edge `GET /api/catalog` → proxy cache → edge consumption |
 | DG-06 | `GET /api/catalog` → interest filter → reels render → first video (tap-to-start) → auto-play → prefetch range request at 30% → proxy caches full next file → swipe → instant start |
 | DG-07 | Tab switch → category tree from IndexedDB → user taps category → filtered list → search input → client-side filter → open PDF or video |

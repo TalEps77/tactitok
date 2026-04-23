@@ -340,7 +340,7 @@ pip install -r requirements.txt
 # 3. צור את בסיס הנתונים
 createdb tactitok
 
-# 4. הרץ מיגרציות (יוצר את כל 5 הטבלאות)
+# 4. הרץ מיגרציות (יוצר את כל 3 הטבלאות)
 alembic upgrade head
 
 # 5. טען נתוני פיתוח
@@ -410,17 +410,17 @@ docker run -p 8080:8080 \
          שקופית 7 — מודל נתונים: שרת
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="7"
-      data-notes="חמש ישויות שרת ב-PostgreSQL. ContentItem הוא הישות המרכזית — כל שאר הישויות מקושרות אליה. ל-Category יש FK עצמי-ייחוסי להיררכיה של 2 רמות (parentId הוא null לשורשים). ContentCategory ו-ContentInterest הן טבלאות צומת — נמחקות בהתחשלות כאשר פריט תוכן נמחק. כל ה-PK הם UUID. version הוא מונה שגדל בעת החלפת קובץ — זה מניע cache-busting בפרוקסי הקצה דרך פרמטר ?v= בשאילתה. מקור: product/05_data-model.md.">
+      data-notes="שלוש טבלאות שרת ב-PostgreSQL. ContentItem היא הטבלה המרכזית ושומרת ישירות גם את שיוך הקטגוריה וגם את שיוכי תחומי העניין. ל-Category יש FK עצמי-ייחוסי להיררכיה של 2 רמות (parentId הוא null לשורשים). Interest היא רשימה שטוחה שמנוהלת על-ידי אדמין. categoryId נאכף ב-FK של בסיס הנתונים; interestIds הוא מערך UUID שמאומת ומנורמל בשכבת השירות. כל ה-PK הם UUID. version הוא מונה שגדל בעת החלפת קובץ — זה מניע cache-busting בפרוקסי הקצה דרך פרמטר ?v= בשאילתה. מקור: product/05_data-model.md.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">מודל נתונים — שרת &middot; DG-04</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">חמש ישויות PostgreSQL, <span class="highlight-g">תוכן-פריט במרכז</span></h1>
+        <h1 class="title-h1">שלוש טבלאות PostgreSQL, <span class="highlight-g">תוכן-פריט במרכז</span></h1>
         <div class="two-col" style="align-items:start;">
           <table class="data-table">
             <thead><tr><th>ישות</th><th>שדות מרכזיים</th></tr></thead>
             <tbody>
               <tr>
                 <td><strong>ContentItem</strong></td>
-                <td class="muted">id (UUID PK), title, description, type (video|pdf), filename, fileSize, mimeType, duration (null עבור PDF), thumbnailPath, <strong>version</strong>, createdAt, updatedAt</td>
+                <td class="muted">id (UUID PK), title, description, type (video|pdf), filename, fileSize, mimeType, duration (null עבור PDF), thumbnailPath, <strong>categoryId</strong> (FK nullable), <strong>interestIds</strong> (UUID[]), <strong>version</strong>, createdAt, updatedAt</td>
               </tr>
               <tr>
                 <td><strong>Category</strong></td>
@@ -430,14 +430,6 @@ docker run -p 8080:8080 \
                 <td><strong>Interest</strong></td>
                 <td class="muted">id, name (UNIQUE), createdAt — רשימה שטוחה, ללא היררכיה</td>
               </tr>
-              <tr>
-                <td><strong>ContentCategory</strong></td>
-                <td class="muted">contentId (FK), categoryId (FK) — צומת M:N; מחיקה בהתחשלות עם מחיקת תוכן</td>
-              </tr>
-              <tr>
-                <td><strong>ContentInterest</strong></td>
-                <td class="muted">contentId (FK), interestId (FK) — צומת M:N; מחיקה בהתחשלות עם מחיקת תוכן</td>
-              </tr>
             </tbody>
           </table>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
@@ -445,6 +437,8 @@ docker run -p 8080:8080 \
               <p class="card-title">עקרונות מידול</p>
               <ul class="bullets" style="margin-top:0.3rem;">
                 <li>קובץ בינארי אחד לכל פריט תוכן (ללא ריבוי קבצים)</li>
+                <li>אפס או קטגוריה אחת בדיוק לכל פריט תוכן</li>
+                <li>מספר תחומי עניין לכל פריט תוכן דרך מערך UUID</li>
                 <li>מחיקה קשה — מסירה רשומת DB + קובץ + תמונה ממוזערת</li>
                 <li><strong>מונה גרסה</strong>, לא היסטוריית גרסאות</li>
                 <li>UUIDs לכל ה-PK — מוכן לסנכרון ממקורות מרובים בעתיד</li>
@@ -1059,7 +1053,7 @@ curl http://localhost:8080/api/health</div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/02_system-boundaries.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">מה בתוך ומחוץ למערכת</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/03_mvp-spec.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">רשימת תכונות, תסריט דמו, קריטריוני קבלה</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/04_system-architecture.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">AD1–AD12, מפת רכיבים, הערות המשך</span></div>
-            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">9 ישויות, סוגי שדות, אילוצים</span></div>
+            <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">7 ישויות/מאגרי מידע ממודלים, סוגי שדות, אילוצים</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/06_api-contract.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">21 נקודות קצה, DTOs, מודל אימות</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/07_delivery-plan.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">תכנית ספרינטים, סיכונים, מנופי צמצום</span></div>
             <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/visuals/diagram-index.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;margin-left:0;">כל 17 הדיאגרמות עם קישורי Excalidraw</span></div>
