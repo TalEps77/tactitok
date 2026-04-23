@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DK-08 - PRD למימוש מסד הנתונים</title>
+  <style>
+    :root {
+      --bg: #09111f;
+      --panel: #101c31;
+      --text: #e9f1ff;
+      --muted: #9db0cc;
+      --green: #6ee7b7;
+      --blue: #8ec5ff;
+      --amber: #f8c56c;
+      --line: rgba(157, 176, 204, 0.22);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-snap-type: y mandatory; }
+    body {
+      margin: 0;
+      font-family: "Heebo", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(110, 231, 183, 0.12), transparent 32%),
+        radial-gradient(circle at bottom left, rgba(142, 197, 255, 0.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+    .slide {
+      min-height: 100vh;
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+      scroll-snap-align: start;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 12px;
+      color: var(--green);
+      margin: 0;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(36px, 6vw, 62px); line-height: 1.05; }
+    h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; }
+    p, li { color: var(--muted); font-size: 18px; line-height: 1.55; }
+    .lede { max-width: 920px; font-size: 22px; color: var(--text); }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(16, 28, 49, 0.96), rgba(12, 22, 38, 0.92));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px;
+    }
+    .card h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    .table th, .table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: right;
+    }
+    .table th { color: var(--green); font-weight: 700; }
+    .mono {
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      color: var(--text);
+      font-size: 15px;
+      direction: ltr;
+      display: inline-block;
+    }
+    .code {
+      background: rgba(0, 0, 0, 0.24);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      color: var(--blue);
+      font-size: 14px;
+      line-height: 1.6;
+      direction: ltr;
+      text-align: left;
+    }
+    ul { margin: 0; padding-right: 20px; }
+    .accent { color: var(--green); }
+    .accent-2 { color: var(--blue); }
+    .accent-3 { color: var(--amber); }
+    @media (max-width: 900px) {
+      .slide { padding: 32px 20px; }
+      .grid { grid-template-columns: 1fr; }
+      p, li { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <p class="eyebrow">DK-08 · PRD למימוש DB</p>
+    <h1>מימוש סכמת השרת של <span class="accent">3 טבלאות</span></h1>
+    <p class="lede">המצגת הזו מתרגמת את PRD מסד הנתונים המעודכן להנחיות מימוש: 3 טבלאות PostgreSQL, שיוך ישיר של <span class="mono">category_id</span>, מערך <span class="mono">interest_ids</span>, וכללי ניקוי מפורשים בשכבת השירות.</p>
+    <div class="badge-row">
+      <span class="badge"><span class="mono">05_data-model.md</span> מקור</span>
+      <span class="badge"><span class="mono">08_db-implementation-prd.md</span> מקור</span>
+      <span class="badge">גרסה 1.1</span>
+      <span class="badge">23 באפריל 2026</span>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">ארכיטקטורה</p>
+    <h2>מה השתנה במודל המימוש</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>המודל הישן</h3>
+        <ul>
+          <li>מודל שרת מנורמל יותר</li>
+          <li>שתי טבלאות שיוך לקטגוריות ולתחומי עניין</li>
+          <li>שלמות ברמת DB לשני המימדים</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>מודל ה-MVP החדש</h3>
+        <ul>
+          <li><span class="mono">content_items</span>, <span class="mono">categories</span>, <span class="mono">interests</span></li>
+          <li><span class="mono">content_items.category_id</span> הוא FK ניתן לריק</li>
+          <li><span class="mono">content_items.interest_ids</span> הוא <span class="mono">UUID[]</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>חלוקת אחריות לשלמות</h3>
+        <ul>
+          <li>תקפות קטגוריה נשארת במסד הנתונים</li>
+          <li>תקפות תחומי עניין עוברת לשירותים</li>
+          <li>מחיקת Interest דורשת ניקוי יזום של המערכים</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>למה זה מתאים ל-MVP</h3>
+        <ul>
+          <li>פחות טבלאות ופחות קשרי ORM</li>
+          <li>סיפור מיגרציות פשוט יותר לצוות של 3 סטודנטים</li>
+          <li>עדיין ניתן להרחבה בעתיד אם יידרש נרמול</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">מבנה ריפו</p>
+    <h2>קבצים ובעלות</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>מודלים</h3>
+        <div class="code">server/app/models/
+  content_item.py
+  category.py
+  interest.py</div>
+      </div>
+      <div class="card">
+        <h3>שירותים</h3>
+        <div class="code">server/app/services/
+  catalog_service.py
+  category_service.py
+  interest_service.py</div>
+      </div>
+      <div class="card">
+        <h3>מיגרציות</h3>
+        <div class="code">server/alembic/versions/
+  0001_enable_uuid_extension.py
+  0002_create_core_tables.py
+  0003_add_indexes.py</div>
+      </div>
+      <div class="card">
+        <h3>חוזה DTO משותף</h3>
+        <ul>
+          <li><span class="mono">categoryId</span> יחיד ב-API וב-DTOs</li>
+          <li><span class="mono">interestIds</span> נשאר מערך</li>
+          <li><span class="mono">DeviceProfile.selectedInterestIds</span> לא משתנה בקצה</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">מודלים</p>
+    <h2>מה שכבת SQLAlchemy חייבת לבטא</h2>
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr><th>מודל</th><th>שדות מרכזיים</th><th>הערת מימוש</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">ContentItem</td>
+            <td><span class="mono">category_id</span>, <span class="mono">interest_ids</span>, מטאדטת קובץ, <span class="mono">version</span>, timestamps</td>
+            <td>להשתמש ב-<span class="mono">MutableList.as_mutable(ARRAY(UUID))</span> כדי ששינויים במערך יזוהו.</td>
+          </tr>
+          <tr>
+            <td class="mono">Category</td>
+            <td><span class="mono">parent_id</span>, <span class="mono">sort_order</span>, timestamps</td>
+            <td>FK עצמי עם cascade לקטגוריות ילד; מגבלת עומק נשארת לוגיקת אפליקציה.</td>
+          </tr>
+          <tr>
+            <td class="mono">Interest</td>
+            <td><span class="mono">name</span>, <span class="mono">created_at</span></td>
+            <td>אין טבלת ORM מקשרת. השירות מטפל בניקוי ההפניות מתוך המערכים.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="code">category_id = mapped_column(
+    UUID(as_uuid=True),
+    ForeignKey("categories.id", ondelete="SET NULL"),
+    nullable=True,
+)
+
+interest_ids = mapped_column(
+    MutableList.as_mutable(ARRAY(UUID(as_uuid=True))),
+    nullable=False,
+    server_default="{}",
+)</div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">מיגרציות</p>
+    <h2>תוכנית מיגרציות ואינדקסים</h2>
+    <div class="grid">
+      <div class="card">
+        <h3><span class="accent-2">0001</span> הרחבת UUID</h3>
+        <p>הכנת תמיכת UUID של PostgreSQL לכל 3 הטבלאות.</p>
+      </div>
+      <div class="card">
+        <h3><span class="accent-2">0002</span> יצירת טבלאות הליבה</h3>
+        <p>יצירת <span class="mono">content_items</span>, <span class="mono">categories</span> ו-<span class="mono">interests</span> עם FK ומערך UUID.</p>
+      </div>
+      <div class="card">
+        <h3><span class="accent-2">0003</span> אינדקסים</h3>
+        <ul>
+          <li><span class="mono">idx_content_type</span></li>
+          <li><span class="mono">idx_content_updated</span></li>
+          <li><span class="mono">idx_content_category</span></li>
+          <li><span class="mono">gin_content_interest_ids</span></li>
+          <li>להשאיר את אינדקסי הקטגוריות/חיפוש מה-PRD</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>הנחיית שאילתות</h3>
+        <div class="code"># סינון לפי קטגוריה
+WHERE category_id = :category_id
+
+# סינון לפי תחומי עניין
+WHERE interest_ids && :interest_ids</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">שירותים</p>
+    <h2>איפה שכבת האפליקציה חשובה עכשיו במיוחד</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>כתיבות קטלוג</h3>
+        <ul>
+          <li>אימות כל UUID ב-<span class="mono">interestIds</span></li>
+          <li>דחיית תחומי עניין שלא קיימים לפני שמירה</li>
+          <li>הסרת כפילויות ומיון קבוע של המערך</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>מחיקת Category</h3>
+        <ul>
+          <li>קטגוריות ילד עדיין נמחקות דרך <span class="mono">categories.parent_id</span></li>
+          <li>תוכן מושפע הופך ל"לא מסווג" אוטומטית</li>
+          <li>מחיקת קטגוריה לא מוחקת שורות תוכן</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>מחיקת Interest</h3>
+        <ul>
+          <li>ניקוי המערכים לפני מחיקת רשומת ה-Interest</li>
+          <li>שימוש ב-<span class="mono">array_remove</span> בעדכון bulk</li>
+          <li>מזהים שנבחרו בקצה יתוקנו בסנכרון הבא</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>בדיקות חובה</h3>
+        <ul>
+          <li>ברירות מחדל של מודלים וקיום אינדקסים</li>
+          <li>אימות ונרמול של מערכי תחומי עניין</li>
+          <li>מחיקת Category מאפסת <span class="mono">category_id</span></li>
+          <li>מחיקת Interest מסירה UUID מכל המערכים</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <p class="eyebrow">Definition of Done</p>
+    <h2>רשימת סיום</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>חייב להיות נכון</h3>
+        <ul>
+          <li>סכמת 3 הטבלאות תואמת ל-PRD ולחוזה ה-API</li>
+          <li>אין DTO שעדיין חושף שדה מערך לקטגוריות</li>
+          <li>אין קוד שמניח שמודל שיוך נפרד עדיין קיים</li>
+          <li>סמנטיקת המחיקה נבדקה מקצה לקצה</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>עדיין מחוץ להיקף</h3>
+        <ul>
+          <li>חשבונות משתמש</li>
+          <li>מחיקה רכה</li>
+          <li>מטאדטה עשירה על שיוך תחומי עניין</li>
+          <li>נרמול מעבר למה שה-MVP צריך</li>
+        </ul>
+      </div>
+    </div>
+    <p class="lede">אם בעתיד יידרשו אנליטיקות עשירות יותר או metadata עשיר על שיוכים, אפשר <span class="accent-3">לנרמל בהמשך</span>. כרגע המימוש מותאם למהירות מסירה ולבהירות.</p>
+  </section>
+</body>
+</html>

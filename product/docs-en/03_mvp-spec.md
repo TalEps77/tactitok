@@ -161,7 +161,7 @@ A hands-on session where evaluators interact directly with a 10″ tablet in a l
 |------|--------|-------------------|
 | 1 | Staff navigates to admin portal URL | Login screen appears |
 | 2 | Staff enters password | Authenticated; dashboard/content list shown |
-| 3 | Staff clicks "Upload Content" | Upload form appears: file picker, title, description, category selector, interest tags, content type auto-detected |
+| 3 | Staff clicks "Upload Content" | Upload form appears: file picker, title, description, single-category selector, interest tags, content type auto-detected |
 | 4 | Staff uploads a video (MP4, ≤3 min) | File uploads with progress bar; server validates format and duration |
 | 5 | Staff uploads a PDF | File uploads with progress bar; server validates format |
 | 6 | Staff fills metadata and publishes | Content item created; appears in content list |

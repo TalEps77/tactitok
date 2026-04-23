@@ -72,7 +72,7 @@ This is the last document in the specification set. All prior documents (Product
 **Dev A — Backend foundation:**
 - Initialize Python virtual environment; install FastAPI + SQLAlchemy + Alembic
 - Create FastAPI skeleton with health endpoint: `GET /api/health → 200 { "status": "ok" }`
-- Create PostgreSQL schema (Alembic migration 001): `content_items`, `categories`, `interests`, `content_categories`, `content_interests`
+- Create PostgreSQL schema (Alembic migration 001): `content_items`, `categories`, `interests`
 - Define SQLAlchemy models and Pydantic response schemas — `ContentItemDTO`, `CatalogResponse`, `CategoryDTO`, `InterestDTO`, `LoginRequest`, `LoginResponse`, `ApiError`
 - FastAPI routing structure, error handler, request logging
 
@@ -98,7 +98,7 @@ This is the last document in the specification set. All prior documents (Product
 **Dev A:**
 - Admin auth: `POST /api/admin/login` + `POST /api/admin/logout` with JWT
 - Auth middleware for all `/api/admin/*` routes
-- `POST /api/admin/content` (upload endpoint): Multer, MIME validation, filesystem store, DB insert
+- `POST /api/admin/content` (upload endpoint): FastAPI upload handling, MIME validation, filesystem store, DB insert
 - `GET /api/admin/content` (list endpoint)
 
 **Dev B:**
@@ -257,7 +257,7 @@ This is the last document in the specification set. All prior documents (Product
 
 **Dev C:**
 - "Updated" badge logic: on catalog sync, compare `DownloadRecord.version` with `CachedCatalog.items[].version`; if catalog version is higher, mark item in Downloads tab with "Updated" badge
-- "Updated" badge in Library: if item has `updatedAt` newer than `CachedCatalog.lastSyncedAt` from the previous sync (approximate heuristic) — simpler alternative: show badge only on downloaded items where version mismatch is clear
+- "Updated" badge scope: downloads only. Compare `DownloadRecord.version` with `CachedCatalog.items[].version`; do not show a heuristic library-wide badge
 - Download button state: if item is in `DownloadRecord` IndexedDB, show "Downloaded" icon; if not, show "Download" button
 
 **Dev A:**

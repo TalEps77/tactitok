@@ -1,11 +1,11 @@
 # Data Model — TactiTok
 
-> **Version:** 0.3
+> **Version:** 0.4
 > **Status:** Draft
-> **Last updated:** 2026-03-25
+> **Last updated:** 2026-04-23
 > **Preceding document:** `product/04_system-architecture.md`
 > **Next document:** `product/06_api-contract.md`
-> **Change log:** v0.2 — aligned with Architecture v0.2 (edge proxy topology): removed Cache API / Service Worker references; simplified DownloadRecord; content caching is now handled by edge proxy. v0.3 (2026-03-25): ORM changed from Prisma to SQLAlchemy. Migration tooling changed from Prisma migrate to Alembic. Any TypeScript type examples replaced with Python/Pydantic equivalents.
+> **Change log:** v0.2 — aligned with Architecture v0.2 (edge proxy topology): removed Cache API / Service Worker references; simplified DownloadRecord; content caching is now handled by edge proxy. v0.3 (2026-03-25): ORM changed from Prisma to SQLAlchemy. Migration tooling changed from Prisma migrate to Alembic. Any TypeScript type examples replaced with Python/Pydantic equivalents. v0.4 (2026-04-23): simplified the server schema to 3 tables. `content_items` now stores a single `categoryId` and a multi-value `interestIds` UUID array; separate assignment tables were removed.
 
 ---
 
@@ -29,8 +29,8 @@ Every downstream document (API Contract → Delivery Plan) must be consistent wi
 | # | Goal | Rationale |
 |---|------|-----------|
 | DG1 | **Minimal entity count** | 3 developers, 10 weeks; every table must earn its place |
-| DG2 | **Shared types** | Server defines Pydantic models; client receives JSON-serialized equivalents |
-| DG3 | **Continuation-ready** | Fields for future features (user-id, view-count) included but nullable/unused in MVP |
+| DG2 | **Shared wire shapes** | Server responses and browser-local cache use the same catalog DTO shape |
+| DG3 | **Continuation-ready** | Fields for future features (user-id, view-count) stay addable without rewriting the core model |
 | DG4 | **Clean separation** | Server-side persistence (PostgreSQL) vs. edge proxy cache (nginx) vs. browser-local state (IndexedDB) clearly delineated |
 | DG5 | **Migration-based schema** | Every change is a versioned Alembic migration; no ad-hoc ALTER TABLE |
 
@@ -48,20 +48,22 @@ Every downstream document (API Contract → Delivery Plan) must be consistent wi
 | **Interest** | A flat tag used to filter the reels feed and library; admin-managed |
 | **Device profile** | Local-only configuration (selected interests); no server identity |
 | **Download record** | Local-only metadata record tracking a content file the user explicitly downloaded (file itself is cached by the edge proxy) |
-| **Junction table** | A many-to-many relationship table (e.g., content ↔ interest) |
+| **Array column** | A PostgreSQL column that stores multiple values in one field, used here for `content_items.interest_ids` |
 
 ---
 
 ## 4. Modeling Principles
 
 1. **One file per content item** — a content item has exactly one binary file (MP4 or PDF). No multi-file items in MVP.
-2. **Interests and categories are independent** — a content item can have any combination of interests and categories. They are not hierarchically linked.
-3. **Server is authoritative** — all catalog data lives in PostgreSQL. The edge caches a snapshot in IndexedDB.
-4. **No user identity** — there is no `User` table. Edge state is device-scoped (IndexedDB), admin auth is a single shared password (no user record).
-5. **Version counter, not version history** — updating content increments a counter and overwrites the file. No old versions are retained.
-6. **Thumbnails are optional** — admin may upload a thumbnail image; if omitted, UI shows a type-based placeholder.
-7. **Soft delete not required** — MVP uses hard delete. Content deletion removes the record and file.
-8. **UUIDs for primary keys** — enables future multi-source sync and avoids sequential-id leakage.
+2. **One optional category per content item** — a content item may belong to zero or one category. This keeps library placement simple.
+3. **Multiple interests per content item** — a content item can have zero or many interests, stored as a PostgreSQL `UUID[]` array on the content row itself.
+4. **Interests and categories are independent** — a content item can be in any category and have any set of interests. They are not hierarchically linked.
+5. **Server is authoritative** — all catalog data lives in PostgreSQL. The edge caches a snapshot in IndexedDB.
+6. **No user identity** — there is no `User` table. Edge state is device-scoped (IndexedDB), admin auth is a single shared password (no user record).
+7. **Version counter, not version history** — updating content increments a counter and overwrites the file. No old versions are retained.
+8. **Thumbnails are optional** — admin may upload a thumbnail image; if omitted, UI shows a type-based placeholder.
+9. **Soft delete not required** — MVP uses hard delete. Content deletion removes the record and file.
+10. **UUIDs for primary keys** — enables future multi-source sync and avoids sequential-id leakage.
 
 ---
 
@@ -71,68 +73,58 @@ Every downstream document (API Contract → Delivery Plan) must be consistent wi
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    SERVER (PostgreSQL)                        │
+│                    SERVER (PostgreSQL)                      │
 │                                                              │
-│  ┌──────────────┐       ┌───────────────────┐                │
-│  │   Category   │       │   ContentItem     │                │
-│  │              │       │                   │                │
-│  │  id (PK)     │       │  id (PK)          │                │
-│  │  name        │       │  title            │                │
-│  │  parentId(FK)│       │  description      │                │
-│  │  sortOrder   │       │  type (video|pdf) │                │
-│  └──────┬───────┘       │  filename         │                │
-│         │               │  fileSize         │                │
-│         │ 1:N           │  mimeType         │                │
-│         ▼               │  duration         │                │
-│  ┌──────────────┐       │  thumbnailPath    │                │
-│  │   Category   │       │  version          │                │
-│  │   (child)    │       │  createdAt        │                │
-│  └──────────────┘       │  updatedAt        │                │
-│                         └─────┬──────┬──────┘                │
-│                               │      │                       │
-│              ┌────────────────┘      └────────────────┐      │
-│              │ M:N                              M:N   │      │
-│              ▼                                        ▼      │
-│  ┌───────────────────┐                  ┌──────────────────┐ │
-│  │ ContentCategory   │                  │ ContentInterest  │ │
-│  │ (junction)        │                  │ (junction)       │ │
-│  │                   │                  │                  │ │
-│  │ contentId (FK)    │                  │ contentId (FK)   │ │
-│  │ categoryId (FK)   │                  │ interestId (FK)  │ │
-│  └───────────────────┘                  └──────────────────┘ │
-│                                                ▲             │
-│                                                │ M:N         │
-│                                         ┌──────┴───────┐    │
-│                                         │   Interest    │    │
-│                                         │              │    │
-│                                         │  id (PK)     │    │
-│                                         │  name        │    │
-│                                         │  createdAt   │    │
-│                                         └──────────────┘    │
+│  ┌──────────────┐       ┌─────────────────────────────────┐  │
+│  │   Category   │       │          ContentItem            │  │
+│  │              │       │                                 │  │
+│  │  id (PK)     │◄──────┤  categoryId (FK, nullable)      │  │
+│  │  name        │ 1:N   │  interestIds (UUID[])           │  │
+│  │  parentId(FK)│       │  title                          │  │
+│  │  sortOrder   │       │  description                    │  │
+│  └──────┬───────┘       │  type (video|pdf)               │  │
+│         │               │  filename                       │  │
+│         │ 1:N           │  fileSize                       │  │
+│         ▼               │  mimeType                       │  │
+│  ┌──────────────┐       │  duration                       │  │
+│  │   Category   │       │  thumbnailPath                  │  │
+│  │   (child)    │       │  version                        │  │
+│  └──────────────┘       │  createdAt                      │  │
+│                         │  updatedAt                      │  │
+│                         └─────────────────────────────────┘  │
+│                                      │                       │
+│                                      │ logical M:N           │
+│                                      ▼ via UUID[]            │
+│                               ┌──────────────┐               │
+│                               │   Interest   │               │
+│                               │              │               │
+│                               │  id (PK)     │               │
+│                               │  name        │               │
+│                               │  createdAt   │               │
+│                               └──────────────┘               │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│                 EDGE BROWSER (IndexedDB)                      │
+│                 EDGE BROWSER (IndexedDB)                    │
 │                                                              │
 │  ┌──────────────────┐  ┌──────────────────┐                  │
 │  │  DeviceProfile   │  │  CachedCatalog   │                  │
 │  │                  │  │                  │                  │
-│  │  deviceId        │  │  (mirror of      │                  │
-│  │  interests[]     │  │   server catalog  │                  │
-│  │  createdAt       │  │   as JSON)       │                  │
-│  │  updatedAt       │  │  lastSyncedAt    │                  │
+│  │  deviceId        │  │  items[]         │                  │
+│  │  selectedInterest│  │  categories[]    │                  │
+│  │  Ids[]           │  │  interests[]     │                  │
+│  │  createdAt       │  │  lastSyncedAt    │                  │
+│  │  updatedAt       │  │                  │                  │
 │  └──────────────────┘  └──────────────────┘                  │
 │                                                              │
 │  ┌──────────────────┐  ┌──────────────────┐                  │
 │  │  DownloadRecord  │  │  LocalAction     │                  │
-│  │  (metadata only; │  │                  │                  │
-│  │   file in proxy) │  │  contentId       │                  │
-│  │                  │  │  action (like|   │                  │
-│  │  contentId       │  │    save)         │                  │
-│  │  title           │  │  timestamp       │                  │
-│  │  type            │  │  active (bool)   │                  │
-│  │  fileSize        │  │                  │                  │
+│  │                  │  │                  │                  │
+│  │  contentId       │  │  contentId       │                  │
+│  │  title           │  │  action          │                  │
+│  │  type            │  │  timestamp       │                  │
+│  │  fileSize        │  │  active          │                  │
 │  │  downloadedAt    │  │                  │                  │
 │  │  version         │  │                  │                  │
 │  └──────────────────┘  └──────────────────┘                  │
@@ -144,9 +136,9 @@ Every downstream document (API Contract → Delivery Plan) must be consistent wi
 
 | Location | Entity | Count |
 |----------|--------|-------|
-| Server (PostgreSQL) | ContentItem, Category, Interest, ContentCategory, ContentInterest | 5 |
+| Server (PostgreSQL) | ContentItem, Category, Interest | 3 |
 | Edge (IndexedDB) | DeviceProfile, CachedCatalog, DownloadRecord, LocalAction | 4 |
-| **Total** | | **9** |
+| **Total** | | **7** |
 
 ---
 
@@ -169,13 +161,21 @@ The central entity representing a piece of training content.
 | `duration` | INTEGER | NULLABLE | Seconds; video only; NULL for PDF |
 | `thumbnailPath` | VARCHAR(500) | NULLABLE | Optional admin-uploaded thumbnail; NULL = placeholder |
 | `version` | INTEGER | NOT NULL, default 1 | Incremented on content update; drives "updated" badge |
+| `categoryId` | UUID | NULLABLE, FK → Category.id, ON DELETE SET NULL | Single library category; `NULL` = uncategorized |
+| `interestIds` | UUID[] | NOT NULL, default `{}` | Zero or more interest UUIDs; validated by service layer |
 | `createdAt` | TIMESTAMP | NOT NULL, auto | First upload time |
 | `updatedAt` | TIMESTAMP | NOT NULL, auto | Last modification time; used for sync and "updated" badge |
 
 **Indexes:**
 - `idx_content_type` on `type` (filter videos for reels feed)
 - `idx_content_updated` on `updatedAt` (sync ordering)
+- `idx_content_category` on `categoryId` (library filtering)
+- `idx_content_interest_ids` as a PostgreSQL GIN index on `interestIds` (array overlap queries)
 - Full-text: `idx_content_search` on `title, description` (PostgreSQL `tsvector` or `ILIKE`)
+
+**Notes:**
+- `interestIds` is deduplicated and normalized in application logic before save.
+- Normalization rule for MVP: convert all UUIDs to canonical string form, remove duplicates, then sort ascending for stable equality checks.
 
 ---
 
@@ -194,7 +194,7 @@ A node in a 2-level hierarchy for organizing library content.
 
 **Constraints:**
 - Max depth enforced in application logic (not DB): `parentId` must reference a top-level category (where `parentId IS NULL`)
-- Deleting a category with children: cascade delete children, unlink content (remove junction rows)
+- Deleting a category with children: cascade delete children, set any matching `content_items.category_id` values to `NULL`
 
 **Indexes:**
 - `idx_category_parent` on `parentId`
@@ -209,42 +209,17 @@ A flat tag used to filter the reels feed and library. Admin-managed.
 | Field | Type | Constraints | Notes |
 |-------|------|------------|-------|
 | `id` | UUID | PK, auto-generated | |
-| `name` | VARCHAR(100) | NOT NULL, UNIQUE | Display name; used in device profile |
+| `name` | VARCHAR(100) | NOT NULL, UNIQUE | Display name; used in device profile and content tagging |
 | `createdAt` | TIMESTAMP | NOT NULL, auto | |
 
 **Notes:**
 - No hierarchy — flat list
-- Deleting an interest: remove junction rows (ContentInterest); edge device profiles updated on next sync
+- No direct DB relationship to `content_items`; links are stored in `content_items.interest_ids`
+- Deleting an interest requires a service-layer cleanup step: remove the deleted UUID from all `content_items.interest_ids`, then delete the `interests` row
 
 ---
 
-### 6.4 ContentCategory (Server — Junction)
-
-Many-to-many: content items belong to categories.
-
-| Field | Type | Constraints | Notes |
-|-------|------|------------|-------|
-| `contentId` | UUID | FK → ContentItem.id, ON DELETE CASCADE | |
-| `categoryId` | UUID | FK → Category.id, ON DELETE CASCADE | |
-
-**PK:** Composite `(contentId, categoryId)`
-
----
-
-### 6.5 ContentInterest (Server — Junction)
-
-Many-to-many: content items are tagged with interests.
-
-| Field | Type | Constraints | Notes |
-|-------|------|------------|-------|
-| `contentId` | UUID | FK → ContentItem.id, ON DELETE CASCADE | |
-| `interestId` | UUID | FK → Interest.id, ON DELETE CASCADE | |
-
-**PK:** Composite `(contentId, interestId)`
-
----
-
-### 6.6 DeviceProfile (Edge — IndexedDB)
+### 6.4 DeviceProfile (Edge — IndexedDB)
 
 Local device configuration. One record per device.
 
@@ -261,7 +236,7 @@ Local device configuration. One record per device.
 
 ---
 
-### 6.7 CachedCatalog (Edge — IndexedDB)
+### 6.5 CachedCatalog (Edge — IndexedDB)
 
 A snapshot of the server catalog, stored locally for offline browsing.
 
@@ -274,7 +249,7 @@ A snapshot of the server catalog, stored locally for offline browsing.
 
 **Storage:** Single record in an IndexedDB object store (`catalogCache`). Replaced entirely on each sync.
 
-**DTO shapes** (Pydantic models, serialized to JSON for the edge client):
+**DTO shapes** (serialized to JSON for the edge client):
 
 ```python
 from enum import Enum
@@ -282,8 +257,8 @@ from typing import Optional
 from pydantic import BaseModel
 
 class ContentType(str, Enum):
-    video = 'video'
-    pdf = 'pdf'
+    video = "video"
+    pdf = "pdf"
 
 class ContentItemDTO(BaseModel):
     id: str
@@ -291,21 +266,21 @@ class ContentItemDTO(BaseModel):
     description: str
     type: ContentType
     filename: str
-    file_size: int
-    mime_type: str
+    fileSize: int
+    mimeType: str
     duration: Optional[int] = None
-    thumbnail_url: Optional[str] = None
+    thumbnailUrl: Optional[str] = None
     version: int
-    category_ids: list[str]
-    interest_ids: list[str]
-    created_at: str
-    updated_at: str
+    categoryId: Optional[str] = None
+    interestIds: list[str]
+    createdAt: str
+    updatedAt: str
 
 class CategoryDTO(BaseModel):
     id: str
     name: str
-    parent_id: Optional[str] = None
-    sort_order: int
+    parentId: Optional[str] = None
+    sortOrder: int
 
 class InterestDTO(BaseModel):
     id: str
@@ -314,7 +289,7 @@ class InterestDTO(BaseModel):
 
 ---
 
-### 6.8 DownloadRecord (Edge — IndexedDB)
+### 6.6 DownloadRecord (Edge — IndexedDB)
 
 Metadata-only record tracking content items the user has explicitly downloaded for offline access. The actual file is cached by the edge proxy (nginx `proxy_cache`), not by Chrome.
 
@@ -329,13 +304,11 @@ Metadata-only record tracking content items the user has explicitly downloaded f
 
 **Storage:** IndexedDB object store (`downloads`), keyed by `contentId`.
 
-**What changed (v0.2):** Removed `cacheKey` and `mimeType` fields. The file is no longer stored in Chrome's Cache API — it is cached by the edge proxy. The DownloadRecord is now a pure metadata record used by the Downloads tab UI. When the user plays a downloaded item, the SPA requests the file from the edge proxy (localhost), which serves it from its cache.
-
 **Delete behavior:** Removing a download record removes only the IndexedDB metadata. The proxy cache may still hold the file (managed by nginx cache eviction, not by the SPA).
 
 ---
 
-### 6.9 LocalAction (Edge — IndexedDB)
+### 6.7 LocalAction (Edge — IndexedDB)
 
 Tracks Like/Save actions locally. No server sync in MVP.
 
@@ -356,9 +329,9 @@ Tracks Like/Save actions locally. No server sync in MVP.
 
 | Relationship | Type | Description |
 |-------------|------|------------|
-| ContentItem ↔ Category | M:N via ContentCategory | A content item can belong to multiple categories; a category can contain many items |
-| ContentItem ↔ Interest | M:N via ContentInterest | A content item can be tagged with multiple interests; an interest can tag many items |
-| Category → Category (self) | 1:N via parentId | Top-level categories have children; max 2 levels |
+| Category → Category (self) | 1:N via `parentId` | Top-level categories have children; max 2 levels |
+| Category → ContentItem | 1:N via `categoryId` | A category can contain many items; a content item belongs to zero or one category |
+| ContentItem ↔ Interest | Logical M:N via `interestIds[]` | A content item can have many interests; an interest can appear on many content items |
 | DeviceProfile → Interest | Local reference | `selectedInterestIds` references Interest UUIDs from CachedCatalog |
 | DownloadRecord → ContentItem | Local reference | `contentId` references ContentItem.id from CachedCatalog |
 | LocalAction → ContentItem | Local reference | `contentId` references ContentItem.id from CachedCatalog |
@@ -373,9 +346,9 @@ Tracks Like/Save actions locally. No server sync in MVP.
 
 | Entity | Key fields for MVP | Key fields for continuation |
 |--------|-------------------|---------------------------|
-| ContentItem | id, title, description, type, filePath, fileSize, mimeType, version, updatedAt | duration, thumbnailPath (future: viewCount, likeCount, userId) |
+| ContentItem | id, title, description, type, filePath, fileSize, mimeType, version, categoryId, interestIds, updatedAt | duration, thumbnailPath (future: viewCount, likeCount, userId) |
 | Category | id, name, parentId, sortOrder | (future: description, iconUrl) |
-| Interest | id, name | (future: description, sortOrder) |
+| Interest | id, name | (future: description, sortOrder, color) |
 
 ### 8.2 Browser-Local (IndexedDB)
 
@@ -400,7 +373,7 @@ Upload (admin) → Created (version=1) → Updated (version++) → Deleted (hard
 |-------|-------------|
 | **Created** | File stored; metadata record inserted; `version=1`; `createdAt` = `updatedAt` = now |
 | **Updated** | File replaced; metadata updated; `version++`; `updatedAt` = now |
-| **Deleted** | Metadata record deleted; file deleted from filesystem; junction rows cascade-deleted |
+| **Deleted** | Metadata record deleted; file deleted from filesystem; category/interest assignments disappear with the row |
 
 No draft/publish distinction in MVP — upload = published immediately.
 
@@ -417,11 +390,9 @@ Not Downloaded → Downloading (in-memory) → Downloaded (proxy cached) → Del
 | **Downloaded** | DownloadRecord in IndexedDB (metadata only); file in edge proxy cache |
 | **Deleted** | DownloadRecord removed from IndexedDB; proxy cache may still hold file (managed by nginx eviction) |
 
-**What changed (v0.2):** The download lifecycle no longer involves Chrome's Cache API. The file is cached by the edge proxy transparently. The SPA only manages the metadata record in IndexedDB.
-
 ### 9.3 "Updated" Badge Logic
 
-The edge client compares `DownloadRecord.version` with `CachedCatalog.items[].version`. If the catalog version is higher, the item shows an "updated" badge. This also applies to items in the library (comparing `CachedCatalog` current version with the version the user last saw — but for MVP simplicity, badge shows only on downloaded items where the version mismatch is clear).
+The edge client compares `DownloadRecord.version` with `CachedCatalog.items[].version`. If the catalog version is higher, the item shows an "updated" badge. For MVP, this badge is scoped to downloaded items only.
 
 ---
 
@@ -434,15 +405,13 @@ The edge client compares `DownloadRecord.version` with `CachedCatalog.items[].ve
 | `content_items` | 15 | Grows with uploads; ~10s–100s in production |
 | `categories` | ~8–12 | Slow growth; admin-managed |
 | `interests` | ~5–8 | Slow growth; admin-managed |
-| `content_categories` | ~20–30 | Proportional to content × categories |
-| `content_interests` | ~20–30 | Proportional to content × interests |
 
 ### 10.2 Naming Convention
 
 - Table names: `snake_case`, plural (`content_items`, `categories`)
-- Column names: `snake_case` (`file_size`, `parent_id`, `created_at`)
+- Column names: `snake_case` (`file_size`, `parent_id`, `interest_ids`)
 - Python model names: `PascalCase` (`ContentItem`, `Category`)
-- SQLAlchemy maps between conventions automatically via `Column` declarations
+- JSON/API field names: `camelCase` (`fileSize`, `categoryId`, `interestIds`)
 
 ### 10.3 Binary Content Storage
 
@@ -480,12 +449,10 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 
 | Cached content | Cache key (automatic) | Typical size | Eviction |
 |---------------|----------------------|-------------|---------|
-| Content files (video/PDF) | URL-based: `/api/content/{id}/file` | 1–100 MB per file | 30 days inactive |
+| Content files (video/PDF) | URL-based: `/api/content/{id}/file?v={version}` | 1–100 MB per file | 30 days inactive |
 | Thumbnails | URL-based: `/api/content/{id}/thumbnail` | 10–200 KB per image | 30 days inactive |
 | Catalog metadata | URL-based: `/api/catalog` | <10 KB | 5 minutes validity |
 | SPA static files | N/A — served directly from Docker image | ~5–10 MB total | Never (part of image) |
-
-**What changed (v0.2):** Chrome's Cache API and Service Worker cache are no longer used. All content caching is handled by the edge proxy's `proxy_cache` on the Linux VM filesystem. The SPA static files are bundled into the Docker image and served by nginx directly.
 
 ### 11.3 Size Expectations
 
@@ -506,11 +473,12 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 |-----------|-------------|-------|
 | ContentItem.id is unique | PK (database) | UUID auto-generated |
 | ContentItem.type ∈ {'video', 'pdf'} | ENUM (database) + validation (API) | |
+| ContentItem.categoryId references valid category or NULL | FK (database) | `ON DELETE SET NULL` |
+| ContentItem.interestIds contains only existing interest UUIDs | Application logic | No native FK across `UUID[]` |
+| ContentItem.interestIds is deduplicated + normalized | Application logic | Sort ascending after dedupe |
 | Category max depth = 2 | Application logic | `parentId` must reference a row where `parentId IS NULL` |
 | Category.name unique within siblings | Application logic + UNIQUE(parentId, name) | |
 | Interest.name globally unique | UNIQUE constraint (database) | |
-| ContentCategory: no duplicate pairs | Composite PK (database) | |
-| ContentInterest: no duplicate pairs | Composite PK (database) | |
 | File upload: MP4 or PDF only | API validation | Check MIME type + extension |
 | File upload: ≤100 MB | API validation | Configurable constant |
 | Video duration: ≤3 min (180s) | API validation (if implemented) | Should priority; not hard blocker |
@@ -532,11 +500,12 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 
 | Query | Used by | Implementation |
 |-------|---------|---------------|
-| Get full catalog (all items + categories + interests) | Metadata sync (edge) | JOIN content_items with content_categories, content_interests; include all categories and interests |
+| Get full catalog (all items + categories + interests) | Metadata sync (edge) | `SELECT` all `content_items`, `categories`, and `interests`; no junction joins needed |
 | Search content by title/description | Library search (edge) | PostgreSQL `ILIKE '%term%'` on title + description; upgrade to `tsvector` if needed |
 | Filter content by type='video' | Reels feed (edge) | WHERE clause on `type` |
-| Filter content by interest IDs | Feed filtering (edge) | JOIN content_interests WHERE interest_id IN (...) |
-| Filter content by category ID | Library browsing (edge) | JOIN content_categories WHERE category_id = ... |
+| Filter content by interest IDs | Feed filtering (edge) | PostgreSQL array overlap: `interest_ids && ARRAY[...]::uuid[]` |
+| Filter content by category ID | Library browsing (edge) | `WHERE category_id = ...` |
+| Get uncategorized items | Library fallback/admin QA | `WHERE category_id IS NULL` |
 | Get category tree | Library (edge) | SELECT all categories; build tree in application (small dataset) |
 | Admin content list | Admin portal | SELECT with optional sort/filter; paginate if >50 items |
 
@@ -552,7 +521,8 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 
 ### 13.3 Performance Notes
 
-- **Server:** With ~15 items, all queries are trivially fast. No pagination needed for MVP. Add `LIMIT/OFFSET` to catalog API for future growth.
+- **Server:** With ~15 items, all queries are trivially fast. No pagination needed for MVP. Add `LIMIT/OFFSET` to admin endpoints if catalog grows.
+- **Server interest filtering:** A GIN index on `interest_ids` keeps overlap queries fast enough for MVP and early growth.
 - **Edge:** CachedCatalog is a single JSON object; all filtering (by interest, category, search) happens in-memory in JavaScript. This is fine for ~15 items. For 100+ items, consider IndexedDB indexes.
 
 ---
@@ -564,11 +534,12 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 | **Separate ContentAsset entity** (one-to-many: item has multiple files) | MVP is one file per item; if multi-quality or multi-format needed, add ContentAsset table later |
 | **User table** | No user identity in MVP; device profile is local-only |
 | **Content version history** (keep old files) | MVP overwrites; version counter is sufficient; add `content_versions` table later if rollback needed |
-| **Tag entity** (separate from Interest) | Interests serve as the only tagging mechanism; if more granular tags are needed, add a separate Tag table |
+| **Junction tables for content-category and content-interest** | Deliberately removed for MVP simplicity; reintroduce only if assignment metadata or richer relationship semantics are needed |
+| **JSONB for `interestIds`** | PostgreSQL `UUID[]` gives clearer intent and stronger type safety |
 | **PublishState / Draft** | MVP publishes immediately on upload; add `status` ENUM to content_items if draft/review workflow is needed |
 | **AnalyticsEvent table** | No server-side analytics in MVP; add event log table when user identity exists |
-| **Full-text search index** (tsvector) | `ILIKE` is sufficient for ~15 items; upgrade to tsvector for 100+ items |
-| **Soft delete** (isDeleted flag) | Hard delete in MVP; add soft delete if audit trail is needed |
+| **Full-text search index** (`tsvector`) | `ILIKE` is sufficient for ~15 items; upgrade to `tsvector` for 100+ items |
+| **Soft delete** (`isDeleted` flag) | Hard delete in MVP; add soft delete if audit trail is needed |
 | **Content expiry / TTL** | No auto-expiry; add `expiresAt` to content_items if content lifecycle management is needed |
 
 ---
@@ -581,8 +552,9 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 | DA2 | A single CachedCatalog JSON blob is efficient for ~15 items | Need IndexedDB indexes or pagination if catalog grows to 100+ |
 | DA3 | Hard delete is acceptable for MVP (no recoverability needed) | Data loss on accidental delete; admin must re-upload |
 | DA4 | Interests and categories are independent (no mapping between them) | If users expect interests to match categories, UX may be confusing |
-| DA5 | Thumbnail upload is optional; placeholder is acceptable | Demo may look less polished without thumbnails |
-| DA6 | No need for a `status` field on content items (all are published immediately) | If approval workflow is needed, must add status ENUM |
+| DA5 | One category per content item is sufficient for library organization in MVP | If multi-placement becomes necessary, reintroduce a junction table later |
+| DA6 | PostgreSQL `UUID[]` is acceptable for interest assignment in MVP | If querying or integrity needs become more complex, reintroduce a junction table later |
+| DA7 | Thumbnail upload is optional; placeholder is acceptable | Demo may look less polished without thumbnails |
 
 ---
 
@@ -591,10 +563,11 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|------|-----------|--------|-----------|
 | DR1 | Orphaned download records if server deletes content between syncs | Medium | Low | Edge client cleanup: on sync, remove DownloadRecords/LocalActions where contentId not in catalog |
-| DR2 | CachedCatalog grows large if content count increases significantly | Low (MVP) | Medium | Design API to support pagination; switch to per-item IndexedDB records if needed |
+| DR2 | Deleting an interest requires application cleanup across `content_items.interest_ids` | Medium | Medium | Implement delete in one transaction: array cleanup first, then delete interest row |
 | DR3 | Interest/category relationship confusion — users expect them to be linked | Medium | Medium | Clear admin UI guidance; document the distinction; consider linking post-MVP |
-| DR4 | Thumbnail management adds upload complexity | Low | Low | Make thumbnail optional; admin can skip; UI shows type-based placeholder |
-| DR5 | UUID generation collision | Negligible | High | Use crypto.randomUUID() — collision probability is effectively zero |
+| DR4 | Array-based interest filtering becomes less transparent to developers than a fully normalized assignment model | Medium | Low | Document query patterns clearly; keep a focused service layer |
+| DR5 | Thumbnail management adds upload complexity | Low | Low | Make thumbnail optional; admin can skip; UI shows type-based placeholder |
+| DR6 | UUID generation collision | Negligible | High | Use crypto.randomUUID() / uuid4; collision probability is effectively zero |
 
 ---
 
@@ -602,9 +575,9 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 
 | # | Question | Affects | Recommended default | Deadline |
 |---|---------|---------|-------------------|----------|
-| DQ1 | Should the "updated" badge appear on all items in library, or only on downloaded items? | Edge UX, logic complexity | All items: compare `CachedCatalog` version with a "last seen version" in LocalAction; simpler: only on downloads | Before UI implementation |
-| DQ2 | Should thumbnails be stored in the same `./data/content/` directory or separate `./data/thumbnails/`? | File organization | Separate `./data/thumbnails/` for clarity | Before implementation |
-| DQ3 | Should the admin be able to assign a content item to zero categories? | Data integrity | Allow zero (uncategorized); show in library under "All" or "Uncategorized" | Before implementation |
+| DQ1 | Should thumbnails be stored in the same `./data/content/` directory or separate `./data/thumbnails/`? | File organization | Separate `./data/thumbnails/` for clarity | Before implementation |
+| DQ2 | Should the admin be able to assign a content item to zero categories? | Data integrity | Allow zero (uncategorized); show in library under "All" or "Uncategorized" | Before implementation |
+| DQ3 | At what scale should the team reintroduce a normalized interest junction table? | Continuation architecture | Only if interest assignment needs per-link metadata, analytics, or significantly larger-scale querying | Post-MVP |
 
 ---
 
@@ -614,21 +587,22 @@ Content files and API responses are cached by the edge proxy (nginx in Docker), 
 |----------|---------------|--------|
 | 1st | Drop thumbnails entirely (use type-based placeholders only) | Removes thumbnail upload, storage, and serving; saves ~2 days |
 | 2nd | Drop LocalAction (Like/Save) entity | Remove Like/Save buttons from UI; users rely on downloads only |
-| 3rd | Make interests a fixed seed list (no admin CRUD) | Remove InterestService admin API; interests are database seeds |
-| 4th | Drop ContentCategory junction (content belongs to zero or one category via direct FK) | Simplifies to 1:N; loses multi-category assignment |
+| 3rd | Make interests a fixed seed list (no admin CRUD) | Remove InterestService admin API; interests come from database seed |
+| 4th | Seed categories and drop category CRUD | Keep the single `categoryId` column but remove admin tree management |
 | 5th | Drop CachedCatalog (require network for all browsing) | Removes IndexedDB catalog mirror; library/reels only work online |
 
 ---
 
 ## 19. Continuation Notes
 
-- **v0.3 (2026-03-25):** ORM changed from Prisma to SQLAlchemy. Migration tooling changed from Prisma migrate to Alembic. Any TypeScript type examples replaced with Python/Pydantic equivalents.
+- **v0.4 (2026-04-23):** Server schema simplified to 3 PostgreSQL tables. `categoryId` is now singular; `interestIds` is a `UUID[]` array on `content_items`.
 - **User entity:** When auth is added, create a `users` table with `id (UUID)`, `email`, `passwordHash`, `role`. Link to content via `createdBy` FK on `content_items`. Replace `deviceId` in DeviceProfile with `userId`.
 - **View/like counts (server):** Add `viewCount` and `likeCount` columns to `content_items`. Populate via batch sync from LocalAction records. Use for future recommendation engine.
 - **Content versions table:** Add `content_versions` (id, contentId, version, filePath, createdAt) to keep old file references. Content update inserts a new version row instead of overwriting.
 - **Analytics events:** Add `analytics_events` (id, deviceId/userId, contentId, eventType, timestamp) for tracking views, downloads, likes at the server level.
 - **Soft delete:** Add `deletedAt` TIMESTAMP NULLABLE to `content_items` and `categories`. Filter `WHERE deletedAt IS NULL` in all queries. Add admin "trash" view.
 - **Delta sync:** Add `syncVersion` (monotonic counter) to a `sync_state` table. Each mutation increments the counter. Edge sends last known version; server returns only changes since then.
+- **Normalized interests (future):** If interest assignments need richer metadata, replace `content_items.interest_ids` with a dedicated normalized assignment table and migrate existing arrays into rows.
 - **Multi-tenancy:** Add `tenantId` UUID to `content_items`, `categories`, `interests`. MVP sets to a constant. Future: partition all queries by tenant.
 - **Full-text search:** Create a PostgreSQL `tsvector` column on `content_items` with a GIN index. Update on insert/update via trigger. Replace `ILIKE` queries.
 

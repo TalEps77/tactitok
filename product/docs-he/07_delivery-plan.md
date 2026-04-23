@@ -73,7 +73,7 @@
 **Dev A — יסודות Backend:**
 - אתחול סביבת Python ווירטואלית; התקנת FastAPI + SQLAlchemy + Alembic
 - יצירת שלד FastAPI עם endpoint בדיקת תקינות: `GET /api/health → 200 { "status": "ok" }`
-- יצירת סכמת PostgreSQL (מיגרציית Alembic 001): `content_items`, `categories`, `interests`, `content_categories`, `content_interests`
+- יצירת סכמת PostgreSQL (מיגרציית Alembic 001): `content_items`, `categories`, `interests`
 - הגדרת מודלי SQLAlchemy וסכמות תגובה Pydantic — `ContentItemDTO`, `CatalogResponse`, `CategoryDTO`, `InterestDTO`, `LoginRequest`, `LoginResponse`, `ApiError`
 - מבנה ניתוב FastAPI, handler שגיאות, רישום בקשות
 
@@ -99,7 +99,7 @@
 **Dev A:**
 - אימות ניהולי: `POST /api/admin/login` + `POST /api/admin/logout` עם JWT
 - Middleware אימות לכל נתיבי `/api/admin/*`
-- `POST /api/admin/content` (endpoint העלאה): Multer, אימות MIME, אחסון filesystem, הכנסה ל-DB
+- `POST /api/admin/content` (endpoint העלאה): טיפול העלאה ב-FastAPI, אימות MIME, אחסון filesystem, הכנסה ל-DB
 - `GET /api/admin/content` (endpoint רשימה)
 
 **Dev B:**
@@ -258,7 +258,7 @@
 
 **Dev C:**
 - לוגיקת תג "מעודכן": בסנכרון קטלוג, השוואת `DownloadRecord.version` עם `CachedCatalog.items[].version`; אם גרסת קטלוג גבוהה יותר, סימון פריט בטאב הורדות עם תג "מעודכן"
-- תג "מעודכן" בספרייה: אם `updatedAt` של פריט חדש יותר מ-`CachedCatalog.lastSyncedAt` מהסנכרון הקודם (היוריסטיקה משוערת) — חלופה פשוטה יותר: הצגת תג רק על פריטים שהורדו שבהם אי-התאמת גרסה ברורה
+- היקף תג "מעודכן": הורדות בלבד. להשוות `DownloadRecord.version` מול `CachedCatalog.items[].version`; לא להציג תג היוריסטי בכל הספרייה
 - מצב כפתור הורדה: אם פריט נמצא ב-IndexedDB של `DownloadRecord`, הצגת אייקון "הורד"; אם לא, הצגת כפתור "הורדה"
 
 **Dev A:**

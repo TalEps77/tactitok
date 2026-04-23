@@ -140,7 +140,7 @@ TactiTok is a browser-based learning platform that delivers short training video
 |------|--------|
 | **Trigger** | New or updated training material is ready to publish |
 | **1** | Log in to admin portal (simple password) |
-| **2** | Upload video or PDF + fill metadata (title, description, categories, interests/tags, version date) |
+| **2** | Upload video or PDF + fill metadata (title, description, category, interests, version date) |
 | **3** | If updating existing content: upload replaces previous version; edge devices see "updated" badge |
 | **4** | Manage category tree (create / rename / reorder / delete categories) |
 | **5** | Publish → content appears in catalog; edge devices receive updated metadata on next sync |

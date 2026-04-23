@@ -188,12 +188,12 @@
         <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
           <p class="label">DK-06 &mdash; עיון במודל הנתונים</p>
           <h1 class="title-hero" style="letter-spacing:-0.02em;">מודל הנתונים של <span class="highlight-g">TactiTok</span></h1>
-          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:680px;line-height:1.5;">9 ישויות &middot; שדות &middot; סוגים &middot; אילוצים &middot; שרת מול קצה</p>
+          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:680px;line-height:1.5;">7 ישויות/מאגרים ממודלים &middot; שדות &middot; סוגים &middot; אילוצים &middot; שרת מול קצה</p>
         </div>
         <hr class="divider" style="width:100%;max-width:500px;">
         <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
-          <span class="badge badge-g">5 ישויות שרת</span>
-          <span class="badge badge-b">4 ישויות קצה</span>
+          <span class="badge badge-g">3 טבלאות שרת</span>
+          <span class="badge badge-b">4 מאגרי קצה</span>
           <span class="badge badge-o">קהל יעד: מפתחים</span>
         </div>
         <p style="font-size:var(--sz-label);color:var(--text-muted);">גרסה 0.2 &middot; מרץ 2026 &middot; מקור: product/05_data-model.md</p>
@@ -201,24 +201,22 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         שקופית 2 — סקירה: 9 ישויות
+         שקופית 2 — סקירה: 7 ישויות/מאגרים ממודלים
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="2"
-      data-notes="תשע ישויות בסך הכל, מחולקות בין שתי מערכות אחסון. צד שרת: 5 ישויות ב-PostgreSQL על ה-VM בענן. צד קצה: 4 ישויות ב-IndexedDB ב-Chrome על מכשיר השטח. עקרון המפתח: השרת הוא סמכותי. כל נתוני הקטלוג שוכנים ב-PostgreSQL. הקצה מחזיק תמונת מצב מאוחסנת ב-IndexedDB בתוספת מצב מכשיר מקומי בלבד. אין טבלת User — זהות המכשיר היא מקומית לקצה בלבד.">
+      data-notes="שבע ישויות/מאגרים ממודלים בסך הכל, מחולקים בין שתי מערכות אחסון. צד שרת: 3 טבלאות ב-PostgreSQL על ה-VM בענן. צד קצה: 4 מאגרים ב-IndexedDB ב-Chrome על מכשיר השטח. עקרון המפתח: השרת הוא סמכותי. כל נתוני הקטלוג שוכנים ב-PostgreSQL. הקצה מחזיק תמונת מצב מאוחסנת ב-IndexedDB בתוספת מצב מכשיר מקומי בלבד. אין טבלת User — זהות המכשיר היא מקומית לקצה בלבד.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">סקירה</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">9 ישויות — <span class="highlight-g">שרת</span> מול <span class="highlight-b">קצה</span></h1>
+        <h1 class="title-h1">7 ישויות/מאגרים ממודלים — <span class="highlight-g">שרת</span> מול <span class="highlight-b">קצה</span></h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
               <p class="card-title" style="color:var(--accent-green);">&#9632; שרת — PostgreSQL (VM בענן)</p>
-              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">מקור האמת הסמכותי &middot; 5 טבלאות</p>
+              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">מקור האמת הסמכותי &middot; 3 טבלאות</p>
               <div style="display:flex;flex-direction:column;gap:0.45rem;">
                 <span class="entity-badge entity-badge-g">ContentItem</span>
                 <span class="entity-badge entity-badge-g">Category</span>
                 <span class="entity-badge entity-badge-g">Interest</span>
-                <span class="entity-badge entity-badge-g">ContentCategory <span style="font-weight:400;font-size:0.85em;">(צומת)</span></span>
-                <span class="entity-badge entity-badge-g">ContentInterest <span style="font-weight:400;font-size:0.85em;">(צומת)</span></span>
               </div>
             </div>
           </div>
@@ -245,20 +243,20 @@
          שקופית 3 — ישויות צד-שרת — סקירה
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="3"
-      data-notes="השרת מחזיק חמש טבלאות PostgreSQL. ContentItem היא הישות המרכזית — כל פריט תוכן הדרכה שוכן כאן. Category מספקת היררכיה דו-רמתית לארגון הספרייה. Interest מספקת תגיות שטוחות למסנן פיד הריאלס. ContentCategory ו-ContentInterest הן טבלאות צומת לקשרי רבים-לרבים. קבצים בינאריים (MP4, PDF, תמונות ממוזערות) אינם במסד הנתונים — הם שוכנים במערכת הקבצים של השרת. העמודות file_path ו-thumbnail_path ב-content_items מצביעות עליהם. SQLAlchemy ממפה עמודות snake_case למאפייני מודל Python; כל שינוי סכמה עובר דרך מיגרציות Alembic.">
+      data-notes="השרת מחזיק שלוש טבלאות PostgreSQL. ContentItem היא הטבלה המרכזית — כל פריט תוכן הדרכה שוכן כאן. Category מספקת היררכיה דו-רמתית לארגון הספרייה. Interest מספקת תגיות שטוחות למסנן פיד הריאלס. הטבלה content_items שומרת ישירות את שיוך הקטגוריה ב-categoryId ואת שיוכי תחומי העניין ב-interestIds. קבצים בינאריים (MP4, PDF, תמונות ממוזערות) אינם במסד הנתונים — הם שוכנים במערכת הקבצים של השרת. העמודות file_path ו-thumbnail_path ב-content_items מצביעות עליהם. SQLAlchemy ממפה עמודות snake_case למאפייני מודל Python; כל שינוי סכמה עובר דרך מיגרציות Alembic.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">צד שרת</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">ישויות <span class="highlight-g">צד-שרת</span></h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
-              <p class="card-title">PostgreSQL · 5 טבלאות</p>
+              <p class="card-title">PostgreSQL · 3 טבלאות</p>
               <ul class="bullets" style="gap:0.45rem;">
                 <li><strong>content_items</strong> — ישות מרכזית; שורה אחת לכל פריט תוכן</li>
                 <li><strong>categories</strong> — היררכיה דו-רמתית (parentId ניתן לריק)</li>
                 <li><strong>interests</strong> — תגיות שטוחות; מנוהלות על-ידי מנהל</li>
-                <li><strong>content_categories</strong> — צומת M:N</li>
-                <li><strong>content_interests</strong> — צומת M:N</li>
+                <li><strong>content_items.category_id</strong> — FK בודד וניתן לריק לקטגוריה</li>
+                <li><strong>content_items.interest_ids</strong> — מערך UUID לשיוך תחומי עניין מרובים</li>
               </ul>
             </div>
             <div class="card card-gl">
@@ -379,7 +377,7 @@ parentId של ילד חייב להפנות לשורה
 רפואת שדה         (parentId = NULL)</div>
             </div>
             <div class="note-box">
-              <strong>מחיקה בcascade:</strong> מחיקת הורה מתגלגלת לקטגוריות ילד ומסירה את כל שורות הצומת (ContentCategory). פריטי תוכן עצמם אינם נמחקים — הם הופכים לא מסווגים.
+              <strong>התנהגות מחיקה:</strong> מחיקת הורה מתגלגלת לקטגוריות ילד, ופריטי התוכן המושפעים הופכים ל"לא מסווגים" דרך <span class="mono">ON DELETE SET NULL</span> על <span class="mono">content_items.category_id</span>.
             </div>
           </div>
         </div>
@@ -390,7 +388,7 @@ parentId של ילד חייב להפנות לשורה
          שקופית 6 — Interest
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="6"
-      data-notes="Interest היא ישות השרת הפשוטה ביותר — רק 3 שדות. תחומי עניין הם תגיות שטוחות ללא היררכיה. מנוהלות על-ידי מנהל דרך פורטל הניהול. השם חייב להיות ייחודי גלובלית. תחומי עניין משמשים לסינון פיד הריאלס: המשתמש בוחר תחומי עניין במכשיר הקצה, אלו נשמרים ב-DeviceProfile.selectedInterestIds, והפיד מסונן בצד-לקוח באמצעות המזהים מ-CachedCatalog. במחיקה: שורות הצומת נמחקות בcascade. פרופיל מכשיר הקצה יכיל מזהי עניין מיושנים עד לסנכרון הבא, שבו לקוח הקצה יפנה אותם.">
+      data-notes="Interest היא ישות השרת הפשוטה ביותר — רק 3 שדות. תחומי עניין הם תגיות שטוחות ללא היררכיה. מנוהלות על-ידי מנהל דרך פורטל הניהול. השם חייב להיות ייחודי גלובלית. תחומי עניין משמשים לסינון פיד הריאלס: המשתמש בוחר תחומי עניין במכשיר הקצה, אלו נשמרים ב-DeviceProfile.selectedInterestIds, והפיד מסונן בצד-לקוח באמצעות המזהים מ-CachedCatalog. במחיקה: שכבת השירות מסירה את ה-UUID שנמחק מכל מערכי content_items.interest_ids לפני מחיקת רשומת ה-Interest. פרופיל מכשיר הקצה יכיל מזהי עניין מיושנים עד לסנכרון הבא, שבו לקוח הקצה יפנה אותם.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">ישות שרת 3/3</p><div class="accent-bar"></div></div>
         <h1 class="title-h1"><span class="highlight-g">Interest</span> — תגיות שטוחות</h1>
@@ -415,7 +413,7 @@ parentId של ילד חייב להפנות לשורה
               <p class="card-title">תפקיד במערכת</p>
               <ul class="bullets" style="gap:0.45rem;">
                 <li>מנהל יוצר תחומי עניין דרך ה-Admin SPA</li>
-                <li>מנהל מתייג פריטי תוכן בתחומי עניין (צומת ContentInterest)</li>
+                <li>מנהל מתייג פריטי תוכן בתחומי עניין דרך <span class="mono">interestIds[]</span> על ContentItem</li>
                 <li>משתמש מכשיר קצה בוחר תחומי עניין בהפעלה ראשונה</li>
                 <li>מזהים שנבחרו נשמרים ב-<span class="highlight-b">DeviceProfile.selectedInterestIds</span></li>
                 <li>פיד ריאלס מסנן לפי interestIds תואמים מ-CachedCatalog</li>
@@ -423,7 +421,7 @@ parentId של ילד חייב להפנות לשורה
             </div>
             <div class="card card-gl">
               <p class="card-title">במחיקה (Interest)</p>
-              <p class="card-body">כל שורות צומת ContentInterest נמחקות בcascade. פרופילי מכשיר קצה שמפנים למזהה העניין שנמחק הופכים מיושנים — יפונו בסנכרון קטלוג הבא על-ידי לקוח הקצה.</p>
+              <p class="card-body">לפני מחיקת רשומת Interest, שכבת השירות מסירה את ה-UUID שלה מכל מערכי <span class="mono">content_items.interest_ids</span>. פרופילי מכשיר קצה שמפנים למזהה העניין שנמחק הופכים מיושנים — יפונו בסנכרון קטלוג הבא על-ידי לקוח הקצה.</p>
             </div>
           </div>
         </div>
@@ -431,55 +429,53 @@ parentId של ילד חייב להפנות לשורה
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         שקופית 7 — טבלאות צומת
+         שקופית 7 — מודל השיוך
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="7"
-      data-notes="שתי טבלאות צומת מממשות את קשרי הרבים-לרבים. ContentCategory מקשרת פריטי תוכן לקטגוריות — פריט תוכן אחד יכול להופיע במספר קטגוריות, קטגוריה אחת יכולה להכיל פריטים רבים. ContentInterest מקשרת פריטי תוכן לתחומי עניין. שתי הטבלאות משתמשות במפתחות ראשיים מורכבים — (contentId, categoryId) ו-(contentId, interestId) — שמונעים אוטומטית כפילויות. שתיהן משתמשות ב-ON DELETE CASCADE על שתי המפתחות הזרים: מחיקת פריט תוכן או קטגוריה מסירה את שורות הצומת אוטומטית.">
+      data-notes="המודל הפשוט שומר את השיוכים ישירות על content_items. קטגוריה היא FK בודד וניתן לריק — בדיוק אפס או קטגוריה אחת לכל פריט תוכן. תחומי עניין נשארים לוגית רבים-לרבים, אך נשמרים פיזית כמערך UUID על content_items. שכבת האפליקציה חייבת לאמת כל UUID, להסיר כפילויות ולנרמל סדר לפני שמירה. זה פשוט יותר ל-MVP מאשר להחזיק טבלאות שיוך נפרדות.">
       <div class="slide-inner">
-        <div class="label-block"><p class="label">צמתות שרת</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">טבלאות צומת — <span class="highlight-g">קשרי M:N</span></h1>
+        <div class="label-block"><p class="label">מודל השיוך</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">איך <span class="highlight-g">ContentItem</span> שומר שיוך</h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g" style="padding-bottom:1rem;">
-              <p class="card-title">ContentCategory</p>
-              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &harr; Category (רבים-לרבים)</p>
+              <p class="card-title">categoryId</p>
+              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &rarr; Category (אפס או קטגוריה אחת)</p>
               <div class="table-container">
                 <table class="data-table">
                   <thead><tr><th>שדה</th><th>סוג</th><th>אילוצים</th></tr></thead>
                   <tbody>
-                    <tr><td class="mono highlight-g">contentId</td><td class="mono">UUID</td><td>FK → ContentItem.id, CASCADE</td></tr>
-                    <tr><td class="mono highlight-g">categoryId</td><td class="mono">UUID</td><td>FK → Category.id, CASCADE</td></tr>
+                    <tr><td class="mono highlight-g">category_id</td><td class="mono">UUID</td><td>FK ניתן לריק → <span class="mono">categories.id</span> עם <span class="highlight-r">ON DELETE SET NULL</span></td></tr>
                   </tbody>
                 </table>
               </div>
-              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">PK: מורכב (contentId, categoryId)</p>
+              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">סינון: <span class="mono">WHERE category_id = :id</span></p>
             </div>
             <div class="note-box">
-              <strong>אפס קטגוריות מותר:</strong> פריט תוכן יכול להשתייך לאפס קטגוריות (לא מסווג). הוא יופיע תחת "הכל" בספרייה.
+              <strong>לא מסווג מותר:</strong> פריט תוכן יכול להישאר עם <span class="mono">category_id = NULL</span> ועדיין להופיע בספרייה תחת "הכל".
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g" style="padding-bottom:1rem;">
-              <p class="card-title">ContentInterest</p>
-              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &harr; Interest (רבים-לרבים)</p>
+              <p class="card-title">interestIds</p>
+              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &rarr; Interests (רבים-לרבים לוגי דרך מערך UUID)</p>
               <div class="table-container">
                 <table class="data-table">
                   <thead><tr><th>שדה</th><th>סוג</th><th>אילוצים</th></tr></thead>
                   <tbody>
-                    <tr><td class="mono highlight-g">contentId</td><td class="mono">UUID</td><td>FK → ContentItem.id, CASCADE</td></tr>
-                    <tr><td class="mono highlight-g">interestId</td><td class="mono">UUID</td><td>FK → Interest.id, CASCADE</td></tr>
+                    <tr><td class="mono highlight-g">interest_ids</td><td class="mono">UUID[]</td><td>NOT NULL, ברירת מחדל <span class="mono">{}</span>; האפליקציה מאמתת מזהים, מסירה כפילויות וממיינת</td></tr>
                   </tbody>
                 </table>
               </div>
-              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">PK: מורכב (contentId, interestId)</p>
+              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">סינון: חפיפת מערכים דרך האופרטור <span class="mono">&&</span> של PostgreSQL</p>
             </div>
             <div class="card card-gl">
-              <p class="card-title">התנהגות Cascade</p>
+              <p class="card-title">חלוקת אחריות לשלמות</p>
               <ul class="bullets" style="gap:0.35rem;">
-                <li>מחיקת ContentItem → כל שורות הצומת מוסרות</li>
-                <li>מחיקת Category → שורות ContentCategory מוסרות</li>
-                <li>מחיקת Interest → שורות ContentInterest מוסרות</li>
-                <li>אין שורות צומת עם הפניה לא חוקית אפשריות</li>
+                <li>תקפות categoryId נאכפת במסד הנתונים דרך FK</li>
+                <li>תקפות interestIds נאכפת בשכבת השירות</li>
+                <li>מחיקת Category → התוכן המושפע הופך ל"לא מסווג"</li>
+                <li>מחיקת Interest → השירות מסיר תחילה את ה-UUID מכל המערכים</li>
               </ul>
             </div>
           </div>
@@ -491,7 +487,7 @@ parentId של ילד חייב להפנות לשורה
          שקופית 8 — דיאגרמת ER — שרת
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="8"
-      data-notes="הדיאגרמה הויזואלית המלאה של ER זמינה כ-DG-04 ב-Excalidraw. היא מציגה את כל 9 הישויות, את כל רשימות השדות, ואת קרדינליות כל הקשרים. הייצוג הטקסטואלי בשקופית זו הוא עיון מהיר לקריאה לא מקוונת. קשרים מרכזיים: ל-ContentItem שני קישורים M:N — לCategory (דרך ContentCategory) ול-Interest (דרך ContentInterest). לCategory יש self-join 1:N דרך parentId. ישויות הקצה מפנות לישויות השרת לפי UUID בלבד — אין מפתחות זרים בין מסדי נתונים לאורך הגבול. השלמות נשמרת על-ידי תהליך הסנכרון.">
+      data-notes="הדיאגרמה הויזואלית המלאה של ER זמינה כ-DG-04 ב-Excalidraw. היא מציגה את כל 7 הישויות/המאגרים הממודלים, את כל רשימות השדות, ואת קרדינליות הקשרים המרכזיים. הייצוג הטקסטואלי בשקופית זו הוא עיון מהיר לקריאה לא מקוונת. קשרי השרת המרכזיים: ל-ContentItem יש קשר N:1 ניתן לריק ל-Category דרך categoryId, וקשר רבים-לרבים לוגי ל-Interest דרך מערך UUID בשם interestIds. ל-Category יש self-join 1:N דרך parentId. ישויות הקצה מפנות לישויות השרת לפי UUID בלבד — אין מפתחות זרים בין מסדי נתונים לאורך הגבול. השלמות נשמרת על-ידי תהליך הסנכרון.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">ERD שרת</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">דיאגרמת <span class="highlight-g">ER — שרת</span></h1>
@@ -502,14 +498,14 @@ parentId של ילד חייב להפנות לשורה
    |N
 Category (child)
 
-ContentItem ---- M:N ---- Category
-     |        (ContentCategory)
+ContentItem ---- N:1 ---- Category
+     |      (categoryId nullable FK)
      |
-     +-------- M:N ---- Interest
-              (ContentInterest)
+     +-------- array references ---- Interest
+              (interestIds UUID[])
 
 קרדינליות:
-  ContentItem → categories : 0..N
+  ContentItem → category   : 0..1
   Category → content items : 0..N
   ContentItem → interests  : 0..N
   Interest → content items : 0..N
@@ -528,7 +524,7 @@ ContentItem ---- M:N ---- Category
               <line x1="32" y1="20" x2="26" y2="28" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2,2"/>
             </svg>
             <p class="label-b">DG-04 — מודל נתונים / ERD</p>
-            <p style="font-size:var(--sz-small);color:var(--text-secondary);max-width:280px;line-height:1.5;">דיאגרמה ויזואלית מלאה: כל 9 הישויות, רשימות שדות, קרדינליות קשרים</p>
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);max-width:280px;line-height:1.5;">דיאגרמה ויזואלית מלאה: כל 7 הישויות/המאגרים הממודלים, רשימות שדות, קרדינליות קשרים</p>
             <a href="https://excalidraw.com/#json=kS9zEDFbS1ZPMiobq3E8a,uGCiwysIVh8mFmOAR-wSCA" target="_blank" rel="noopener">פתח DG-04 ב-Excalidraw &#8599;</a>
             <p style="font-size:var(--sz-label);color:var(--text-muted);">ראה גם: DG-14 (מחזור חיי תוכן) · DG-15 (מחזור חיי הורדה)</p>
           </div>
@@ -540,7 +536,7 @@ ContentItem ---- M:N ---- Category
          שקופית 9 — כללים ואילוצים — שרת
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="9"
-      data-notes="אלו כללי השלמות שכל מפתח חייב לדעת. לתוכן: type הוא ENUM ב-DB — שכבת ה-API חייבת לאמת לפני הכנסה. העלאות קבצים מוגבלות ל-MP4 או PDF, מקסימום 100 MB, מאומתות בשכבת ה-API. version מתחיל ב-1, מתגבר בכל החלפת קובץ — כך הקצה יודע שהתוכן השתנה מבלי להשוות גיבובי קבצים. לקטגוריות: עומק מקסימלי של 2 אינו נאכף על-ידי מסד הנתונים — זוהי לוגיקת אפליקציה ב-API. בדיקת האילוץ היא: ה-parentId שמוגדר חייב להצביע על שורה שבה parentId IS NULL. שמות קטגוריות ייחודיים בתוך אחים. מחיקה קשיחה בכל מקום — אין מחיקה רכה ב-MVP.">
+      data-notes="אלו כללי השלמות שכל מפתח חייב לדעת. לתוכן: type הוא ENUM ב-DB — שכבת ה-API חייבת לאמת לפני הכנסה. העלאות קבצים מוגבלות ל-MP4 או PDF, מקסימום 100 MB, מאומתות בשכבת ה-API. version מתחיל ב-1 וגדל בכל עדכון תוכן. category_id הוא FK ניתן לריק במסד הנתונים. interest_ids הוא מערך UUID ששכבת השירות חייבת לאמת, להסיר ממנו כפילויות ולנרמל. לקטגוריות: עומק מקסימלי של 2 אינו נאכף על-ידי מסד הנתונים — זוהי לוגיקת אפליקציה ב-API. בדיקת האילוץ היא: ה-parentId שמוגדר חייב להצביע על שורה שבה parentId IS NULL. שמות קטגוריות ייחודיים בתוך אחים. מחיקה קשיחה בכל מקום — אין מחיקה רכה ב-MVP.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">כללי שרת</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">כללים <span class="highlight-g">ואילוצים</span> — שרת</h1>
@@ -563,8 +559,8 @@ ContentItem ---- M:N ---- Category
               <tr><td>עומק קטגוריה מקסימלי = 2</td><td class="muted highlight-r">לוגיקת אפליקציה בלבד</td><td class="muted">parentId חייב להפנות לשורה שבה parentId IS NULL</td></tr>
               <tr><td>Category.name ייחודי בתוך אחים</td><td class="muted">UNIQUE(parentId, name) + לוגיקת אפליקציה</td><td class="muted">parentId = NULL → טווח שורש</td></tr>
               <tr><td>Interest.name ייחודי גלובלית</td><td class="muted">אילוץ UNIQUE (מסד נתונים)</td><td class="muted">תלוי רישיות</td></tr>
-              <tr><td>ContentCategory: ללא כפילויות</td><td class="muted">PK מורכב (מסד נתונים)</td><td class="muted">הקצאה מחדש של אותה זוג היא no-op</td></tr>
-              <tr><td>ContentInterest: ללא כפילויות</td><td class="muted">PK מורכב (מסד נתונים)</td><td class="muted">תיוג מחדש של אותה זוג היא no-op</td></tr>
+              <tr><td>ContentItem.category_id תקף או NULL</td><td class="muted">FK + ON DELETE SET NULL</td><td class="muted">מחיקת Category → התוכן הופך ל"לא מסווג"</td></tr>
+              <tr><td>ContentItem.interest_ids מנורמל</td><td class="muted">לוגיקת אפליקציה בלבד</td><td class="muted">אימות UUIDs, הסרת כפילויות ומיון לפני שמירה</td></tr>
               <tr><td>מחיקה קשיחה (ללא מחיקה רכה)</td><td class="muted">לוגיקת אפליקציה — אין שדה isDeleted</td><td class="muted">רשומה + קובץ נמחקים לצמיתות</td></tr>
             </tbody>
           </table>
@@ -673,7 +669,7 @@ ContentItem ---- M:N ---- Category
          שקופית 12 — CachedCatalog
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="12"
-      data-notes="CachedCatalog היא המראה המקומית של קטלוג השרת. זוהי רשומה יחידה המכילה שלושה מערכים — items, categories, ו-interests — בתוספת חותמת זמן lastSyncedAt. היא מוחלפת לחלוטין בכל משיכת סנכרון. מודלי Pydantic מוגדרים ב-shared/schemas.py. ContentItemDTO הוא המודל המרכזי — שימו לב שהוא כולל category_ids ו-interest_ids כמערכים (לא כטבלאות צומת). דה-נורמליזציה זו מכוונת: הקצה מבצע את כל הסינון בזיכרון ב-JavaScript באמצעות מערכים אלו. ContentItemDTO גם מכיל thumbnail_url (URL, לא נתיב — השרת ממיר file_path ל-URL בתגובת ה-API). כל הסינון לפיד ריאלס, ספרייה וחיפוש מתרחש בזיכרון על blob מאוחסן זה.">
+      data-notes="CachedCatalog היא המראה המקומית של קטלוג השרת. זוהי רשומה יחידה המכילה שלושה מערכים — items, categories, ו-interests — בתוספת חותמת זמן lastSyncedAt. היא מוחלפת לחלוטין בכל משיכת סנכרון. מודלי Pydantic מוגדרים ב-shared/schemas.py. ContentItemDTO הוא המודל המרכזי — שימו לב שהוא כולל categoryId כערך יחיד ניתן לריק ו-interestIds כמערך. הצורה הזו משקפת את ה-API הפשוט ומאפשרת לקצה לבצע את כל הסינון בזיכרון ב-JavaScript. ContentItemDTO גם מכיל thumbnailUrl (URL, לא נתיב — השרת ממיר file_path ל-URL בתגובת ה-API). כל הסינון לפיד ריאלס, ספרייה וחיפוש מתרחש בזיכרון על blob מאוחסן זה.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">ישות קצה 2/4</p><div class="accent-bar-b"></div></div>
         <h1 class="title-h1"><span class="highlight-b">CachedCatalog</span> — תמונת מצב יחידה</h1>
@@ -709,10 +705,10 @@ class ContentItemDTO(BaseModel):
     file_size: int
     mime_type: str
     duration: Optional[int]      # None for PDF
-    thumbnail_url: Optional[str] # URL, not path
+    thumbnailUrl: Optional[str]  # URL, not path
     version: int
-    category_ids: list[str]      # denormalized
-    interest_ids: list[str]      # denormalized
+    categoryId: Optional[str]    # nullable single category
+    interestIds: list[str]       # denormalized UUID array
     created_at: str
     updated_at: str
 
@@ -871,7 +867,7 @@ if (existing) {
          שקופית 16 — סיכום וצעדים הבאים
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="16"
-      data-notes="זהו מודל הנתונים המלא. תשע ישויות. חמש בשרת ב-PostgreSQL. ארבע בקצה ב-IndexedDB. עקרונות עיצוב מרכזיים: השרת סמכותי, הקצה הוא מראה מאוחסנת. ללא זהות משתמש ב-MVP — מוקף מכשיר בלבד. מחיקה קשיחה בכל מקום. מונה גרסה מניע תג עודכן. קבצים לעולם לא עוברים דרך IndexedDB — תמיד דרך מטמון פרוקסי הקצה. המסמך הבא לקריאה הוא חוזה ה-API (06_api-contract.md) שמגדיר כל נקודת קצה המגשרת בין מודלי הנתונים של השרת והקצה. DK-04 פריימינג מפתחים מכסה את מבנה ה-monorepo וסדר הבנייה אם טרם ראיתם.">
+      data-notes="זהו מודל הנתונים המלא. שבע ישויות/מאגרים ממודלים. שלוש בשרת ב-PostgreSQL. ארבע בקצה ב-IndexedDB. עקרונות עיצוב מרכזיים: השרת סמכותי, הקצה הוא מראה מאוחסנת. ללא זהות משתמש ב-MVP — מוקף מכשיר בלבד. מחיקה קשיחה בכל מקום. קבצים לעולם לא עוברים דרך IndexedDB — תמיד דרך מטמון פרוקסי הקצה. המסמך הבא לקריאה הוא חוזה ה-API (06_api-contract.md) שמגדיר כל נקודת קצה המגשרת בין מודלי הנתונים של השרת והקצה. DK-04 פריימינג מפתחים מכסה את מבנה הריפו וסדר הבנייה אם טרם ראיתם.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">סיכום</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">סיכום <span class="highlight-g">וצעדים הבאים</span></h1>
@@ -880,11 +876,11 @@ if (existing) {
             <div class="card card-g">
               <p class="card-title">נקודות מפתח</p>
               <ul class="bullets" style="gap:0.45rem;">
-                <li><strong>9 ישויות בסך הכל:</strong> 5 שרת (PostgreSQL) + 4 קצה (IndexedDB)</li>
+                <li><strong>7 ישויות/מאגרים ממודלים:</strong> 3 טבלאות שרת (PostgreSQL) + 4 מאגרי קצה (IndexedDB)</li>
                 <li><strong>השרת הוא סמכותי.</strong> הקצה הוא מראה מאוחסנת + מצב מקומי בלבד.</li>
                 <li><strong>ללא טבלת User ב-MVP.</strong> זהות מכשיר היא UUID מקומי בלבד.</li>
                 <li><strong>קבצים לעולם לא ב-IndexedDB.</strong> nginx proxy_cache מטפל באחסון קבצים.</li>
-                <li><strong>מונה גרסה</strong> (לא גיבוב) מניע תג "עודכן" על הורדות.</li>
+                <li><strong>קטגוריה אחת + תחומי עניין רבים:</strong> categoryId יחיד; interestIds נשאר מערך.</li>
                 <li><strong>מחיקה קשיחה בכל מקום.</strong> ללא מחיקה רכה, ללא מצב טיוטה ב-MVP.</li>
                 <li><strong>UUID כ-PK.</strong> מאפשר סנכרון ממקורות מרובים עתידי ללא התנגשות.</li>
                 <li><strong>סכמות Pydantic משותפות</strong> ב-<span class="mono highlight-g">shared/schemas.py</span> גושרים שרת ↔ קצה.</li>
@@ -895,7 +891,7 @@ if (existing) {
             <div class="card card-b">
               <p class="card-title">צעדים הבאים</p>
               <ul class="bullets bullets-b" style="gap:0.45rem;">
-                <li>מימוש מודלי SQLAlchemy התואמים 5 טבלאות + אילוצים אלו</li>
+                <li>מימוש מודלי SQLAlchemy התואמים 3 טבלאות שרת + אילוצים אלו</li>
                 <li>כתיבת מיגרציות Alembic לכל ישויות השרת לפני כל קוד API</li>
                 <li>הגדרת מודלי Pydantic DTO משותפים ב-<span class="mono">shared/schemas.py</span></li>
                 <li>מימוש עטיפת IndexedDB ב-Edge SPA (4 מאגרים)</li>

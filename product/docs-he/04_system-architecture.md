@@ -246,9 +246,9 @@ tactitok/
 
 | שירות | אחריות |
 |-------|--------|
-| **CatalogService** | CRUD למטה-נתוני תוכן; חיפוש (כותרת + תיאור); סינון לפי קטגוריה/עניין |
+| **CatalogService** | CRUD למטה-נתוני תוכן; חיפוש (כותרת + תיאור); סינון לפי קטגוריה יחידה ולפי כמה תחומי עניין; נרמול `interestIds` לפני שמירה |
 | **CategoryService** | CRUD לעץ קטגוריות; אכיפת עומק מקסימלי 2; סידור מחדש |
-| **InterestService** | CRUD לתגיות עניינים שטוחות |
+| **InterestService** | CRUD לתגיות עניינים שטוחות; הסרת IDs שנמחקו מתוך `content_items.interest_ids` לפני מחיקה |
 | **ContentFileService** | אחסון/אחזור/מחיקת קבצים דרך הפשטת אחסון; יצירת content-id |
 | **AuthService** | אימות סיסמת אדמין; הנפקה/אימות של tokens פעלה |
 | **SyncService** | הגשת סנפשוט קטלוג מלא לבקשות סנכרון קצה |
@@ -259,9 +259,9 @@ tactitok/
 
 | אחריות | פרטים |
 |--------|-------|
-| **אחסון מטה-נתונים** | פריטי תוכן, קטגוריות, עניינים, מיפויי תוכן-קטגוריה/עניין |
+| **אחסון מטה-נתונים** | פריטי תוכן, קטגוריות ועניינים; `content_items` שומר ישירות `category_id` ו-`interest_ids UUID[]` |
 | **ניהול schema** | הגירות Alembic (קבצי הגירה בגרסה; מיושם דרך `alembic upgrade head`) |
-| **תמיכת query** | חיפוש טקסט (PostgreSQL `ILIKE` או `tsvector`); queries עץ קטגוריות; סינון עניינים |
+| **תמיכת query** | חיפוש טקסט (PostgreSQL `ILIKE` או `tsvector`); queries לעץ קטגוריות; lookup על `category_id`; סינון overlap על `interest_ids` |
 
 *(ללא שינויים מ-v0.1)*
 

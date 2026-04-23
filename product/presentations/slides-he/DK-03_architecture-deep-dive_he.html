@@ -584,12 +584,12 @@ location / {
          שקופית 11 — מודל נתונים: שרת (DG-04)
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="11"
-      data-notes="ContentItem הוא הישות המרכזית. יש לו קובץ אחד (MP4 או PDF) ויכול לשייך לקטגוריות ותחומי עניין מרובים דרך טבלאות חיבור. Category תומך בהיררכיה עצמית של 2 רמות — עומק מקסימלי נאכף בלוגיקת האפליקציה, לא בבסיס הנתונים. Interest היא רשימת תגיות שטוחה. אין ישות User ב-MVP — פרופיל המכשיר נמצא רק ב-IndexedDB של הדפדפן.">
+      data-notes="ContentItem היא הטבלה המרכזית. יש לה קובץ אחד (MP4 או PDF), אפס או קטגוריה אחת דרך categoryId, ותחומי עניין רבים דרך מערך UUID בשם interestIds. Category תומכת בהיררכיה עצמית של 2 רמות — עומק מקסימלי נאכף בלוגיקת האפליקציה, לא בבסיס הנתונים. Interest היא רשימת תגיות שטוחה. אין ישות User ב-MVP — פרופיל המכשיר נמצא רק ב-IndexedDB של הדפדפן.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">DG-04 &middot; מודל נתונים — שרת</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">חמש ישויות ב-<span class="highlight-g">PostgreSQL</span></h1>
+        <h1 class="title-h1">שלוש טבלאות ב-<span class="highlight-g">PostgreSQL</span></h1>
         <div style="width:100%;overflow-x:auto;margin-top:var(--gap-sm);">
-          <svg viewBox="0 0 900 260" width="100%" style="max-height:230px;display:block;margin:0 auto;" role="img" aria-label="ERD: ContentItem linked to Category and Interest via junction tables">
+          <svg viewBox="0 0 900 260" width="100%" style="max-height:230px;display:block;margin:0 auto;" role="img" aria-label="ERD: ContentItem linked directly to Category and Interest">
             <defs>
               <marker id="erd-t" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#c3fae8"/></marker>
               <marker id="erd-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#b2f2bb"/></marker>
@@ -601,66 +601,50 @@ location / {
             <text x="450" y="25" text-anchor="middle" font-size="9" font-weight="700" fill="#c3fae8" font-family="Inter,system-ui,sans-serif" letter-spacing="1">SERVER — PostgreSQL</text>
 
             <!-- ContentItem (center) -->
-            <rect x="310" y="32" width="280" height="170" rx="5" fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
+            <rect x="300" y="32" width="300" height="178" rx="5" fill="#d0bfff" stroke="#7c5cbc" stroke-width="1.5"/>
             <text x="450" y="52" text-anchor="middle" font-size="12" font-weight="700" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">ContentItem</text>
-            <line x1="322" y1="60" x2="578" y2="60" stroke="#7c5cbc" stroke-width="0.8" opacity="0.5"/>
+            <line x1="312" y1="60" x2="588" y2="60" stroke="#7c5cbc" stroke-width="0.8" opacity="0.5"/>
             <text x="450" y="76" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">id (UUID, PK) · title · description</text>
             <text x="450" y="91" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">type: ENUM('video','pdf') · filename</text>
             <text x="450" y="106" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">filePath · fileSize · mimeType</text>
             <text x="450" y="121" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">duration (nullable) · thumbnailPath</text>
-            <text x="450" y="136" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">version (INT, default 1)</text>
-            <text x="450" y="151" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">createdAt · updatedAt</text>
-            <text x="450" y="170" text-anchor="middle" font-size="8" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">idx: type · updatedAt · tsvector(title,desc)</text>
+            <text x="450" y="136" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">categoryId (FK nullable) · interestIds (UUID[])</text>
+            <text x="450" y="151" text-anchor="middle" font-size="8.5" fill="#2d1b5e" font-family="Inter,system-ui,sans-serif">version (INT, default 1) · createdAt · updatedAt</text>
+            <text x="450" y="170" text-anchor="middle" font-size="8" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">idx: type · updatedAt · categoryId · GIN(interestIds)</text>
             <text x="450" y="185" text-anchor="middle" font-size="8" fill="#4a2e8a" font-family="Inter,system-ui,sans-serif">Hard delete · No drafts in MVP</text>
 
-            <!-- ContentCategory junction -->
-            <rect x="120" y="75" width="170" height="60" rx="5" fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
-            <text x="205" y="96" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">ContentCategory</text>
-            <text x="205" y="111" text-anchor="middle" font-size="8.5" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">contentId FK · categoryId FK</text>
-            <text x="205" y="125" text-anchor="middle" font-size="8" fill="#1a4060" font-family="Inter,system-ui,sans-serif">PK: (contentId, categoryId)</text>
-            <!-- Arrow ContentItem → ContentCategory -->
-            <line x1="310" y1="105" x2="290" y2="105" stroke="#a5d8ff" stroke-width="1.5" marker-end="url(#erd-t)"/>
-            <text x="300" y="98" text-anchor="middle" font-size="7.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">M:N</text>
-
             <!-- Category -->
-            <rect x="12" y="40" width="100" height="100" rx="5" fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
-            <text x="62" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Category</text>
-            <line x1="18" y1="68" x2="106" y2="68" stroke="#2d7a3a" stroke-width="0.7" opacity="0.5"/>
-            <text x="62" y="82" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">id (UUID, PK)</text>
-            <text x="62" y="96" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">name · sortOrder</text>
-            <text x="62" y="110" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">parentId → self</text>
-            <text x="62" y="124" text-anchor="middle" font-size="7.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">max depth=2 (app)</text>
-            <!-- Arrow ContentCategory → Category -->
-            <line x1="120" y1="100" x2="112" y2="88" stroke="#b2f2bb" stroke-width="1.5" marker-end="url(#erd-g)"/>
-
-            <!-- ContentInterest junction -->
-            <rect x="610" y="75" width="170" height="60" rx="5" fill="#a5d8ff" stroke="#1a5e8a" stroke-width="1.5"/>
-            <text x="695" y="96" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">ContentInterest</text>
-            <text x="695" y="111" text-anchor="middle" font-size="8.5" fill="#0d2d44" font-family="Inter,system-ui,sans-serif">contentId FK · interestId FK</text>
-            <text x="695" y="125" text-anchor="middle" font-size="8" fill="#1a4060" font-family="Inter,system-ui,sans-serif">PK: (contentId, interestId)</text>
-            <!-- Arrow ContentItem → ContentInterest -->
-            <line x1="590" y1="105" x2="610" y2="105" stroke="#a5d8ff" stroke-width="1.5" marker-end="url(#erd-t)"/>
-            <text x="600" y="98" text-anchor="middle" font-size="7.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">M:N</text>
+            <rect x="18" y="40" width="120" height="110" rx="5" fill="#b2f2bb" stroke="#2d7a3a" stroke-width="1.5"/>
+            <text x="78" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">Category</text>
+            <line x1="24" y1="68" x2="132" y2="68" stroke="#2d7a3a" stroke-width="0.7" opacity="0.5"/>
+            <text x="78" y="82" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">id (UUID, PK)</text>
+            <text x="78" y="96" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">name · sortOrder</text>
+            <text x="78" y="110" text-anchor="middle" font-size="8" fill="#1a3d22" font-family="Inter,system-ui,sans-serif">parentId → self</text>
+            <text x="78" y="124" text-anchor="middle" font-size="7.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">max depth=2 (app)</text>
+            <text x="78" y="138" text-anchor="middle" font-size="7.5" fill="#2d6032" font-family="Inter,system-ui,sans-serif">ContentItem.categoryId</text>
+            <line x1="300" y1="115" x2="138" y2="95" stroke="#b2f2bb" stroke-width="1.5" marker-end="url(#erd-g)"/>
+            <text x="205" y="96" text-anchor="middle" font-size="7.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">N:1</text>
 
             <!-- Interest -->
-            <rect x="790" y="40" width="100" height="90" rx="5" fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
-            <text x="840" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3d2800" font-family="Inter,system-ui,sans-serif">Interest</text>
-            <line x1="796" y1="68" x2="884" y2="68" stroke="#cc8800" stroke-width="0.7" opacity="0.5"/>
-            <text x="840" y="82" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">id (UUID, PK)</text>
-            <text x="840" y="96" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">name (UNIQUE)</text>
-            <text x="840" y="110" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">createdAt</text>
-            <text x="840" y="124" text-anchor="middle" font-size="7.5" fill="#5d4800" font-family="Inter,system-ui,sans-serif">flat list (no tree)</text>
-            <!-- Arrow ContentInterest → Interest -->
-            <line x1="780" y1="100" x2="790" y2="88" stroke="#ffd8a8" stroke-width="1.5" marker-end="url(#erd-p)"/>
+            <rect x="762" y="40" width="120" height="100" rx="5" fill="#ffd8a8" stroke="#cc8800" stroke-width="1.5"/>
+            <text x="822" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3d2800" font-family="Inter,system-ui,sans-serif">Interest</text>
+            <line x1="768" y1="68" x2="876" y2="68" stroke="#cc8800" stroke-width="0.7" opacity="0.5"/>
+            <text x="822" y="82" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">id (UUID, PK)</text>
+            <text x="822" y="96" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">name (UNIQUE)</text>
+            <text x="822" y="110" text-anchor="middle" font-size="8" fill="#3d2800" font-family="Inter,system-ui,sans-serif">createdAt</text>
+            <text x="822" y="124" text-anchor="middle" font-size="7.5" fill="#5d4800" font-family="Inter,system-ui,sans-serif">referenced by UUID[]</text>
+            <line x1="600" y1="115" x2="762" y2="95" stroke="#ffd8a8" stroke-width="1.5" marker-end="url(#erd-p)"/>
+            <text x="680" y="96" text-anchor="middle" font-size="7.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">array overlap</text>
 
             <!-- Legend -->
             <rect x="12" y="222" width="11" height="11" rx="2" fill="#d0bfff"/><text x="28" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">ContentItem (central)</text>
             <rect x="170" y="222" width="11" height="11" rx="2" fill="#b2f2bb"/><text x="186" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Category (self-ref 1:N)</text>
             <rect x="350" y="222" width="11" height="11" rx="2" fill="#ffd8a8"/><text x="366" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Interest (flat tags)</text>
-            <rect x="490" y="222" width="11" height="11" rx="2" fill="#a5d8ff"/><text x="506" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">Junction tables (M:N, cascade delete)</text>
+            <line x1="510" y1="227" x2="535" y2="227" stroke="#b2f2bb" stroke-width="1.5"/><text x="542" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">categoryId = FK במסד הנתונים</text>
+            <line x1="710" y1="227" x2="735" y2="227" stroke="#ffd8a8" stroke-width="1.5"/><text x="742" y="232" font-size="8.5" fill="#94a3b8" font-family="Inter,system-ui,sans-serif">interestIds = UUID[]</text>
           </svg>
         </div>
-        <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;">5 ישויות שרת &middot; UUIDs לכל PKs &middot; מחיקה קשה ב-MVP &middot; סכמה מבוססת Migration (SQLAlchemy / Alembic)</p>
+        <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;">3 טבלאות שרת &middot; UUIDs לכל PKs &middot; מחיקה קשה ב-MVP &middot; סכמה מבוססת Migration (SQLAlchemy / Alembic)</p>
       </div>
     </section>
 
@@ -894,7 +878,7 @@ location / {
         <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%;max-width:680px;margin-top:var(--gap-sm);">
           <p style="font-size:var(--sz-label);color:var(--text-muted);text-align:center;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.25rem;">מסמכי ייחוס</p>
           <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/04_system-architecture.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">החלטות ארכיטקטורה והערות המשכיות</span></div>
-          <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">כל 9 ישויות עם שדות ואילוצים</span></div>
+          <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/05_data-model.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">כל 7 הישויות/המאגרים הממודלים עם שדות ואילוצים</span></div>
           <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/06_api-contract.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">21 נקודות קצה, DTOs, מודל אימות</span></div>
           <div class="doc-ref"><span class="doc-ref-icon">&#9632;</span><span class="doc-ref-path">product/visuals/diagram-index.md</span><span style="font-size:var(--sz-label);color:var(--text-muted);margin-right:auto;">כל 17 דיאגרמות (קישורי Excalidraw)</span></div>
         </div>

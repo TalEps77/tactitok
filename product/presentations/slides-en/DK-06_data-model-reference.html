@@ -178,12 +178,12 @@
         <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:center;">
           <p class="label">DK-06 &mdash; Data Model Reference</p>
           <h1 class="title-hero" style="letter-spacing:-0.02em;">TactiTok <span class="highlight-g">Data Model</span></h1>
-          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:680px;line-height:1.5;">All 9 entities &middot; fields &middot; types &middot; constraints &middot; server vs. edge storage</p>
+          <p style="font-size:var(--sz-h3);color:var(--text-secondary);font-weight:400;max-width:680px;line-height:1.5;">All 7 modeled entities/stores &middot; fields &middot; types &middot; constraints &middot; server vs. edge storage</p>
         </div>
         <hr class="divider" style="width:100%;max-width:500px;">
         <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
-          <span class="badge badge-g">5 Server Entities</span>
-          <span class="badge badge-b">4 Edge Entities</span>
+          <span class="badge badge-g">3 Server Tables</span>
+          <span class="badge badge-b">4 Edge Stores</span>
           <span class="badge badge-o">Audience: Developers</span>
         </div>
         <p style="font-size:var(--sz-label);color:var(--text-muted);">Version 0.2 &middot; March 2026 &middot; Source: product/05_data-model.md</p>
@@ -191,24 +191,22 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         SLIDE 2 — OVERVIEW: 9 ENTITIES
+         SLIDE 2 — OVERVIEW: 7 MODELED ENTITIES/STORES
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="2"
-      data-notes="Nine entities total, split across two storage systems. Server side: 5 entities in PostgreSQL on the cloud VM. Edge side: 4 entities in IndexedDB in Chrome on the edge device. The key principle is: the server is authoritative. All catalog data lives in PostgreSQL. The edge holds a cached snapshot in IndexedDB plus local-only device state. There is no User table — device identity is edge-local only.">
+      data-notes="Seven modeled entities/stores total, split across two storage systems. Server side: 3 tables in PostgreSQL on the cloud VM. Edge side: 4 stores in IndexedDB in Chrome on the edge device. The key principle is: the server is authoritative. All catalog data lives in PostgreSQL. The edge holds a cached snapshot in IndexedDB plus local-only device state. There is no User table — device identity is edge-local only.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Overview</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">9 Entities — <span class="highlight-g">Server</span> vs. <span class="highlight-b">Edge</span></h1>
+        <h1 class="title-h1">7 Modeled Entities/Stores — <span class="highlight-g">Server</span> vs. <span class="highlight-b">Edge</span></h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
               <p class="card-title" style="color:var(--accent-green);">&#9632; SERVER — PostgreSQL (Cloud VM)</p>
-              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">Authoritative source of truth &middot; 5 tables</p>
+              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">Authoritative source of truth &middot; 3 tables</p>
               <div style="display:flex;flex-direction:column;gap:0.45rem;">
                 <span class="entity-badge entity-badge-g">ContentItem</span>
                 <span class="entity-badge entity-badge-g">Category</span>
                 <span class="entity-badge entity-badge-g">Interest</span>
-                <span class="entity-badge entity-badge-g">ContentCategory <span style="font-weight:400;font-size:0.85em;">(junction)</span></span>
-                <span class="entity-badge entity-badge-g">ContentInterest <span style="font-weight:400;font-size:0.85em;">(junction)</span></span>
               </div>
             </div>
           </div>
@@ -235,20 +233,20 @@
          SLIDE 3 — SERVER-SIDE ENTITIES OVERVIEW
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="3"
-      data-notes="The server holds five PostgreSQL tables. ContentItem is the central entity — every piece of training content lives here. Category provides a 2-level hierarchy for library organization. Interest provides flat tags for the reels feed filter. ContentCategory and ContentInterest are junction tables for the many-to-many relationships. Binary files (MP4, PDF, thumbnails) are NOT in the database — they live on the server filesystem. The filePath and thumbnailPath columns in content_items point to them. SQLAlchemy maps snake_case column names to Python model attributes automatically.">
+      data-notes="The server holds three PostgreSQL tables. ContentItem is the central table — every piece of training content lives here. Category provides a 2-level hierarchy for library organization. Interest provides flat tags for the reels feed filter. content_items stores category assignment directly in categoryId and interest assignment directly in interestIds. Binary files (MP4, PDF, thumbnails) are NOT in the database — they live on the server filesystem. The filePath and thumbnailPath columns in content_items point to them. SQLAlchemy maps snake_case column names to Python model attributes automatically.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Server Side</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Server-Side <span class="highlight-g">Entities</span></h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g">
-              <p class="card-title">PostgreSQL · 5 Tables</p>
+              <p class="card-title">PostgreSQL · 3 Tables</p>
               <ul class="bullets" style="gap:0.45rem;">
                 <li><strong>content_items</strong> — central entity; 1 row per content piece</li>
                 <li><strong>categories</strong> — 2-level hierarchy (parentId nullable)</li>
                 <li><strong>interests</strong> — flat tags; admin-managed</li>
-                <li><strong>content_categories</strong> — M:N junction</li>
-                <li><strong>content_interests</strong> — M:N junction</li>
+                <li><strong>content_items.category_id</strong> — single optional category FK</li>
+                <li><strong>content_items.interest_ids</strong> — UUID[] for multi-interest assignment</li>
               </ul>
             </div>
             <div class="card card-gl">
@@ -369,7 +367,7 @@ where parentId IS NULL</div>
 Field Medicine         (parentId = NULL)</div>
             </div>
             <div class="note-box">
-              <strong>Delete cascade:</strong> Deleting a parent cascades to child categories and removes all junction rows (ContentCategory). Content items themselves are not deleted — they become uncategorized.
+              <strong>Delete behavior:</strong> Deleting a parent cascades to child categories, and affected content items become uncategorized through <span class="mono">ON DELETE SET NULL</span> on <span class="mono">content_items.category_id</span>.
             </div>
           </div>
         </div>
@@ -380,7 +378,7 @@ Field Medicine         (parentId = NULL)</div>
          SLIDE 6 — Interest
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="6"
-      data-notes="Interest is the simplest server entity — just 3 fields. Interests are flat tags with no hierarchy. Admin-managed via the admin portal. The name must be globally unique. Interests are used to filter the reels feed: the user selects interests on the edge device, those are stored in DeviceProfile.selectedInterestIds, and the feed is filtered client-side using the IDs from CachedCatalog. On delete: junction rows are cascade-deleted. The edge device profile will have stale interest IDs until the next sync, at which point the edge client should clean them up.">
+      data-notes="Interest is the simplest server entity — just 3 fields. Interests are flat tags with no hierarchy. Admin-managed via the admin portal. The name must be globally unique. Interests are used to filter the reels feed: the user selects interests on the edge device, those are stored in DeviceProfile.selectedInterestIds, and the feed is filtered client-side using the IDs from CachedCatalog. On delete: the service layer removes the deleted UUID from every content_items.interest_ids array before deleting the interest row. The edge device profile will have stale interest IDs until the next sync, at which point the edge client should clean them up.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Server Entity 3/3</p><div class="accent-bar"></div></div>
         <h1 class="title-h1"><span class="highlight-g">Interest</span> — Flat Tags</h1>
@@ -405,7 +403,7 @@ Field Medicine         (parentId = NULL)</div>
               <p class="card-title">Role in the System</p>
               <ul class="bullets" style="gap:0.45rem;">
                 <li>Admin creates interests via Admin SPA</li>
-                <li>Admin tags content items with interests (ContentInterest junction)</li>
+                <li>Admin tags content items with interests via <span class="mono">interestIds[]</span> on ContentItem</li>
                 <li>Edge device user selects interests on first launch</li>
                 <li>Selected IDs stored in <span class="highlight-b">DeviceProfile.selectedInterestIds</span></li>
                 <li>Reels feed filters by matching interestIds from CachedCatalog</li>
@@ -413,7 +411,7 @@ Field Medicine         (parentId = NULL)</div>
             </div>
             <div class="card card-gl">
               <p class="card-title">On Delete (Interest)</p>
-              <p class="card-body">All ContentInterest junction rows cascade-deleted. Edge device profiles that reference the deleted interest ID become stale — cleaned up on next catalog sync by the edge client.</p>
+              <p class="card-body">Before deleting an Interest row, the service layer removes its UUID from every <span class="mono">content_items.interest_ids</span> array. Edge device profiles that reference the deleted interest ID become stale — cleaned up on next catalog sync by the edge client.</p>
             </div>
           </div>
         </div>
@@ -421,55 +419,53 @@ Field Medicine         (parentId = NULL)</div>
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         SLIDE 7 — JUNCTION TABLES
+         SLIDE 7 — ASSIGNMENT MODEL
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="7"
-      data-notes="Two junction tables implement the many-to-many relationships. ContentCategory links content items to categories — one content item can appear in multiple categories, one category can hold many items. ContentInterest links content items to interests. Both tables use composite primary keys — (contentId, categoryId) and (contentId, interestId) — which automatically prevent duplicate pairs. Both use ON DELETE CASCADE on both foreign keys: deleting a content item or a category removes the junction rows automatically. No extra cleanup needed in application code.">
+      data-notes="The simplified model stores assignments directly on content_items. Category is a single nullable foreign key — exactly zero or one category per content item. Interests remain logically many-to-many, but are stored physically as a UUID array on content_items. The application layer must validate every UUID, remove duplicates, and normalize ordering before saving. This is simpler for MVP than keeping separate assignment tables.">
       <div class="slide-inner">
-        <div class="label-block"><p class="label">Server Junctions</p><div class="accent-bar"></div></div>
-        <h1 class="title-h1">Junction Tables — <span class="highlight-g">M:N Relationships</span></h1>
+        <div class="label-block"><p class="label">Assignment Model</p><div class="accent-bar"></div></div>
+        <h1 class="title-h1">How <span class="highlight-g">ContentItem</span> Stores Assignment</h1>
         <div class="two-col" style="align-items:start;">
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g" style="padding-bottom:1rem;">
-              <p class="card-title">ContentCategory</p>
-              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &harr; Category (many-to-many)</p>
+              <p class="card-title">categoryId</p>
+              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &rarr; Category (zero or one category)</p>
               <div class="table-container">
                 <table class="data-table">
                   <thead><tr><th>Field</th><th>Type</th><th>Constraints</th></tr></thead>
                   <tbody>
-                    <tr><td class="mono highlight-g">contentId</td><td class="mono">UUID</td><td>FK → ContentItem.id, CASCADE</td></tr>
-                    <tr><td class="mono highlight-g">categoryId</td><td class="mono">UUID</td><td>FK → Category.id, CASCADE</td></tr>
+                    <tr><td class="mono highlight-g">category_id</td><td class="mono">UUID</td><td>Nullable FK → <span class="mono">categories.id</span> <span class="highlight-r">ON DELETE SET NULL</span></td></tr>
                   </tbody>
                 </table>
               </div>
-              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">PK: composite (contentId, categoryId)</p>
+              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">Filtering: <span class="mono">WHERE category_id = :id</span></p>
             </div>
             <div class="note-box">
-              <strong>Zero categories allowed:</strong> A content item can belong to zero categories (uncategorized). It will appear under "All" in the library.
+              <strong>Uncategorized allowed:</strong> A content item can keep <span class="mono">category_id = NULL</span> and still appear in the library under "All".
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--gap-sm);">
             <div class="card card-g" style="padding-bottom:1rem;">
-              <p class="card-title">ContentInterest</p>
-              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &harr; Interest (many-to-many)</p>
+              <p class="card-title">interestIds</p>
+              <p style="font-size:var(--sz-label);color:var(--text-muted);margin-bottom:0.75rem;">ContentItem &rarr; Interests (logical many-to-many via UUID array)</p>
               <div class="table-container">
                 <table class="data-table">
                   <thead><tr><th>Field</th><th>Type</th><th>Constraints</th></tr></thead>
                   <tbody>
-                    <tr><td class="mono highlight-g">contentId</td><td class="mono">UUID</td><td>FK → ContentItem.id, CASCADE</td></tr>
-                    <tr><td class="mono highlight-g">interestId</td><td class="mono">UUID</td><td>FK → Interest.id, CASCADE</td></tr>
+                    <tr><td class="mono highlight-g">interest_ids</td><td class="mono">UUID[]</td><td>NOT NULL, default <span class="mono">{}</span>; app validates IDs, dedupes, sorts</td></tr>
                   </tbody>
                 </table>
               </div>
-              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">PK: composite (contentId, interestId)</p>
+              <p style="font-size:var(--sz-label);color:var(--accent-green);margin-top:0.6rem;">Filtering: array overlap via PostgreSQL <span class="mono">&&</span> operator</p>
             </div>
             <div class="card card-gl">
-              <p class="card-title">Cascade Behavior</p>
+              <p class="card-title">Integrity Split</p>
               <ul class="bullets" style="gap:0.35rem;">
-                <li>Delete ContentItem → all junction rows removed</li>
-                <li>Delete Category → ContentCategory rows removed</li>
-                <li>Delete Interest → ContentInterest rows removed</li>
-                <li>No orphaned junction rows possible</li>
+                <li>Category validity is DB-enforced by foreign key</li>
+                <li>Interest validity is service-layer enforced</li>
+                <li>Delete Category → affected content becomes uncategorized</li>
+                <li>Delete Interest → service removes UUID from all arrays first</li>
               </ul>
             </div>
           </div>
@@ -481,7 +477,7 @@ Field Medicine         (parentId = NULL)</div>
          SLIDE 8 — SERVER ER DIAGRAM
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="8"
-      data-notes="The full visual ER diagram is available as DG-04 in Excalidraw. It shows all 9 entities, all field listings, and all relationship cardinalities. The text representation on this slide is a quick reference for offline reading. Key relationships: ContentItem has two M:N links — to Category (via ContentCategory) and to Interest (via ContentInterest). Category has a 1:N self-join via parentId. Edge entities reference server entities by UUID only — there are no database foreign keys across the boundary. Integrity is maintained by the sync process.">
+      data-notes="The full visual ER diagram is available as DG-04 in Excalidraw. It shows all 7 modeled entities/stores, all field listings, and the key relationship cardinalities. The text representation on this slide is a quick reference for offline reading. Key server relationships: ContentItem has a nullable N:1 link to Category through categoryId, and a logical many-to-many link to Interest through the interestIds UUID array. Category has a 1:N self-join via parentId. Edge entities reference server entities by UUID only — there are no database foreign keys across the boundary. Integrity is maintained by the sync process.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Server ERD</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Server <span class="highlight-g">ER Diagram</span></h1>
@@ -492,14 +488,14 @@ Field Medicine         (parentId = NULL)</div>
    │N
 Category (child)
 
-ContentItem ──── M:N ──── Category
-     │        (ContentCategory)
+ContentItem ──── N:1 ──── Category
+     │        (categoryId nullable FK)
      │
-     └──────── M:N ──── Interest
-              (ContentInterest)
+     └──────── array references ──── Interest
+              (interestIds UUID[])
 
 Cardinalities:
-  ContentItem → categories : 0..N
+  ContentItem → category   : 0..1
   Category → content items : 0..N
   ContentItem → interests  : 0..N
   Interest → content items : 0..N
@@ -518,7 +514,7 @@ Cardinalities:
               <line x1="32" y1="20" x2="26" y2="28" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2,2"/>
             </svg>
             <p class="label-b">DG-04 — Data Model / ERD</p>
-            <p style="font-size:var(--sz-small);color:var(--text-secondary);max-width:280px;line-height:1.5;">Full visual diagram: all 9 entities, field listings, relationship cardinalities</p>
+            <p style="font-size:var(--sz-small);color:var(--text-secondary);max-width:280px;line-height:1.5;">Full visual diagram: all 7 modeled entities/stores, field listings, relationship cardinalities</p>
             <a href="https://excalidraw.com/#json=kS9zEDFbS1ZPMiobq3E8a,uGCiwysIVh8mFmOAR-wSCA" target="_blank" rel="noopener">Open DG-04 in Excalidraw &#8599;</a>
             <p style="font-size:var(--sz-label);color:var(--text-muted);">Also see: DG-14 (Content Lifecycle) · DG-15 (Download Lifecycle)</p>
           </div>
@@ -530,7 +526,7 @@ Cardinalities:
          SLIDE 9 — SERVER RULES & CONSTRAINTS
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="9"
-      data-notes="These are the integrity rules every developer must know. For content: type is a DB ENUM — the API layer must validate before insert. File uploads are limited to MP4 or PDF, max 100 MB, validated at API layer. Version starts at 1, increments on every file replacement — this is how the edge knows content has changed without comparing file hashes. For categories: max depth of 2 is NOT enforced by the database — it's application logic in the API. The constraint check is: the parentId being set must point to a row where parentId IS NULL. Category names are unique within siblings. Hard delete everywhere — no soft delete in MVP.">
+      data-notes="These are the integrity rules every developer must know. For content: type is a DB ENUM — the API layer must validate before insert. File uploads are limited to MP4 or PDF, max 100 MB, validated at API layer. Version starts at 1 and increments on every content update. category_id is a nullable DB foreign key. interest_ids is a UUID array that must be validated, deduped, and normalized in the service layer. For categories: max depth of 2 is NOT enforced by the database — it's application logic in the API. The constraint check is: the parentId being set must point to a row where parentId IS NULL. Category names are unique within siblings. Hard delete everywhere — no soft delete in MVP.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Server Rules</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Server <span class="highlight-g">Rules &amp; Constraints</span></h1>
@@ -553,8 +549,8 @@ Cardinalities:
               <tr><td>Category max depth = 2</td><td class="muted highlight-r">Application logic only</td><td class="muted">parentId must reference row where parentId IS NULL</td></tr>
               <tr><td>Category.name unique within siblings</td><td class="muted">UNIQUE(parentId, name) + app logic</td><td class="muted">NULL parentId = root scope</td></tr>
               <tr><td>Interest.name globally unique</td><td class="muted">UNIQUE constraint (database)</td><td class="muted">Case-sensitive</td></tr>
-              <tr><td>ContentCategory: no duplicate pairs</td><td class="muted">Composite PK (database)</td><td class="muted">Re-assigning same pair is a no-op</td></tr>
-              <tr><td>ContentInterest: no duplicate pairs</td><td class="muted">Composite PK (database)</td><td class="muted">Re-tagging same pair is a no-op</td></tr>
+              <tr><td>ContentItem.category_id valid or NULL</td><td class="muted">Foreign key + ON DELETE SET NULL</td><td class="muted">Delete Category → content becomes uncategorized</td></tr>
+              <tr><td>ContentItem.interest_ids normalized</td><td class="muted">Application logic only</td><td class="muted">Validate UUIDs, dedupe, sort before save</td></tr>
               <tr><td>Hard delete (no soft delete)</td><td class="muted">App logic — no isDeleted field</td><td class="muted">Record + file deleted permanently</td></tr>
             </tbody>
           </table>
@@ -663,7 +659,7 @@ Cardinalities:
          SLIDE 12 — CachedCatalog
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="12"
-      data-notes="CachedCatalog is the local mirror of the server catalog. It's a single record containing three arrays — items, categories, and interests — plus a lastSyncedAt timestamp. It's replaced entirely on each sync pull. The Pydantic DTO shapes are defined in shared/schemas.py. ContentItemDTO is the key type — note that it includes category_ids and interest_ids as arrays (not as junction tables). This denormalization is intentional: the edge does all filtering in-memory in JavaScript using these arrays. ContentItemDTO also has thumbnail_url (a URL, not a path — the server converts file_path to a URL in the API response). All filtering for the reels feed, library, and search happens in-memory over this cached blob.">
+      data-notes="CachedCatalog is the local mirror of the server catalog. It's a single record containing three arrays — items, categories, and interests — plus a lastSyncedAt timestamp. It's replaced entirely on each sync pull. The Pydantic DTO shapes are defined in shared/schemas.py. ContentItemDTO is the key type — note that it includes categoryId as a single optional value and interestIds as an array. This shape mirrors the simplified API and lets the edge do all filtering in-memory in JavaScript. ContentItemDTO also has thumbnailUrl (a URL, not a path — the server converts file_path to a URL in the API response). All filtering for the reels feed, library, and search happens in-memory over this cached blob.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Edge Entity 2/4</p><div class="accent-bar-b"></div></div>
         <h1 class="title-h1"><span class="highlight-b">CachedCatalog</span> — Singleton Snapshot</h1>
@@ -699,10 +695,10 @@ class ContentItemDTO(BaseModel):
     file_size: int
     mime_type: str
     duration: Optional[int]      # None for PDF
-    thumbnail_url: Optional[str] # URL, not path
+    thumbnailUrl: Optional[str]  # URL, not path
     version: int
-    category_ids: list[str]      # denormalized
-    interest_ids: list[str]      # denormalized
+    categoryId: Optional[str]    # nullable single category
+    interestIds: list[str]       # denormalized UUID array
     created_at: str
     updated_at: str
 
@@ -861,7 +857,7 @@ if (existing) {
          SLIDE 16 — SUMMARY & NEXT STEPS
     ═══════════════════════════════════════════════════════════════ -->
     <section class="slide" data-slide="16"
-      data-notes="That's the complete data model. Nine entities. Five on the server in PostgreSQL. Four on the edge in IndexedDB. The key design principles: server is authoritative, edge is a cached mirror. No user identity in MVP — device-scoped only. Hard delete everywhere. Version counter drives the updated badge. Files never go through IndexedDB — always through the edge proxy cache. The next document to read is the API Contract (06_api-contract.md) which defines every endpoint that bridges the server and edge data models. DK-04 Developer Onboarding covers the monorepo structure and build order if you haven't seen it yet.">
+      data-notes="That's the complete data model. Seven modeled entities/stores. Three on the server in PostgreSQL. Four on the edge in IndexedDB. The key design principles: server is authoritative, edge is a cached mirror. No user identity in MVP — device-scoped only. Hard delete everywhere. Files never go through IndexedDB — always through the edge proxy cache. The next document to read is the API Contract (06_api-contract.md) which defines every endpoint that bridges the server and edge data models. DK-04 Developer Onboarding covers the repo structure and build order if you haven't seen it yet.">
       <div class="slide-inner">
         <div class="label-block"><p class="label">Summary</p><div class="accent-bar"></div></div>
         <h1 class="title-h1">Summary &amp; <span class="highlight-g">Next Steps</span></h1>
@@ -870,11 +866,11 @@ if (existing) {
             <div class="card card-g">
               <p class="card-title">Key Takeaways</p>
               <ul class="bullets" style="gap:0.45rem;">
-                <li><strong>9 entities total:</strong> 5 server (PostgreSQL) + 4 edge (IndexedDB)</li>
+                <li><strong>7 modeled entities/stores total:</strong> 3 server tables (PostgreSQL) + 4 edge stores (IndexedDB)</li>
                 <li><strong>Server is authoritative.</strong> Edge is a cached mirror + local-only state.</li>
                 <li><strong>No User table in MVP.</strong> Device identity is local-only UUID.</li>
                 <li><strong>Files never in IndexedDB.</strong> nginx proxy_cache handles all file storage.</li>
-                <li><strong>Version counter</strong> (not hash) drives the "updated" badge on downloads.</li>
+                <li><strong>Single category + many interests:</strong> categoryId is singular; interestIds stays an array.</li>
                 <li><strong>Hard delete everywhere.</strong> No soft-delete, no draft state in MVP.</li>
                 <li><strong>UUIDs as PKs.</strong> Enables future multi-source sync without collision.</li>
                 <li><strong>Shared Pydantic schemas</strong> in <span class="mono highlight-g">shared/schemas.py</span> bridge server ↔ edge.</li>
@@ -885,7 +881,7 @@ if (existing) {
             <div class="card card-b">
               <p class="card-title">Next Steps</p>
               <ul class="bullets bullets-b" style="gap:0.45rem;">
-                <li>Implement SQLAlchemy models matching these 5 tables + constraints</li>
+                <li>Implement SQLAlchemy models matching these 3 server tables + constraints</li>
                 <li>Write Alembic migrations for all server entities before any API code</li>
                 <li>Define shared Pydantic DTO models in <span class="mono">shared/schemas.py</span></li>
                 <li>Implement IndexedDB wrapper in Edge SPA (4 stores)</li>

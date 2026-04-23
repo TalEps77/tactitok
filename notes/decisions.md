@@ -66,6 +66,9 @@ Use this file to track explicit project decisions and why they were made.
 | D38 | UUIDs for all primary keys | Enables future multi-source sync; avoids sequential-ID leakage; standard for distributed systems | 2026-03-07 |
 | D39 | Hard delete for content items in MVP (no soft delete) | Simplest implementation; audit trail not required for demo; add `deletedAt` later | 2026-03-07 |
 | D40 | One binary file per content item (no ContentAsset table) | MVP is single-file; multi-file or multi-quality can add ContentAsset table later | 2026-03-07 |
+| D69 | Server DB schema simplified to 3 tables (`content_items`, `categories`, `interests`) | Removes junction-table complexity; keeps the schema continuation-ready for a 3-dev MVP | 2026-04-23 |
+| D70 | `content_items.category_id` is a single nullable FK | Library organization is simpler with one optional category per item; uncategorized content remains allowed | 2026-04-23 |
+| D71 | `content_items.interest_ids` is a PostgreSQL `UUID[]` validated in the service layer | Preserves multi-interest tagging without extra tables; simpler schema than a normalized junction table for MVP | 2026-04-23 |
 
 ## From Architecture v0.2 Update (Edge Proxy)
 
@@ -113,7 +116,7 @@ Use this file to track explicit project decisions and why they were made.
 
 | # | Decision | Rationale | Date |
 |---|---------|-----------|------|
-| D54 | Role assignment: Dev A = backend, Dev B = edge SPA, Dev C = admin SPA | Cleanest separation; shared types in `packages/shared` owned by Dev A; roles shift for integration in Sprint 5 | 2026-03-07 |
+| D54 | Role assignment: Dev A = backend, Dev B = edge SPA, Dev C = admin SPA | Cleanest separation for a 3-person team; roles shift for integration in Sprint 5 | 2026-03-07 |
 | D55 | 6 × 2-week sprints (12 weeks total): sprints 1–5 build, sprint 6 stabilises | Aligns with North Star §8 (8–10 weeks build + stabilisation through week 12) | 2026-03-07 |
 | D56 | Milestone 3 (reels on device, end of week 6) is the primary risk checkpoint | Reels UX is the highest-risk, highest-impact capability; if it fails, 6 weeks remain to recover or de-scope | 2026-03-07 |
 | D57 | De-scope levers applied in priority order from MVP Spec §13; decision logged in notes/decisions.md | Consistent with the agreed de-scope ladder; prevents ad-hoc scope cuts | 2026-03-07 |

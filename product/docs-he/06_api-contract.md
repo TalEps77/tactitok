@@ -1,10 +1,10 @@
 <!-- RTL -->
 # חוזה API — TactiTok
 
-> **גרסה:** 0.3
+> **גרסה:** 0.4
 > **סטטוס:** טיוטה
-> **עדכון אחרון:** 2026-03-25
-> **יומן שינויים:** v0.3 (2026-03-25): הוסרה סעיף ה-TypeScript DTOs. הוחלף בדוגמאות JSON פשוטות. כל 21 נקודות הקצה ללא שינוי. | v0.2 — נוסף endpoint ‏`GET /api/health` (תיקון N1); שונה URL קובץ תוכן לכלול `?v={version}` לביטול מטמון ה-proxy (תיקון N2); תוקנה הערת ETag (ETag מטפל במטמון הדפדפן בלבד, לא במטמון ה-proxy); עודכן מספר ה-endpoints ל-21.
+> **עדכון אחרון:** 2026-04-23
+> **יומן שינויים:** v0.4 (2026-04-23): יושר מול Data Model v0.4. צורת `ContentItem` משתמשת כעת ב-`categoryId` יחיד nullable וב-`interestIds` כמערך. סמנטיקת המחיקה עודכנה למודל 3 הטבלאות: מחיקת קטגוריה מאפסת `categoryId` ל-`null`; מחיקת עניין מחייבת cleanup בשכבת השירות לפני המחיקה. | v0.3 (2026-03-25): הוסרה סעיף ה-TypeScript DTOs. הוחלף בדוגמאות JSON פשוטות. כל 21 נקודות הקצה ללא שינוי. | v0.2 — נוסף endpoint ‏`GET /api/health` (תיקון N1); שונה URL קובץ תוכן לכלול `?v={version}` לביטול מטמון ה-proxy (תיקון N2); תוקנה הערת ETag (ETag מטפל במטמון הדפדפן בלבד, לא במטמון ה-proxy); עודכן מספר ה-endpoints ל-21.
 > **מסמך קודם:** `product/05_data-model.md`
 > **מסמך הבא:** `product/07_delivery-plan.md`
 
@@ -161,7 +161,7 @@ GET /api/catalog?since=2026-03-01T00:00:00.000Z   (מתקבל; מחזיר קטל
       "duration": 120,
       "thumbnailUrl": "/api/content/{id}/thumbnail",
       "version": 1,
-      "categoryIds": ["uuid", "uuid"],
+      "categoryId": "uuid",
       "interestIds": ["uuid"],
       "createdAt": "2026-03-07T09:00:00.000Z",
       "updatedAt": "2026-03-07T09:00:00.000Z"
@@ -195,7 +195,8 @@ GET /api/catalog?since=2026-03-01T00:00:00.000Z   (מתקבל; מחזיר קטל
 - ‏`thumbnailUrl` הוא נתיב יחסי; ה-Edge SPA מוסיף את כתובת ה-proxy כבסיס. ‏`null` אם לא הועלתה תמונה ממוזערת.
 - ‏`duration` בשניות; ‏`null` לקובצי PDF.
 - פריטים מוחזרים לפי `updatedAt` יורד (החדשים ביותר ראשונים).
-- כל המערכים עשויים להיות ריקים.
+- ‏`categoryId` יכול להיות `null` עבור תוכן לא מסווג.
+- המערכים `interestIds`, `categories` ו-`interests` עשויים להיות ריקים.
 
 **תגובה: 500** — שגיאת מסד נתונים או שרת.
 
@@ -366,7 +367,7 @@ Authorization: Bearer {token}
       "duration": 120,
       "thumbnailUrl": "/api/content/{id}/thumbnail",
       "version": 1,
-      "categoryIds": ["uuid"],
+      "categoryId": "uuid",
       "interestIds": ["uuid"],
       "createdAt": "2026-03-07T09:00:00.000Z",
       "updatedAt": "2026-03-07T09:00:00.000Z"
@@ -390,7 +391,7 @@ Authorization: Bearer {token}
 | `file` | בינארי | כן | MP4 או PDF; ≤ 100 MB |
 | `title` | מחרוזת | כן | מקסימום 255 תווים; לא ריק |
 | `description` | מחרוזת | לא | ברירת מחדל: `""` |
-| `categoryIds` | מחרוזת (מערך JSON) | לא | מערך של category UUIDs; ברירת מחדל `[]` |
+| `categoryId` | מחרוזת | לא | UUID של קטגוריה יחידה; השמטה או מחרוזת ריקה = לא מסווג |
 | `interestIds` | מחרוזת (מערך JSON) | לא | מערך של interest UUIDs; ברירת מחדל `[]` |
 
 **תגובה: 201 Created** — צורת ContentItem המלאה של הפריט שנוצר (ראה סעיף 8).
@@ -401,7 +402,12 @@ Authorization: Bearer {token}
 - סיומת קובץ אינה תואמת לסוג MIME
 - גודל קובץ > 100 MB
 - ‏`title` חסר או ריק
-- ‏`categoryIds` / `interestIds` מכילים UUIDs שאינם קיימים
+- ‏`categoryId` מפנה לקטגוריה שאינה קיימת
+- ‏`interestIds` מכילים UUIDs שאינם קיימים
+
+**נרמול:**
+- כפילויות בתוך `interestIds` מוסרות בשרת.
+- `interestIds` נשמרים לאחר מיון עולה של UUIDs.
 
 **אימות ספציפי לוידאו:**
 - משך > 180 שניות → `400` (אם ניתוח משך ממומש; יש להתייחס כאילוץ רך אם אינו מוכן בספרינט)
@@ -428,7 +434,7 @@ Authorization: Bearer {token}
 {
   "title": "string",
   "description": "string",
-  "categoryIds": ["uuid"],
+  "categoryId": "uuid",
   "interestIds": ["uuid"]
 }
 ```
@@ -437,7 +443,8 @@ Authorization: Bearer {token}
 
 **שגיאות אימות (400):**
 - ‏`title` הוא מחרוזת ריקה (אם סופק)
-- ‏`categoryIds` / `interestIds` מכילים UUIDs שאינם קיימים
+- ‏`categoryId` מפנה לקטגוריה שאינה קיימת
+- ‏`interestIds` מכילים UUIDs שאינם קיימים
 
 **תגובה: 404 Not Found**
 
@@ -504,7 +511,7 @@ Authorization: Bearer {token}
 
 #### DELETE /api/admin/content/:id
 
-מחיקת פריט תוכן. מחיקה קשה — מסיר את רשומת מסד הנתונים, את קובץ התוכן ממערכת הקבצים, ואת התמונה הממוזערת (אם קיימת). שורות junction ‏(`content_categories`, `content_interests`) נמחקות בcascade על ידי מסד הנתונים.
+מחיקת פריט תוכן. מחיקה קשה — מסיר את רשומת מסד הנתונים, את קובץ התוכן ממערכת הקבצים, ואת התמונה הממוזערת (אם קיימת). שיוכי קטגוריה ותחומי עניין נעלמים יחד עם השורה שנמחקה.
 
 **תגובה: 204 No Content**
 
@@ -587,7 +594,7 @@ Authorization: Bearer {token}
 
 #### DELETE /api/admin/categories/:id
 
-מחיקת קטגוריה. **מוחק בcascade** את כל הקטגוריות הילד ומסיר את כל שורות junction ‏`content_categories` עבור הקטגוריה שנמחקה וילדיה. פריטי התוכן עצמם אינם נמחקים — הם הופכים לבלתי מסווגים.
+מחיקת קטגוריה. **מוחק בcascade** את כל הקטגוריות הילד. כל `content_items.category_id` שמפנה לקטגוריה שנמחקה או לילדיה נהיה `NULL` על ידי מסד הנתונים. פריטי התוכן עצמם אינם נמחקים — הם הופכים לבלתי מסווגים.
 
 **תגובה: 204 No Content**
 
@@ -659,7 +666,7 @@ Authorization: Bearer {token}
 
 #### DELETE /api/admin/interests/:id
 
-מחיקת עניין. מסיר את כל שורות junction ‏`content_interests`. פרופילי מכשיר קצה עם הפניות `selectedInterestIds` ישנות מנוקים על ידי ה-SPA בסנכרון הבא (מסנן IDs נעדרים מהקטלוג).
+מחיקת עניין. שכבת השירות מסירה תחילה את ה-UUID מכל מערכי `content_items.interest_ids`, ורק אחר כך מוחקת את השורה מטבלת `interests`. פרופילי מכשיר קצה עם הפניות `selectedInterestIds` ישנות מנוקים על ידי ה-SPA בסנכרון הבא.
 
 **תגובה: 204 No Content**
 
@@ -685,7 +692,7 @@ Authorization: Bearer {token}
   "duration": 90,
   "thumbnailUrl": "/api/content/{id}/thumbnail",
   "version": 1,
-  "categoryIds": ["uuid", "uuid"],
+  "categoryId": "uuid-string | null",
   "interestIds": ["uuid"],
   "createdAt": "2026-01-01T00:00:00Z",
   "updatedAt": "2026-01-01T00:00:00Z"
@@ -802,11 +809,11 @@ Edge SPA מקבל CatalogResponse:
 
 | אילוץ | ערך | אכיפה |
 |-------|-----|-------|
-| גודל קובץ תוכן מקסימלי | 100 MB | הגדרת Multer בשרת + בדיקה מקדימה בצד הלקוח |
+| גודל קובץ תוכן מקסימלי | 100 MB | אימות העלאה ב-FastAPI + בדיקה מקדימה בצד הלקוח |
 | MIME וידאו מורשה | `video/mp4` | שרת: בדיקת סוג MIME + בדיקת magic bytes |
 | MIME מסמך מורשה | `application/pdf` | שרת: בדיקת סוג MIME + בדיקת magic bytes |
 | משך וידאו מקסימלי | 180 ש' (3 דקות) | שרת: אילוץ רך (לאמת אם ניתן לביצוע בספרינט) |
-| גודל תמונה ממוזערת מקסימלי | 5 MB | שרת: הגדרת Multer + בדיקה מקדימה בצד הלקוח |
+| גודל תמונה ממוזערת מקסימלי | 5 MB | שרת: אימות העלאה ב-FastAPI + בדיקה מקדימה בצד הלקוח |
 | MIME מורשים לתמונה ממוזערת | `image/jpeg`, `image/png`, `image/webp` | שרת: בדיקת סוג MIME + בדיקת סיומת |
 
 **גישת אימות MIME:** יש לבדוק גם את header ה-`Content-Type` מהלקוח וגם את magic bytes של הקובץ תוך שימוש בספרייה כמו `file-type`. בדיקת magic bytes היא הבדיקה הסמכותית — סוג ה-MIME שהלקוח מספק לבדו אינו מספיק.
@@ -852,8 +859,9 @@ Edge SPA מקבל CatalogResponse:
 | AC3 | אימות MIME + magic bytes מספיק לאבטחת קבצים בסביבת דמו מבוקרת | מתקפת תוכן מובנה עדיין אפשרית; מקובל ל-MVP |
 | AC4 | JWT stateless; התנתקות ניהולית היא השלכת טוקן בצד הלקוח בלבד | אם נדרש ביטול, יש להוסיף רשימת חסימה בצד השרת |
 | AC5 | אדמין פועל תמיד ברשת יציבה; העלאת multipart ללא chunking מקובלת | העלאות קבצים גדולים עלולות לפוג בזמן; יש להוסיף העלאה מקוטעת אם נדרש |
-| AC6 | תפוגת טוקן של 8 שעות מתאימה לסשן ניהולי טיפוסי | יש להתאים אם נדרשים סשנים ארוכים יותר; להוסיף endpoint רענון בהמשך |
-| AC7 | ‏`proxy_ignore_headers Cache-Control` בנתיב הקטלוג עובד ללא תופעות לוואי | יש לבדוק התנהגות nginx; חלופה: השרת מגדיר `Cache-Control: public, max-age=0` |
+| AC6 | קטגוריה יחידה לכל פריט תוכן מספיקה לארגון הספרייה ב-MVP | אם יידרש שיוך לכמה קטגוריות, יהיה צורך בשינוי schema |
+| AC7 | PostgreSQL `UUID[]` מתאים לשמירת תחומי עניין ב-MVP | אם השאילתות או הצרכים יסתבכו, נחזיר מודל מנורמל |
+| AC8 | ‏`proxy_ignore_headers Cache-Control` בנתיב הקטלוג עובד ללא תופעות לוואי | יש לבדוק התנהגות nginx; חלופה: השרת מגדיר `Cache-Control: public, max-age=0` |
 
 ---
 
@@ -863,10 +871,10 @@ Edge SPA מקבל CatalogResponse:
 |---|-------|--------|-------|-------|
 | CR1 | ‏`proxy_cache` של nginx אינו שומר תוכן במטמון כאשר בקשת ה-Chrome הראשונה כוללת header ‏`Range` | בינונית | גבוהה | יש לבדוק בספרינט 1; להגדיר `proxy_cache_key` להתעלם מ-header ‏`Range`; או לאלץ pre-fetch קובץ מלא לחימום המטמון |
 | CR2 | רשומות מטמון `?v={version}` ישנות מצטברות בדיסק מטמון ה-proxy (רשומה אחת לכל גרסה לכל קובץ) | נמוכה | נמוכה | רשומות פגות לאחר פסק זמן `inactive` של 30 יום; מקובל ל-MVP עם ≤15 פריטים ועדכונים נדירים |
-| CR3 | העלאת multipart של 100 MB פוגת בזמן תחת הגדרת Express/Multer ברירת המחדל | נמוכה | בינונית | יש לקבוע פסק זמן נדיב להעלאה (לדוג', 10 דקות) בנתיבי העלאה; לבדוק עם קובץ של 100 MB |
+| CR3 | העלאת multipart של 100 MB פוגת בזמן תחת קונפיגורציית FastAPI / reverse proxy ברירת המחדל | נמוכה | בינונית | יש לקבוע פסק זמן נדיב להעלאה (לדוג', 10 דקות) בנתיבי העלאה; לבדוק עם קובץ של 100 MB |
 | CR4 | עקיפת אימות סוג MIME (שינוי שם `.exe` ל-`.mp4`) | בינונית | בינונית | יש להשתמש בבדיקת magic bytes (ספריית `file-type`) בנוסף ל-header MIME |
 | CR5 | ה-JSON של הקטלוג גדל באופן בלתי צפוי עם עלייה במספר התוכן | נמוכה (MVP) | נמוכה | פרמטר `?since` מתקבל מהיום הראשון; יש להוסיף pagination לפי הצורך |
-| CR6 | מחיקת עניין משאירה `selectedInterestIds` ישן בקצה DeviceProfile | בינונית | נמוכה | ה-Edge SPA מסנן עניינים נבחרים מול הקטלוג בכל סנכרון |
+| CR6 | מחיקת עניין עלולה להשאיר IDs מיושנים גם ב-`content_items.interest_ids` וגם ב-`selectedInterestIds` בקצה | בינונית | בינונית | מחיקת עניין מבצעת cleanup למערכים בטרנזקציה אחת; ה-Edge SPA מסנן IDs נעדרים מול הקטלוג בכל סנכרון |
 
 ---
 

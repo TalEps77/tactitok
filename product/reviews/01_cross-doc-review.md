@@ -58,7 +58,7 @@ The following areas are **consistently specified** across all documents and alig
 - **Interest model: admin-managed flat list, independent of categories** — consistent in 01, 03, 05, 06 §7.4, 07; decision D35.
 - **Category model: 2-level hierarchy, parent-id, cascade-delete children** — consistent in 01, 03, 05, 06 §7.3, 07; decisions D23, D51.
 - **Orphan cleanup on sync** — explicit in 06 §10.4, confirmed in 07 Sprint 4 Week 8; consistent with data model.
-- **Technology stack** — TypeScript monorepo, React, Node/Express, PostgreSQL, nginx, Docker — consistent in 04, 07; decisions D24–D34, D41–D59.
+- **Technology stack** — vanilla HTML/CSS/JS frontends, Python/FastAPI backend, PostgreSQL, nginx, Docker — consistent in 04, 07; decisions D26, D41–D46, D64–D68.
 - **Demo corpus: 10 PDFs + 5 videos** — consistent in 01, 03, 07 Sprint 6; decision D9.
 - **De-scope order** — lever priority consistent across 01, 02, 03, 04, 07 §8 and §13; decision D57.
 - **Thumbnail endpoint** — defined in 06 §6.3; consistent with data model `thumbnailPath` field.
