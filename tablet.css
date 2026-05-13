@@ -8,21 +8,28 @@
   --color-text-info: #0071e3;
   --color-background-danger: #ffebee;
   --color-text-danger: #d32f2f;
+  --color-background-warning: #fff8e1;
+  --color-text-warning: #8a6d00;
   --border-radius-md: 12px;
 }
 
 body {
-  font-family: -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: #e5e5e5;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   margin: 0;
+  direction: rtl;
 }
 
-/* --- 2. המכשיר (Landscape Tablet) --- */
-/* רוחב גדול מהגובה - נכנס בול במסך בלי גלילה מיותרת */
+/* מעטפת כללית */
+.tt-wrap {
+  position: relative;
+}
+
+/* מסך הטאבלט */
 .tt-device { 
   width: 900px; 
   height: 580px; 
@@ -35,7 +42,7 @@ body {
   box-shadow: 0 15px 40px rgba(0,0,0,0.15);
 }
 
-/* --- 3. טאבים וניווט --- */
+/* טאבים עליונים */
 .tt-tabs { 
   display: flex; 
   background: var(--color-background-primary); 
@@ -50,6 +57,12 @@ body {
   font-size: 14px; 
   color: var(--color-text-secondary); 
   cursor: pointer; 
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.tt-tab:hover {
+  background-color: #fafafa;
 }
 
 .tt-tab.active { 
@@ -58,19 +71,19 @@ body {
   font-weight: 600;
 }
 
-/* --- 4. אזור התוכן --- */
+/* פאנלים */
 .tt-panel { 
-    display: none; 
-    flex: 1; 
-    overflow-y: auto; 
+  display: none; 
+  flex: 1; 
+  overflow-y: auto; 
 }
 
 .tt-panel.active { 
-    display: flex; 
-    flex-direction: column;
+  display: flex; 
+  flex-direction: column;
 }
 
-/* --- 5. REELS (חזרה למקור השחור) --- */
+/* Reels placeholder */
 .tt-reel { 
   flex: 1;
   background: #000000; 
@@ -79,45 +92,55 @@ body {
   justify-content: center;
   color: #ffffff;
   font-weight: bold;
+  font-size: 20px;
 }
 
-/* --- 6. LIBRARY (חזרה לטור אחד - הרעיון המקורי) --- */
-.tt-lib { padding: 20px; }
+/* ספרייה */
+.tt-lib {
+  padding: 20px;
+}
 
 .tt-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .tt-search { 
-    flex: 1;             
-    padding: 12px; 
-    box-sizing: border-box; 
-    border-radius: 8px; 
-    border: 1px solid var(--color-border-tertiary);
-    margin-bottom: 0;    
+  flex: 1;             
+  padding: 12px; 
+  box-sizing: border-box; 
+  border-radius: 8px; 
+  border: 1px solid var(--color-border-tertiary);
+  margin-bottom: 0;
+  font-family: inherit;
+  font-size: 15px;
+  background: var(--color-background-primary);
+}
+
+.tt-search:focus {
+  outline: none;
+  border-color: var(--color-text-info);
 }
 
 .tt-refresh-btn {
-    width: 45px;
-    height: 45px;
-    background: var(--color-background-primary);
-    border: 1px solid var(--color-border-tertiary);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+  width: 45px;
+  height: 45px;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .tt-refresh-btn:hover {
-    background: #f0f0f0;
-    transform: rotate(45deg); /* אפקט קטן כשנוגעים בו */
+  background: #f0f0f0;
+  transform: rotate(45deg);
 }
-
 
 #tt-cats {
   display: flex;
@@ -125,6 +148,7 @@ body {
   gap: 12px;
 }
 
+/* כרטיס תוכן */
 .tt-card { 
   display: flex; 
   align-items: center; 
@@ -132,7 +156,15 @@ body {
   padding: 12px 20px; 
   border: 1px solid var(--color-border-tertiary); 
   border-radius: var(--border-radius-md); 
-  background: var(--color-background-primary); 
+  background: var(--color-background-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tt-card:hover {
+  background: #fafafa;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
 }
 
 .tt-card-thumb { 
@@ -143,24 +175,41 @@ body {
   align-items: center; 
   justify-content: center; 
   font-weight: bold;
+  font-size: 13px;
   flex-shrink: 0;
 }
 
-.tt-card-vid { background: var(--color-background-info); color: var(--color-text-info); }
-.tt-card-pdf { background: var(--color-background-danger); color: var(--color-text-danger); }
-
-.tt-card-info { flex: 1; min-width: 0; }
-.tt-card-title { 
-    font-size: 15px; 
-    font-weight: 600; 
-    color: var(--color-text-primary);
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
+.tt-card-vid {
+  background: var(--color-background-info);
+  color: var(--color-text-info);
 }
 
-.tt-card-meta { font-size: 13px; color: var(--color-text-secondary); }
+.tt-card-pdf {
+  background: var(--color-background-danger);
+  color: var(--color-text-danger);
+}
 
+.tt-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tt-card-title { 
+  font-size: 15px; 
+  font-weight: 600; 
+  color: var(--color-text-primary);
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+
+.tt-card-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 3px;
+}
+
+/* כפתור הורדה */
 .tt-dl-btn { 
   width: 32px; 
   height: 32px; 
@@ -169,52 +218,174 @@ body {
   background: none; 
   color: var(--color-text-secondary);
   cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
+.tt-dl-btn:hover {
+  background: var(--color-background-info);
+  color: var(--color-text-info);
+}
+
+/* Downloads tab */
+.tt-dls {
+  padding: 20px;
+}
+
+.tt-offline-bar {
+  background: var(--color-background-warning);
+  color: var(--color-text-warning);
+  border: 1px solid #ffe08a;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+#download-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* מודל צפייה בתוכן */
 .modal {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  position: absolute;
+  top: 0; 
+  left: 0;
+  width: 100%; 
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-/* החלון הלבן עצמו */
 .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    width: 80%;
-    max-height: 80%;
-    position: relative;
-    text-align: center;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  width: 80%;
+  max-height: 80%;
+  position: relative;
+  text-align: center;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+#playerContainer {
+  width: 100%;
+  min-height: 120px;
+}
+
+#playerContainer video {
+  max-height: 360px;
+  background: #000000;
+}
+
+#playerContainer canvas {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 8px;
+}
+
+#modalTitle {
+  font-size: 18px;
+  color: var(--color-text-primary);
+  margin: 15px 0 0 0;
 }
 
 .close-btn {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 32px;
-    font-weight: bold;
-    color: #333;
-    cursor: pointer;
-    z-index: 1001; /* מוודא שהוא מעל הוידאו ומעל הכל */
-    background: rgba(255, 255, 255, 0.8); /* רקע קטן כדי שיראו אותו גם על תוכן כהה */
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.85);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  line-height: 1;
 }
 
 .close-btn:hover {
-    color: #ed4956; /* הופך לאדום במעבר עכבר */
+  color: #ed4956;
 }
 
 .hidden {
-    display: none !important;
+  display: none !important;
+}
+
+/* התאמה למסכים קטנים יותר */
+@media (max-width: 950px) {
+  .tt-device {
+    width: 95vw;
+    height: 70vh;
+  }
+
+  .modal-content {
+    width: 90%;
+    max-height: 85%;
+  }
+}
+
+@media (max-width: 650px) {
+  body {
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+
+  .tt-device {
+    width: 96vw;
+    height: 92vh;
+    border-radius: 16px;
+  }
+
+  .tt-tab {
+    padding: 12px 0;
+    font-size: 13px;
+  }
+
+  .tt-lib,
+  .tt-dls {
+    padding: 14px;
+  }
+
+  .tt-card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .tt-card-thumb {
+    width: 44px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .tt-card-title {
+    font-size: 14px;
+  }
+
+  .tt-card-meta {
+    font-size: 12px;
+  }
+
+  .modal-content {
+    width: 94%;
+    padding: 15px;
+  }
+
+  #playerContainer video {
+    max-height: 300px;
+  }
 }

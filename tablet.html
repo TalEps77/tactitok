@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TactiTok Tablet - Library</title>
     <link rel="stylesheet" href="tablet.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -12,9 +13,9 @@
   <div class="tt-device">
     
     <div class="tt-tabs">
-      <div class="tt-tab" onclick="ttTab('reels',this)">Reels</div>
-      <div class="tt-tab active" id="library-tab" onclick="ttTab('library',this)">Library</div>
-      <div class="tt-tab" onclick="ttTab('downloads',this)">Downloads</div>
+      <div class="tt-tab" onclick="ttTab('reels', this)">Reels</div>
+      <div class="tt-tab active" id="library-tab" onclick="ttTab('library', this)">Library</div>
+      <div class="tt-tab" onclick="ttTab('downloads', this)">Downloads</div>
     </div>
 
     <div class="tt-panel" id="tt-reels">
@@ -44,7 +45,9 @@
       </div>
     </div>
     
-  </div> <div id="contentModal" class="modal hidden">
+  </div>
+
+  <div id="contentModal" class="modal hidden">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <div id="playerContainer"></div>
@@ -54,6 +57,15 @@
 
 </div>
 
+<!-- הגדרת בסיס ה-API לטאבלט דרך nginx -->
+<script>
+    window.TACTITOK_API_BASE = "/api";
+</script>
+
+<!-- שכבת API משותפת -->
+<script src="api.js"></script>
+
+<!-- סקריפט הטאבלט הראשי -->
 <script src="tablet.js"></script>
 
 <script>
