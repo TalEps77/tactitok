@@ -1,7 +1,3 @@
-// api.js
-// TactiTok shared API layer
-// This file is used by both admin.js and tablet.js
-
 (function () {
     const DEFAULT_API_BASE = "";
 

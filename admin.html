@@ -23,7 +23,7 @@
         <form id="uploadForm">
             <div class="input-group">
                 <label for="contentFile">בחירת קובץ (MP4 או PDF):</label>
-                <input type="file" id="contentFile" name="contentFile" accept="video/mp4, application/pdf" required>
+                <input type="file" id="contentFile" name="file" accept="video/mp4, application/pdf" required>
                 
                 <div id="filePreview" class="hidden">
                     <span id="fileNameDisplay"></span>
@@ -43,7 +43,7 @@
 
             <div class="input-group">
                 <label for="category">קטגוריה:</label>
-                <select id="category" name="category" required>
+                <select id="category" name="category_id" required>
                     <option value="">טוען קטגוריות...</option>
                 </select>
             </div>

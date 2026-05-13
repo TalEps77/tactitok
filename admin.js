@@ -134,6 +134,10 @@ function getContentType(item) {
     return item?.type ?? item?.content_type ?? item?.file_type ?? "";
 }
 
+function getContentTitle(item) {
+    return item?.title ?? item?.name ?? "";
+}
+
 function getContentCategory(item) {
     if (!item) return "";
 
@@ -141,13 +145,25 @@ function getContentCategory(item) {
         return getCategoryName(item.category);
     }
 
-    return item.category ?? item.category_name ?? "";
+    if (item.category ?? item.category_name) {
+        return item.category ?? item.category_name;
+    }
+
+    if (item.category_id) {
+        const category = categoriesData.find(currentCategory => {
+            return String(getCategoryId(currentCategory)) === String(item.category_id);
+        });
+
+        return category ? getCategoryName(category) : item.category_id;
+    }
+
+    return "";
 }
 
 function getContentInterests(item) {
     if (!item) return [];
 
-    const rawInterests = item.interests ?? item.interest_names ?? [];
+    const rawInterests = item.interests ?? item.interest_names ?? item.interest_ids ?? [];
 
     if (Array.isArray(rawInterests)) {
         return rawInterests.map(interest => {
@@ -182,21 +198,20 @@ function resetUploadFormAfterSuccess() {
 function enrichUploadFormData(formData) {
     const selectedCategoryOption = categorySelect.options[categorySelect.selectedIndex];
 
-    if (selectedCategoryOption) {
-        formData.set("category", selectedCategoryOption.value);
+    formData.delete("category");
+    formData.delete("interests");
 
-        if (selectedCategoryOption.dataset.id) {
-            formData.set("category_id", selectedCategoryOption.dataset.id);
-        }
+    if (selectedCategoryOption && selectedCategoryOption.value) {
+        formData.set("category_id", selectedCategoryOption.value);
     }
 
-    const selectedInterestCheckboxes = interestsContainer.querySelectorAll('input[name="interests"]:checked');
+    const selectedInterestCheckboxes = interestsContainer.querySelectorAll('input[name="interest_ids"]:checked');
 
     formData.delete("interest_ids");
 
     selectedInterestCheckboxes.forEach(checkbox => {
-        if (checkbox.dataset.id) {
-            formData.append("interest_ids", checkbox.dataset.id);
+        if (checkbox.value) {
+            formData.append("interest_ids", checkbox.value);
         }
     });
 
@@ -318,7 +333,7 @@ function refreshTableDisplay() {
 
     adminCatalogData.forEach(item => {
         const id = getContentId(item);
-        const title = item.title ?? "";
+        const title = getContentTitle(item);
         const type = getContentType(item);
         const category = getContentCategory(item);
 
@@ -392,7 +407,7 @@ function editItem(id) {
     }
 
     document.getElementById('editId').value = getContentId(item);
-    document.getElementById('editTitle').value = item.title ?? '';
+    document.getElementById('editTitle').value = getContentTitle(item);
     document.getElementById('editDescription').value = item.description ?? '';
 
     renderCategoryOptions(editCategorySelect, getContentCategory(item));
@@ -419,22 +434,16 @@ if (editForm) {
             const id = document.getElementById('editId').value;
             const selectedCategoryOption = editCategorySelect.options[editCategorySelect.selectedIndex];
 
-            const selectedInterestCheckboxes = editInterestsContainer.querySelectorAll('input[name="interests"]:checked');
+            const selectedInterestCheckboxes = editInterestsContainer.querySelectorAll('input[name="interest_ids"]:checked');
 
             const updatedData = {
                 title: document.getElementById('editTitle').value.trim(),
                 description: document.getElementById('editDescription').value.trim(),
-                category: selectedCategoryOption ? selectedCategoryOption.value : "",
-                interests: Array.from(selectedInterestCheckboxes).map(checkbox => checkbox.value)
+                category_id: selectedCategoryOption ? selectedCategoryOption.value : "",
+                interest_ids: Array.from(selectedInterestCheckboxes)
+                    .map(checkbox => checkbox.value)
+                    .filter(Boolean)
             };
-
-            if (selectedCategoryOption?.dataset.id) {
-                updatedData.category_id = selectedCategoryOption.dataset.id;
-            }
-
-            updatedData.interest_ids = Array.from(selectedInterestCheckboxes)
-                .map(checkbox => checkbox.dataset.id)
-                .filter(Boolean);
 
             const response = await api().updateContent(id, updatedData);
 
@@ -494,8 +503,9 @@ function renderCategoryOptions(selectElement, selectedValue = "") {
         if (!name) return;
 
         const option = document.createElement('option');
-        option.value = name;
+        option.value = id;
         option.dataset.id = id;
+        option.dataset.name = name;
         option.textContent = parentName ? `${parentName} / ${name}` : name;
 
         if (
@@ -708,9 +718,10 @@ function renderInterestCheckboxes(containerElement, selectedValues = []) {
         const checkbox = document.createElement('input');
 
         checkbox.type = "checkbox";
-        checkbox.name = "interests";
-        checkbox.value = name;
+        checkbox.name = "interest_ids";
+        checkbox.value = id;
         checkbox.dataset.id = id;
+        checkbox.dataset.name = name;
 
         if (selectedSet.has(String(name)) || selectedSet.has(String(id))) {
             checkbox.checked = true;
