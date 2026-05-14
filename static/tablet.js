@@ -58,7 +58,7 @@ function escapeHtml(value) {
 }
 
 function getItemId(item) {
-    return item?.id ?? item?._id ?? item?.uuid ?? "";
+    return item?.content_id ?? item?.id ?? item?._id ?? item?.uuid ?? "";
 }
 
 function getItemTitle(item) {

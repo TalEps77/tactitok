@@ -7,7 +7,7 @@ from typing import List
 
 # ייבוא הכלים מהפרויקט שלך - ודא שהנתיבים נכונים
 from core.database import get_db
-from models.tables import Content
+from models.tables import Content, Interest
 
 router = APIRouter()
 
@@ -68,39 +68,81 @@ async def delete_content(content_id: uuid.UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"שגיאה בזמן המחיקה: {str(e)}")
 
 
-#עדכון התוכן
+
+from pydantic import BaseModel
+from typing import Optional, List
+from uuid import UUID
+from fastapi import Depends, HTTPException
+from sqlalchemy.orm import Session
+
+
+class ContentUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    category_id: Optional[UUID] = None
+    interest_ids: Optional[List[UUID]] = None
+
+
 @router.patch("/{content_id}")
 async def update_content_metadata(
-    content_id: uuid.UUID, 
-    title: str = None, 
-    description: str = None, 
-    category_id: uuid.UUID = None,
+    content_id: UUID,
+    update_data: ContentUpdateRequest,
     db: Session = Depends(get_db)
 ):
     """
-    עדכון פרטי תוכן (Metadata) לפי ID.
-    ניתן לעדכן כותרת, תיאור או קטגוריה.
+    עדכון פרטי תוכן לפי ID.
+    מקבל JSON body מה-Frontend.
+    ניתן לעדכן כותרת, תיאור, קטגוריה ותחומי עניין.
     """
+
     content = db.query(Content).filter(Content.id == content_id).first()
+
     if not content:
         raise HTTPException(status_code=404, detail="התוכן לעדכון לא נמצא")
 
-    # עדכון השדות שנשלחו בלבד
-    if title:
-        content.title = title
-    if description is not None: # מאפשר לשלוח מחרוזת ריקה
-        content.description = description
-    if category_id:
-        content.category_id = category_id
+    # עדכון כותרת
+    if update_data.title is not None:
+        content.title = update_data.title
+
+    # עדכון תיאור
+    if update_data.description is not None:
+        content.description = update_data.description
+
+    # עדכון קטגוריה
+    if update_data.category_id is not None:
+        content.category_id = update_data.category_id
+
+    # עדכון תחומי עניין
+    if update_data.interest_ids is not None:
+
+        # בדיקה שכל תחומי העניין שנשלחו באמת קיימים בטבלת Interest
+        if len(update_data.interest_ids) > 0:
+            existing_count = db.query(Interest).filter(
+                Interest.id.in_(update_data.interest_ids)
+            ).count()
+
+            if existing_count != len(update_data.interest_ids):
+                raise HTTPException(
+                    status_code=400,
+                    detail="אחד או יותר מתחומי העניין לא קיימים במסד הנתונים"
+                )
+
+        # כאן העדכון הנכון לפי המודל שלכם:
+        # במודל Content יש עמודה בשם interest_ids
+        content.interest_ids = update_data.interest_ids
 
     try:
         db.commit()
         db.refresh(content)
         return content
+
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"שגיאה בעדכון הנתונים: {str(e)}")
-    
+        raise HTTPException(
+            status_code=500,
+            detail=f"שגיאה בעדכון הנתונים: {str(e)}"
+        )   
+
 #בקשת הסרטון בחלקים/ 206
 @router.get("/{content_id}/file")
 async def stream_content_file(content_id: str, request: Request, db: Session = Depends(get_db)):

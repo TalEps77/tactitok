@@ -127,7 +127,7 @@ function getInterestName(interest) {
 }
 
 function getContentId(item) {
-    return item?.id ?? item?._id ?? item?.uuid ?? "";
+    return item?.content_id ?? item?.id ?? item?._id ?? item?.uuid ?? "";
 }
 
 function getContentType(item) {
@@ -268,6 +268,7 @@ if (uploadForm) {
             let formData = new FormData(uploadForm);
             formData = enrichUploadFormData(formData);
 
+            
             await api().uploadContent(formData, function(percentComplete) {
                 progressBar.style.width = percentComplete + '%';
                 progressText.textContent = percentComplete + '%';

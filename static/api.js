@@ -17,35 +17,49 @@
         return base + "/" + cleanPath;
     }
 
-    async function parseResponse(response) {
-        const contentType = response.headers.get("content-type") || "";
+   async function parseResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
 
-        let responseBody = null;
+    let responseText = "";
 
-        if (contentType.includes("application/json")) {
-            responseBody = await response.json();
-        } else {
-            responseBody = await response.text();
-        }
-
-        if (!response.ok) {
-            let message = "API request failed";
-
-            if (responseBody && typeof responseBody === "object") {
-                message =
-                    responseBody.detail ||
-                    responseBody.message ||
-                    responseBody.error ||
-                    JSON.stringify(responseBody);
-            } else if (responseBody) {
-                message = responseBody;
-            }
-
-            throw new Error(`${message} (status ${response.status})`);
-        }
-
-        return responseBody;
+    try {
+        responseText = await response.text();
+    } catch (error) {
+        responseText = "";
     }
+
+    let responseBody = null;
+
+    if (responseText) {
+        if (contentType.includes("application/json")) {
+            try {
+                responseBody = JSON.parse(responseText);
+            } catch (error) {
+                throw new Error("השרת החזיר JSON לא תקין");
+            }
+        } else {
+            responseBody = responseText;
+        }
+    }
+
+    if (!response.ok) {
+        let message = "API request failed";
+
+        if (responseBody && typeof responseBody === "object") {
+            message =
+                responseBody.detail ||
+                responseBody.message ||
+                responseBody.error ||
+                JSON.stringify(responseBody);
+        } else if (responseBody) {
+            message = responseBody;
+        }
+
+        throw new Error(`${message} (status ${response.status})`);
+    }
+
+    return responseBody ?? { success: true };
+}
 
     async function request(path, options = {}) {
         const url = buildUrl(path);
@@ -139,7 +153,7 @@
 
         // Catalog
         getCatalog() {
-            return request("/catalog");
+            return request("/content/");
         },
 
         // Content
@@ -149,7 +163,7 @@
 
         updateContent(id, data) {
             return request(`/content/${encodeURIComponent(id)}`, {
-                method: "PUT",
+                method: "PATCH",
                 body: data
             });
         },
